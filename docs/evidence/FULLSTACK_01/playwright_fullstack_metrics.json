@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-11-19T11:29:52.726Z",
+  "viewports": [
+    {
+      "name": "mobile_360",
+      "width": 360,
+      "height": 800,
+      "overflowX": false
+    },
+    {
+      "name": "mobile_390",
+      "width": 390,
+      "height": 844,
+      "overflowX": false
+    },
+    {
+      "name": "tablet_768",
+      "width": 768,
+      "height": 1024,
+      "overflowX": false
+    },
+    {
+      "name": "desktop_1440",
+      "width": 1440,
+      "height": 900,
+      "overflowX": false
+    }
+  ],
+  "consoleErrorCount": 0,
+  "expected403ProbeCount": 3,
+  "pageErrorCount": 0,
+  "consoleErrors": [],
+  "pageErrors": [],
+  "screenshotsCaptured": 10,
+  "passedAllJourneys": true
+}

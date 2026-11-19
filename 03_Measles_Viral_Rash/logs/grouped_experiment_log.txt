@@ -1,0 +1,70 @@
+[2026-11-18 13:34:23] ======================================================================
+[2026-11-18 13:34:23] MCVSLD Group-Isolated Vision Model Training & Benchmark on RTX 5060 Ti
+[2026-11-18 13:34:23] ======================================================================
+[2026-11-18 13:34:23] Active Device: cuda:0 (NVIDIA GeForce RTX 5060 Ti)
+[2026-11-18 13:34:23] Dataset Partitions:
+[2026-11-18 13:34:23]   Train: 7279 images (528 families)
+[2026-11-18 13:34:23]   Val  : 1544 images (113 families)
+[2026-11-18 13:34:23]   Test : 1561 images (114 families)
+[2026-11-18 13:34:23] Confirmed: 0.0% source-family leakage across all splits.
+[2026-11-18 13:34:23] Computed Class Weights: {'Chickenpox': 1.73, 'Cowpox': 1.89, 'HFMD': 0.77, 'Healthy': 1.1, 'Measles': 2.3, 'Monkeypox': 0.44}
+[2026-11-18 13:34:23] 
+========================= Training resnet18 (Group-Isolated) =========================
+[2026-11-18 13:34:53] Epoch 1/8 (28.9s) | Train Loss: 0.5381, Macro F1: 75.75% | Val Loss: 0.4331, Val BalAcc: 84.56%, Val Macro F1: 79.93%
+[2026-11-18 13:34:53]   --> Saved new best model checkpoint (Val Macro F1: 79.93%)
+[2026-11-18 13:35:19] Epoch 2/8 (26.2s) | Train Loss: 0.1622, Macro F1: 92.89% | Val Loss: 0.4125, Val BalAcc: 86.25%, Val Macro F1: 82.99%
+[2026-11-18 13:35:19]   --> Saved new best model checkpoint (Val Macro F1: 82.99%)
+[2026-11-18 13:35:45] Epoch 3/8 (26.3s) | Train Loss: 0.0950, Macro F1: 95.78% | Val Loss: 0.4348, Val BalAcc: 86.17%, Val Macro F1: 81.86%
+[2026-11-18 13:36:11] Epoch 4/8 (26.2s) | Train Loss: 0.0603, Macro F1: 97.73% | Val Loss: 0.4629, Val BalAcc: 84.88%, Val Macro F1: 82.36%
+[2026-11-18 13:36:38] Epoch 5/8 (26.4s) | Train Loss: 0.0397, Macro F1: 98.46% | Val Loss: 0.4658, Val BalAcc: 86.05%, Val Macro F1: 83.98%
+[2026-11-18 13:36:38]   --> Saved new best model checkpoint (Val Macro F1: 83.98%)
+[2026-11-18 13:37:04] Epoch 6/8 (26.1s) | Train Loss: 0.0262, Macro F1: 99.04% | Val Loss: 0.4604, Val BalAcc: 85.63%, Val Macro F1: 83.83%
+[2026-11-18 13:37:30] Epoch 7/8 (26.2s) | Train Loss: 0.0166, Macro F1: 99.50% | Val Loss: 0.4134, Val BalAcc: 86.03%, Val Macro F1: 83.55%
+[2026-11-18 13:37:56] Epoch 8/8 (26.3s) | Train Loss: 0.0184, Macro F1: 99.47% | Val Loss: 0.3944, Val BalAcc: 87.19%, Val Macro F1: 84.22%
+[2026-11-18 13:37:57]   --> Saved new best model checkpoint (Val Macro F1: 84.22%)
+[2026-11-18 13:37:59] 
+resnet18 Final Evaluation on Group-Held-Out Test Set (Unseen Families):
+[2026-11-18 13:37:59]   Test Accuracy         : 83.34%
+[2026-11-18 13:37:59]   Test Balanced Accuracy: 85.09%
+[2026-11-18 13:37:59]   Test Macro F1         : 82.62%
+[2026-11-18 13:37:59]   Chickenpox   Sensitivity: 81.76% (130/159)
+[2026-11-18 13:37:59]   Cowpox       Sensitivity: 88.49% (123/139)
+[2026-11-18 13:37:59]   HFMD         Sensitivity: 98.49% (327/332)
+[2026-11-18 13:37:59]   Healthy      Sensitivity: 88.56% (209/236)
+[2026-11-18 13:37:59]   Measles      Sensitivity: 80.91% (89/110)
+[2026-11-18 13:37:59]   Monkeypox    Sensitivity: 72.31% (423/585)
+[2026-11-18 13:37:59]   Per-Source-Family Majority Vote Accuracy: 85.09%
+[2026-11-18 13:37:59]   Per-Source-Family Macro F1               : 84.38%
+[2026-11-18 13:37:59]   Measles Family-Level Detection: 75.0% (6/8 unseen families)
+[2026-11-18 13:37:59] 
+========================= Training mobilenet_v3_small (Group-Isolated) =========================
+[2026-11-18 13:38:21] Epoch 1/8 (21.4s) | Train Loss: 0.9295, Macro F1: 62.14% | Val Loss: 0.6174, Val BalAcc: 79.90%, Val Macro F1: 73.43%
+[2026-11-18 13:38:21]   --> Saved new best model checkpoint (Val Macro F1: 73.43%)
+[2026-11-18 13:38:42] Epoch 2/8 (21.5s) | Train Loss: 0.3432, Macro F1: 84.74% | Val Loss: 0.5044, Val BalAcc: 82.15%, Val Macro F1: 78.73%
+[2026-11-18 13:38:42]   --> Saved new best model checkpoint (Val Macro F1: 78.73%)
+[2026-11-18 13:39:03] Epoch 3/8 (21.0s) | Train Loss: 0.1912, Macro F1: 91.48% | Val Loss: 0.4838, Val BalAcc: 82.77%, Val Macro F1: 80.75%
+[2026-11-18 13:39:03]   --> Saved new best model checkpoint (Val Macro F1: 80.75%)
+[2026-11-18 13:39:25] Epoch 4/8 (21.3s) | Train Loss: 0.1246, Macro F1: 94.36% | Val Loss: 0.4846, Val BalAcc: 84.21%, Val Macro F1: 81.20%
+[2026-11-18 13:39:25]   --> Saved new best model checkpoint (Val Macro F1: 81.20%)
+[2026-11-18 13:39:46] Epoch 5/8 (21.3s) | Train Loss: 0.1007, Macro F1: 95.74% | Val Loss: 0.5279, Val BalAcc: 83.34%, Val Macro F1: 80.55%
+[2026-11-18 13:40:07] Epoch 6/8 (21.0s) | Train Loss: 0.0886, Macro F1: 95.96% | Val Loss: 0.4823, Val BalAcc: 84.53%, Val Macro F1: 81.53%
+[2026-11-18 13:40:07]   --> Saved new best model checkpoint (Val Macro F1: 81.53%)
+[2026-11-18 13:40:28] Epoch 7/8 (21.5s) | Train Loss: 0.0725, Macro F1: 96.84% | Val Loss: 0.4941, Val BalAcc: 83.79%, Val Macro F1: 81.49%
+[2026-11-18 13:40:50] Epoch 8/8 (21.3s) | Train Loss: 0.0734, Macro F1: 96.84% | Val Loss: 0.4970, Val BalAcc: 84.04%, Val Macro F1: 81.56%
+[2026-11-18 13:40:50]   --> Saved new best model checkpoint (Val Macro F1: 81.56%)
+[2026-11-18 13:40:52] 
+mobilenet_v3_small Final Evaluation on Group-Held-Out Test Set (Unseen Families):
+[2026-11-18 13:40:52]   Test Accuracy         : 80.97%
+[2026-11-18 13:40:52]   Test Balanced Accuracy: 81.64%
+[2026-11-18 13:40:52]   Test Macro F1         : 79.23%
+[2026-11-18 13:40:52]   Chickenpox   Sensitivity: 87.42% (139/159)
+[2026-11-18 13:40:52]   Cowpox       Sensitivity: 71.22% (99/139)
+[2026-11-18 13:40:52]   HFMD         Sensitivity: 95.78% (318/332)
+[2026-11-18 13:40:52]   Healthy      Sensitivity: 90.25% (213/236)
+[2026-11-18 13:40:52]   Measles      Sensitivity: 74.55% (82/110)
+[2026-11-18 13:40:52]   Monkeypox    Sensitivity: 70.60% (413/585)
+[2026-11-18 13:40:52]   Per-Source-Family Majority Vote Accuracy: 85.96%
+[2026-11-18 13:40:52]   Per-Source-Family Macro F1               : 83.93%
+[2026-11-18 13:40:52]   Measles Family-Level Detection: 75.0% (6/8 unseen families)
+[2026-11-18 13:40:52] Saved grouped metrics to F:\Clude cccccccccccccccccccccccc\data we test\03_Measles_Viral_Rash\outputs\grouped_metrics.json
+[2026-11-18 13:40:52] Total training & evaluation elapsed: 388.1 seconds

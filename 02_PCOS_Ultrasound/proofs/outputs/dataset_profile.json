@@ -1,0 +1,30 @@
+{
+  "dataset_name": "Ovarian Ultrasound Dataset (Saadat et al. / Borna et al. 2025)",
+  "source": "https://github.com/HananSaadat/ovarian_ultrasound_dataset",
+  "license": "CC BY 4.0",
+  "reference_paper": "Borna et al., Frontiers in Physiology 2025, doi:10.3389/fphys.2025.1520898",
+  "total_images": 301,
+  "corrupted_images": 0,
+  "exact_duplicates": 2,
+  "class_counts": {
+    "Dominant_Follicle": 144,
+    "Normal": 41,
+    "PCO": 116
+  },
+  "class_percentages": {
+    "Dominant_Follicle": 47.84,
+    "Normal": 13.62,
+    "PCO": 38.54
+  },
+  "image_dimensions_sample": {
+    "first_image_size": [
+      513,
+      728
+    ],
+    "modes_detected": [
+      "L",
+      "RGB"
+    ]
+  },
+  "scientific_disclaimer": "These ultrasound categories (Normal, Dominant Follicle, PCO) reflect ovarian morphological findings, which are NOT equivalent to a full clinical diagnosis of PCOS (which requires Rotterdam criteria including hyperandrogenism and ovulatory dysfunction). The small number of Normal images (N=41) poses an imbalance constraint."
+}

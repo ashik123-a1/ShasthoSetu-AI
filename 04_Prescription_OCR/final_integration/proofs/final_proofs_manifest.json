@@ -1,0 +1,87 @@
+{
+  "zip_path": "FINAL_INTEGRATION_PROOFS.zip",
+  "zip_size_bytes": 30870,
+  "zip_sha256": "ddf67648d405beafa00ebefe0dd4e676aaf0790236ead8543d74ac10953a4ad4",
+  "packed_files": [
+    {
+      "file": "FINAL_EVALUATION_REPORT.md",
+      "size_bytes": 6097,
+      "sha256": "076d59d98f48b7f96dd998cfda2055ba586d13aeb7e9df729f70dff0d922db72"
+    },
+    {
+      "file": "QUARANTINE_CONSISTENCY_REPORT.md",
+      "size_bytes": 4713,
+      "sha256": "eb22f38732ce2cac970aa0896b666ed211ae9af32e986e4908c7e75b56fbaf30"
+    },
+    {
+      "file": "TESTED_SAFETY_GATE_IMPLEMENTATION.md",
+      "size_bytes": 5260,
+      "sha256": "4d6adddad3678bbe186eddb2f366fc7cf739735e0adf5290ec4125f3fe8a541a"
+    },
+    {
+      "file": "HUMAN_VERIFICATION_WORKFLOW.md",
+      "size_bytes": 5414,
+      "sha256": "f7382aceba2794fac53a2afb0b568bddde8c15338198b35f366990fddd645a1f"
+    },
+    {
+      "file": "OUTSTANDING_LIMITATIONS.md",
+      "size_bytes": 3130,
+      "sha256": "d7576d03e7f24a6d6fd44c4f82c8ba8acd900326672b102666ef8c2224c65bac"
+    },
+    {
+      "file": "REPRODUCIBILITY_REPORT.md",
+      "size_bytes": 4836,
+      "sha256": "e114a0e33c3e6fc0ac9d948a605456479a9e202f4ea3cb5a97a2e42a9cd73bb1"
+    },
+    {
+      "file": "reproduce_final.ps1",
+      "size_bytes": 2110,
+      "sha256": "24cbb0d84558da50a24fb4ffb56fb993f8f000e9fe45733498b3587987e3cfb2"
+    },
+    {
+      "file": "quarantine_audit.json",
+      "size_bytes": 5796,
+      "sha256": "65248e4fc5ef397aca790f786f123f08121ec2e4aaca3de295b156c6639da6c9"
+    },
+    {
+      "file": "src\\safety_gate.py",
+      "size_bytes": 11277,
+      "sha256": "e39b5ee9a9fafeca01d58b9e707777e1b3a23667478b76e39367fc481f88a97c"
+    },
+    {
+      "file": "src\\demo_server.py",
+      "size_bytes": 2198,
+      "sha256": "53ad9d75acb7c61f6ef53455f6d2ee61c66d582dfb1a742192276cdc506e9ec2"
+    },
+    {
+      "file": "src\\verify_quarantine_consistency.py",
+      "size_bytes": 3773,
+      "sha256": "8b540367df30dc20e998208a490017adca8b5800aa987b625c84a1ba8c6d06b5"
+    },
+    {
+      "file": "tests\\test_safety_gate.py",
+      "size_bytes": 6894,
+      "sha256": "9a3ca8f6bbc1f97bc47172578272338fc33023d1188f6bfcfd04fc876635c003"
+    },
+    {
+      "file": "tests\\test_demo_server.py",
+      "size_bytes": 1679,
+      "sha256": "99d31218dfcf65019e6f4860fd0c05158daf5fd1324a9ae86c187d0ceada4744"
+    },
+    {
+      "file": "demo\\index.html",
+      "size_bytes": 5358,
+      "sha256": "7b7cf132ac61817a2f1837a81e8ef2b6ad0ec31d3f668f58ba4cdb60f21ae1f2"
+    },
+    {
+      "file": "demo\\styles.css",
+      "size_bytes": 4261,
+      "sha256": "9d5a7732481f05e430a0493f19c26b8ff042adce7d1e7987cb5d65fd1dfa79f4"
+    },
+    {
+      "file": "demo\\app.js",
+      "size_bytes": 9717,
+      "sha256": "394e5c6dc5ceda810924c1a4aa5ad958145c931058aee3e7dd01e3be98ede1de"
+    }
+  ]
+}

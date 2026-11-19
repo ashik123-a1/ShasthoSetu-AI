@@ -1,0 +1,3 @@
+Model_Variant,Parameters_M,Device,Peak_VRAM_MB,Mean_Latency_Sec,Sample_RTF,Aggregate_Speedup_X,CER_Percent,WER_Percent,Bengali_Script_Char_Percent,Exact_Match_Rate_Percent,Clinical_Readiness
+Whisper-Tiny,39,cuda:0 (RTX 5060 Ti),182.8,0.2849,0.0216,48.09x,129.64%,137.54%,0.00%,0.00%,Pre-alpha Baseline (Requires Fine-Tuning)
+Whisper-Base,74,cuda:0 (RTX 5060 Ti),335.0,0.3648,0.0275,37.56x,106.28%,116.14%,0.00%,0.00%,Pre-alpha Baseline (Requires Fine-Tuning)

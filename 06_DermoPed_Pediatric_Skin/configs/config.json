@@ -1,0 +1,24 @@
+{
+  "module_name": "06_DermoPed_Pediatric_Skin",
+  "dataset": {
+    "source": "Zenodo Record 20829589",
+    "tier": 1,
+    "classes": ["chickenpox", "pediculosis"],
+    "max_crops_per_patient": 40
+  },
+  "training": {
+    "experiment_mode": "EXP_D",
+    "seed": 42,
+    "epochs": 10,
+    "batch_size": 16,
+    "learning_rate": 0.0001,
+    "weight_decay": 0.01,
+    "dropout": 0.5,
+    "freeze_backbone": true,
+    "early_stopping_patience": 3
+  },
+  "device": "cuda",
+  "privacy": {
+    "include_patient_images_in_public_zip": false
+  }
+}

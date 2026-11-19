@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-11-18T20:39:44.846Z",
+  "externalCdnCount": 0,
+  "viewportMetrics": [
+    {
+      "viewport": "mobile_360",
+      "width": 360,
+      "height": 800,
+      "scrollWidth": 360,
+      "innerWidth": 360,
+      "overflowX": false,
+      "fontsLoaded": "loaded",
+      "visibleControlsCount": 26,
+      "controlsUnder44pxHeightCount": 0,
+      "undersizedSample": []
+    },
+    {
+      "viewport": "mobile_390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "overflowX": false,
+      "fontsLoaded": "loaded",
+      "visibleControlsCount": 26,
+      "controlsUnder44pxHeightCount": 0,
+      "undersizedSample": []
+    },
+    {
+      "viewport": "tablet_768",
+      "width": 768,
+      "height": 1024,
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "overflowX": false,
+      "fontsLoaded": "loaded",
+      "visibleControlsCount": 31,
+      "controlsUnder44pxHeightCount": 0,
+      "undersizedSample": []
+    },
+    {
+      "viewport": "desktop_1440",
+      "width": 1440,
+      "height": 900,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "overflowX": false,
+      "fontsLoaded": "loaded",
+      "visibleControlsCount": 41,
+      "controlsUnder44pxHeightCount": 0,
+      "undersizedSample": []
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

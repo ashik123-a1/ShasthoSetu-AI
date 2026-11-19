@@ -1,0 +1,35 @@
+{
+  "experiment_id": "DERMOPED-T1-V2-EXP_B",
+  "experiment_mode": "EXP_B",
+  "python_version": "3.13.16 (main, Oct  1 2026, 15:40:24) [GCC 13.3.0]",
+  "pytorch_version": "2.14.1+cu130",
+  "torchvision_version": "0.29.1+cu130",
+  "numpy_version": "2.4.6",
+  "batch_size": 16,
+  "max_crops_per_patient": 40,
+  "early_stopping_patience": 3,
+  "note": "This is one controlled mode. Do not use held-out test to choose among modes.",
+  "gpu_hardware": "Tesla T4",
+  "seed": 42,
+  "epochs_trained": 5,
+  "total_training_seconds": 25.32,
+  "tier": 1,
+  "classes": [
+    "chickenpox",
+    "pediculosis"
+  ],
+  "download_telemetry": {
+    "chickenpox.zip": {
+      "status": "downloaded",
+      "elapsed_sec": 337.86,
+      "size_mb": 564.19,
+      "md5": "6f4de33ee140aab91ea626eb860a2544"
+    },
+    "pediculosis.zip": {
+      "status": "downloaded",
+      "elapsed_sec": 100.73,
+      "size_mb": 309.49,
+      "md5": "811b59d0589b16f6cd7bb146f14e9d51"
+    }
+  }
+}

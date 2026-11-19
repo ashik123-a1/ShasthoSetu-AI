@@ -1,0 +1,54 @@
+{
+  "audit_timestamp": "2026-11-18T02:29:00Z",
+  "audited_candidate_datasets": {
+    "Mendeley_MCVSLD": {
+      "identifier": "10.17632/dfztdtfsxz.1",
+      "dataset_name": "Multi-Class Viral Skin Lesion Dataset (MCVSLD)",
+      "provenance": "Web-scraped via Google Image Search and online repositories",
+      "classes_present": [
+        "Measles",
+        "Monkeypox",
+        "Chickenpox",
+        "Cowpox",
+        "HFMD",
+        "Healthy"
+      ],
+      "patient_identifiers_available": false,
+      "clinical_metadata": "None (No patient IDs, no ages, no hospital records)",
+      "laboratory_ground_truth": "Unverified (Web query labels only)",
+      "duplicate_risk": "HIGH (Web scraping frequently gathers identical images at different resolutions/crops)",
+      "patient_disjoint_splitting_feasible": false,
+      "recommendation": "DO NOT USE as clinical benchmark. Lacks patient tracking required by Master SRS v1.0."
+    },
+    "DermoPed_Zenodo": {
+      "identifier": "10.5281/zenodo.20829589",
+      "dataset_name": "DermoPed Paediatric Dataset",
+      "provenance": "IRCCS Azienda Ospedaliero-Universitaria di Bologna, Italy",
+      "classes_relevant_to_rash": {
+        "chickenpox": {
+          "status": "Downloaded locally (564 MB)",
+          "patients": 19,
+          "crops": 575
+        },
+        "morbilliform_exanthema": {
+          "status": "On Zenodo (329.67 MB)",
+          "nature": "Cutaneous morphological reaction pattern"
+        },
+        "maculopapular_exanthema": {
+          "status": "On Zenodo (771.08 MB)",
+          "nature": "General exanthematous eruption"
+        },
+        "viral_exanthema": {
+          "status": "On Zenodo (5.41 GB)",
+          "nature": "Broad viral cutaneous category"
+        }
+      },
+      "patient_identifiers_available": true,
+      "clinical_metadata": "Patient folder structure (patient{n}), access_age, sex",
+      "laboratory_ground_truth": "Clinical dermatological syndromic presentation",
+      "critical_clinical_boundary": "Morbilliform exanthema is a morphological rash description, NOT confirmed Measles. Never relabel as Measles.",
+      "patient_disjoint_splitting_feasible": true,
+      "recommendation": "Valid for Morphology Classification (Chickenpox vs Morbilliform Exanthema) once storage is allocated."
+    }
+  }
+}

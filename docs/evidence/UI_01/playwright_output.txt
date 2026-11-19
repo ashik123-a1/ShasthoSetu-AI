@@ -1,0 +1,10 @@
+﻿
+> @shasthosetu/web@0.1.0 test:e2e
+> playwright test
+
+
+Running 1 test using 1 worker
+
+  ok 1 e2e\ui01.spec.ts:18:3 › UI-01 Responsive, Accessibility & Screenshot Suite › Verifies 4 responsive viewports, reload persistence, tap targets, modal focus trap & zero console errors (6.4s)
+
+  1 passed (7.9s)

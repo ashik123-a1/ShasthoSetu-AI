@@ -1,0 +1,6 @@
+,precision,recall,f1-score,support
+chickenpox,1.0,1.0,1.0,89.0
+pediculosis,1.0,1.0,1.0,21.0
+accuracy,1.0,1.0,1.0,1.0
+macro avg,1.0,1.0,1.0,110.0
+weighted avg,1.0,1.0,1.0,110.0

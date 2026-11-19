@@ -1,0 +1,4 @@
+model,family_id,true_class,crop_count,vote_distribution,tied_classes,tie_count,max_vote_count,policy_alphabetical_pred,policy_alphabetical_correct,policy_reverse_alpha_pred,policy_reverse_alpha_correct,policy_clinical_priority_pred,policy_clinical_priority_correct
+ResNet18,MKP_117_01,Monkeypox,14,"{'Monkeypox': 7, 'Chickenpox': 7}","Chickenpox, Monkeypox",2,7,Chickenpox,False,Monkeypox,True,Monkeypox,True
+ResNet18,MKP_41_01,Monkeypox,12,"{'Cowpox': 5, 'Monkeypox': 5, 'Chickenpox': 2}","Cowpox, Monkeypox",2,5,Cowpox,False,Monkeypox,True,Monkeypox,True
+MobileNetV3,HFMD_32_01,HFMD,14,"{'Monkeypox': 7, 'Cowpox': 7}","Cowpox, Monkeypox",2,7,Cowpox,False,Monkeypox,False,Monkeypox,False

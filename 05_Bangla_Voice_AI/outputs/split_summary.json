@@ -1,0 +1,30 @@
+{
+  "total_samples": 402,
+  "split_strategy": "Speaker-Independent Grouped Partition (Zero Speaker Leakage)",
+  "splits": {
+    "train": {
+      "utterances": 282,
+      "speakers": 105,
+      "total_duration_sec": 3640.32,
+      "total_words": 5221
+    },
+    "val": {
+      "utterances": 59,
+      "speakers": 22,
+      "total_duration_sec": 735.6,
+      "total_words": 1038
+    },
+    "test": {
+      "utterances": 61,
+      "speakers": 23,
+      "total_duration_sec": 838.26,
+      "total_words": 1177
+    }
+  },
+  "speaker_leakage_audit": {
+    "train_val_overlap": 0,
+    "train_test_overlap": 0,
+    "val_test_overlap": 0,
+    "verified_zero_leakage": true
+  }
+}

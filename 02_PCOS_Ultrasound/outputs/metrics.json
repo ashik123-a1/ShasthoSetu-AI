@@ -1,0 +1,135 @@
+{
+  "experiment": "Ovarian Ultrasound Multi-Class Morphology Classification",
+  "best_model_by_val_f1": "ResNet18",
+  "sample_counts": {
+    "total_unique_images": 299,
+    "train": 209,
+    "val": 45,
+    "test_held_out": 45,
+    "class_distribution": {
+      "Dominant_Follicle": 142,
+      "PCO": 116,
+      "Normal": 41
+    }
+  },
+  "models_evaluated": {
+    "ResNet18": {
+      "best_epoch": 5,
+      "best_val_macro_f1": 0.7314,
+      "test_accuracy": 0.8667,
+      "test_balanced_accuracy": 0.8624,
+      "test_macro_f1": 0.877,
+      "test_loss": 0.5443,
+      "confusion_matrix": [
+        [
+          17,
+          0,
+          4
+        ],
+        [
+          0,
+          5,
+          1
+        ],
+        [
+          1,
+          0,
+          17
+        ]
+      ],
+      "classification_report": {
+        "Dominant_Follicle": {
+          "precision": 0.9444444444444444,
+          "recall": 0.8095238095238095,
+          "f1-score": 0.8717948717948718,
+          "support": 21.0
+        },
+        "Normal": {
+          "precision": 1.0,
+          "recall": 0.8333333333333334,
+          "f1-score": 0.9090909090909091,
+          "support": 6.0
+        },
+        "PCO": {
+          "precision": 0.7727272727272727,
+          "recall": 0.9444444444444444,
+          "f1-score": 0.85,
+          "support": 18.0
+        },
+        "accuracy": 0.8666666666666667,
+        "macro avg": {
+          "precision": 0.9057239057239057,
+          "recall": 0.8624338624338623,
+          "f1-score": 0.876961926961927,
+          "support": 45.0
+        },
+        "weighted avg": {
+          "precision": 0.8831649831649832,
+          "recall": 0.8666666666666667,
+          "f1-score": 0.8680497280497279,
+          "support": 45.0
+        }
+      }
+    },
+    "MobileNetV3": {
+      "best_epoch": 11,
+      "best_val_macro_f1": 0.7231,
+      "test_accuracy": 0.8,
+      "test_balanced_accuracy": 0.8175,
+      "test_macro_f1": 0.8246,
+      "test_loss": 0.5126,
+      "confusion_matrix": [
+        [
+          13,
+          0,
+          8
+        ],
+        [
+          0,
+          5,
+          1
+        ],
+        [
+          0,
+          0,
+          18
+        ]
+      ],
+      "classification_report": {
+        "Dominant_Follicle": {
+          "precision": 1.0,
+          "recall": 0.6190476190476191,
+          "f1-score": 0.7647058823529411,
+          "support": 21.0
+        },
+        "Normal": {
+          "precision": 1.0,
+          "recall": 0.8333333333333334,
+          "f1-score": 0.9090909090909091,
+          "support": 6.0
+        },
+        "PCO": {
+          "precision": 0.6666666666666666,
+          "recall": 1.0,
+          "f1-score": 0.8,
+          "support": 18.0
+        },
+        "accuracy": 0.8,
+        "macro avg": {
+          "precision": 0.8888888888888888,
+          "recall": 0.8174603174603176,
+          "f1-score": 0.8245989304812834,
+          "support": 45.0
+        },
+        "weighted avg": {
+          "precision": 0.8666666666666667,
+          "recall": 0.8,
+          "f1-score": 0.7980748663101604,
+          "support": 45.0
+        }
+      }
+    }
+  },
+  "clinical_disclaimer": "Ultrasound morphology classification (Normal, Dominant Follicle, PCO) reflects imaging appearance and DOES NOT represent autonomous PCOS clinical diagnosis. Clinical diagnosis requires comprehensive Rotterdam criteria including biochemical hyperandrogenism and ovulatory history. Imbalance constraint: Normal class contains only 41 unique images.",
+  "total_runtime_seconds": 32.47
+}

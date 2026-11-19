@@ -1,0 +1,35 @@
+{
+  "experiment_name": "measles_viral_rash_vision_baseline",
+  "dataset": "Multi-Class Viral Skin Lesion Dataset (MCVSLD, Mendeley Data dfztdtfsxz/1)",
+  "authors": "Kazi Rifat Ahmed, Md. Mazbaur Rashid, Suprove Chandra Sarkar, Mujahidul Islam (Daffodil International University)",
+  "license": "CC BY 4.0",
+  "classes": [
+    "Chickenpox",
+    "Cowpox",
+    "HFMD",
+    "Healthy",
+    "Measles",
+    "Monkeypox"
+  ],
+  "num_classes": 6,
+  "input_size": [224, 224],
+  "batch_size": 32,
+  "num_workers": 0,
+  "learning_rate": 0.0001,
+  "weight_decay": 0.0001,
+  "max_epochs": 10,
+  "early_stopping_patience": 3,
+  "metric_for_best_model": "val_macro_f1",
+  "models": [
+    "resnet18",
+    "mobilenet_v3_small"
+  ],
+  "deduplication": {
+    "enabled": true,
+    "strategy": "exact_sha256_canonical_keep_first",
+    "original_images": 11325,
+    "clean_unique_images": 10384,
+    "purged_cross_split_leaks": 305
+  },
+  "random_seed": 42
+}

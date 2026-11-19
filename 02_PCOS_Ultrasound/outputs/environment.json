@@ -1,0 +1,10 @@
+{
+  "os": "Windows-10-10.0.19045-SP0",
+  "python_version": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "AMD64",
+  "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+  "pytorch_version": "2.11.0+cu128",
+  "cuda_version": "12.8",
+  "gpu_device": "NVIDIA GeForce RTX 5060 Ti",
+  "total_vram_gb": 15.93
+}

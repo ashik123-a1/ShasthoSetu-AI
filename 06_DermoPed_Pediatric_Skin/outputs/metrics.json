@@ -1,0 +1,14 @@
+{
+  "experiment_id": "DERMOPED-T1-LOCAL-EXP_D",
+  "device": "cpu",
+  "total_training_sec": 29.77,
+  "best_epoch": 1,
+  "best_val_macro_f1": 0.43902439024390244,
+  "test_crops": 110,
+  "test_patients": 4,
+  "image_accuracy": 1.0,
+  "image_macro_f1": 1.0,
+  "patient_accuracy": 1.0,
+  "patient_macro_f1": 1.0,
+  "timestamp_utc": "2026-11-17T12:52:25.742876+00:00"
+}

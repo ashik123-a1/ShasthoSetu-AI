@@ -1,0 +1,23 @@
+[2026-11-18 03:13:01] ======================================================================
+[2026-11-18 03:13:01] ShasthoSetu AI — Bilingual Doctor's Prescription OCR Benchmark
+[2026-11-18 03:13:01] ======================================================================
+[2026-11-18 03:13:01] Device: NVIDIA GeForce RTX 5060 Ti (GPU Acceleration: True)
+[2026-11-18 03:13:01] Total test prescriptions to benchmark: 150
+[2026-11-18 03:13:01] Initializing EasyOCR Bilingual Reader (['bn', 'en']) on GPU...
+[2026-11-18 03:13:03] EasyOCR engine successfully initialized.
+[2026-11-18 03:13:18]   Processed 25/150 (16.7%) | Speed: 1.42 img/s | Avg CER so far: 106.46%
+[2026-11-18 03:13:35]   Processed 50/150 (33.3%) | Speed: 1.45 img/s | Avg CER so far: 118.33%
+[2026-11-18 03:13:52]   Processed 75/150 (50.0%) | Speed: 1.46 img/s | Avg CER so far: 108.40%
+[2026-11-18 03:14:15]   Processed 100/150 (66.7%) | Speed: 1.36 img/s | Avg CER so far: 108.10%
+[2026-11-18 03:14:30]   Processed 125/150 (83.3%) | Speed: 1.41 img/s | Avg CER so far: 103.74%
+[2026-11-18 03:14:44]   Processed 150/150 (100.0%) | Speed: 1.46 img/s | Avg CER so far: 101.07%
+[2026-11-18 03:14:44] 
+============================== Final Benchmark Metrics ==============================
+[2026-11-18 03:14:44] Test Prescriptions Evaluated: 150
+[2026-11-18 03:14:44] Mean Character Error Rate (CER):       101.07% (Median: 87.55%)
+[2026-11-18 03:14:44] Mean Word Error Rate (WER):            117.32% (Median: 99.84%)
+[2026-11-18 03:14:44] Mean Levenshtein String Similarity:    12.96%
+[2026-11-18 03:14:44] Mean Medication Token Recall:          3.12%
+[2026-11-18 03:14:44] Mean Inference Speed per Prescription: 0.673 seconds (1.48 pages/s)
+[2026-11-18 03:14:44] Prescription OCR benchmark completed successfully in 103.38 seconds.
+[2026-11-18 03:14:44] ======================================================================

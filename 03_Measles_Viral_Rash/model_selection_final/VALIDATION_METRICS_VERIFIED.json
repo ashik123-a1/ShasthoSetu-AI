@@ -1,0 +1,703 @@
+{
+  "metadata": {
+    "verification_timestamp": "2026-11-18 17:16:26",
+    "device": "cuda:0",
+    "gpu_name": "NVIDIA GeForce RTX 5060 Ti",
+    "classes": [
+      "Chickenpox",
+      "Cowpox",
+      "HFMD",
+      "Healthy",
+      "Measles",
+      "Monkeypox"
+    ],
+    "validation_sample_count": 1544,
+    "validation_family_count": 113,
+    "test_sample_count": 1561,
+    "test_family_count": 114
+  },
+  "checkpoints": {
+    "resnet18": {
+      "architecture": "ResNet18",
+      "checkpoint_file": "resnet18_grouped_best.pth",
+      "sha256": "809a202a7f9e3a05c8306bedef2ba0fbe45f15bb935e435458f752be4eae0571",
+      "size_mb": 42.72,
+      "total_parameters": 11179590,
+      "trainable_parameters": 11179590,
+      "inference_latency_ms": 1.66
+    },
+    "mobilenet_v3_small": {
+      "architecture": "MobileNetV3-Small",
+      "checkpoint_file": "mobilenet_v3_small_grouped_best.pth",
+      "sha256": "c80a4da6421f14405eec4190c571ec2f558d5e507f67ac1e255539d9fcae4c05",
+      "size_mb": 5.95,
+      "total_parameters": 1524006,
+      "trainable_parameters": 1524006,
+      "inference_latency_ms": 3.24
+    }
+  },
+  "validation_evaluation": {
+    "resnet18": {
+      "image_level": {
+        "accuracy": 84.65,
+        "balanced_accuracy": 87.19,
+        "macro_f1": 84.22,
+        "weighted_f1": 84.73,
+        "class_recalls_percent": {
+          "Chickenpox": 78.0,
+          "Cowpox": 99.27,
+          "HFMD": 91.04,
+          "Healthy": 85.96,
+          "Measles": 91.94,
+          "Monkeypox": 76.91
+        },
+        "class_support": {
+          "Chickenpox": 150,
+          "Cowpox": 137,
+          "HFMD": 335,
+          "Healthy": 235,
+          "Measles": 124,
+          "Monkeypox": 563
+        },
+        "class_detected": {
+          "Chickenpox": 117,
+          "Cowpox": 136,
+          "HFMD": 305,
+          "Healthy": 202,
+          "Measles": 114,
+          "Monkeypox": 433
+        },
+        "measles_recall_percent": 91.94,
+        "measles_detected_ratio": "114/124",
+        "confusion_matrix": [
+          [
+            117,
+            13,
+            10,
+            1,
+            2,
+            7
+          ],
+          [
+            0,
+            136,
+            0,
+            1,
+            0,
+            0
+          ],
+          [
+            4,
+            13,
+            305,
+            4,
+            1,
+            8
+          ],
+          [
+            9,
+            0,
+            13,
+            202,
+            9,
+            2
+          ],
+          [
+            0,
+            0,
+            1,
+            1,
+            114,
+            8
+          ],
+          [
+            39,
+            30,
+            36,
+            25,
+            0,
+            433
+          ]
+        ]
+      },
+      "family_level": {
+        "accuracy": 85.84,
+        "balanced_accuracy": 88.49,
+        "macro_f1": 85.73,
+        "family_recalls_percent": {
+          "Chickenpox": 81.82,
+          "Cowpox": 100.0,
+          "HFMD": 95.83,
+          "Healthy": 88.24,
+          "Measles": 88.89,
+          "Monkeypox": 76.19
+        },
+        "family_support": {
+          "Chickenpox": 11,
+          "Cowpox": 10,
+          "HFMD": 24,
+          "Healthy": 17,
+          "Measles": 9,
+          "Monkeypox": 42
+        },
+        "family_detected": {
+          "Chickenpox": 9,
+          "Cowpox": 10,
+          "HFMD": 23,
+          "Healthy": 15,
+          "Measles": 8,
+          "Monkeypox": 32
+        },
+        "measles_family_recall_percent": 88.89,
+        "measles_family_detected_ratio": "8/9",
+        "confusion_matrix": [
+          [
+            9,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            10,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            23,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1,
+            15,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            8,
+            1
+          ],
+          [
+            2,
+            3,
+            3,
+            2,
+            0,
+            32
+          ]
+        ]
+      }
+    },
+    "mobilenet_v3_small": {
+      "image_level": {
+        "accuracy": 81.15,
+        "balanced_accuracy": 84.04,
+        "macro_f1": 81.56,
+        "weighted_f1": 81.21,
+        "class_recalls_percent": {
+          "Chickenpox": 82.67,
+          "Cowpox": 91.24,
+          "HFMD": 84.48,
+          "Healthy": 81.28,
+          "Measles": 90.32,
+          "Monkeypox": 74.25
+        },
+        "class_support": {
+          "Chickenpox": 150,
+          "Cowpox": 137,
+          "HFMD": 335,
+          "Healthy": 235,
+          "Measles": 124,
+          "Monkeypox": 563
+        },
+        "class_detected": {
+          "Chickenpox": 124,
+          "Cowpox": 125,
+          "HFMD": 283,
+          "Healthy": 191,
+          "Measles": 112,
+          "Monkeypox": 418
+        },
+        "measles_recall_percent": 90.32,
+        "measles_detected_ratio": "112/124",
+        "confusion_matrix": [
+          [
+            124,
+            2,
+            2,
+            0,
+            1,
+            21
+          ],
+          [
+            0,
+            125,
+            0,
+            0,
+            0,
+            12
+          ],
+          [
+            5,
+            9,
+            283,
+            3,
+            10,
+            25
+          ],
+          [
+            6,
+            0,
+            17,
+            191,
+            12,
+            9
+          ],
+          [
+            2,
+            1,
+            1,
+            3,
+            112,
+            5
+          ],
+          [
+            57,
+            22,
+            43,
+            22,
+            1,
+            418
+          ]
+        ]
+      },
+      "family_level": {
+        "accuracy": 86.73,
+        "balanced_accuracy": 89.31,
+        "macro_f1": 87.34,
+        "family_recalls_percent": {
+          "Chickenpox": 90.91,
+          "Cowpox": 90.0,
+          "HFMD": 91.67,
+          "Healthy": 82.35,
+          "Measles": 100.0,
+          "Monkeypox": 80.95
+        },
+        "family_support": {
+          "Chickenpox": 11,
+          "Cowpox": 10,
+          "HFMD": 24,
+          "Healthy": 17,
+          "Measles": 9,
+          "Monkeypox": 42
+        },
+        "family_detected": {
+          "Chickenpox": 10,
+          "Cowpox": 9,
+          "HFMD": 22,
+          "Healthy": 14,
+          "Measles": 9,
+          "Monkeypox": 34
+        },
+        "measles_family_recall_percent": 100.0,
+        "measles_family_detected_ratio": "9/9",
+        "confusion_matrix": [
+          [
+            10,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            9,
+            0,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            22,
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1,
+            14,
+            1,
+            1
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            9,
+            0
+          ],
+          [
+            2,
+            2,
+            3,
+            1,
+            0,
+            34
+          ]
+        ]
+      }
+    }
+  },
+  "test_evaluation_historical_reference": {
+    "resnet18": {
+      "image_level": {
+        "accuracy": 83.34,
+        "balanced_accuracy": 85.09,
+        "macro_f1": 82.62,
+        "weighted_f1": 83.35,
+        "class_recalls_percent": {
+          "Chickenpox": 81.76,
+          "Cowpox": 88.49,
+          "HFMD": 98.49,
+          "Healthy": 88.56,
+          "Measles": 80.91,
+          "Monkeypox": 72.31
+        },
+        "class_support": {
+          "Chickenpox": 159,
+          "Cowpox": 139,
+          "HFMD": 332,
+          "Healthy": 236,
+          "Measles": 110,
+          "Monkeypox": 585
+        },
+        "class_detected": {
+          "Chickenpox": 130,
+          "Cowpox": 123,
+          "HFMD": 327,
+          "Healthy": 209,
+          "Measles": 89,
+          "Monkeypox": 423
+        },
+        "measles_recall_percent": 80.91,
+        "measles_detected_ratio": "89/110",
+        "confusion_matrix": [
+          [
+            130,
+            5,
+            0,
+            5,
+            0,
+            19
+          ],
+          [
+            1,
+            123,
+            0,
+            4,
+            0,
+            11
+          ],
+          [
+            0,
+            0,
+            327,
+            2,
+            2,
+            1
+          ],
+          [
+            0,
+            0,
+            6,
+            209,
+            2,
+            19
+          ],
+          [
+            10,
+            0,
+            0,
+            1,
+            89,
+            10
+          ],
+          [
+            60,
+            52,
+            21,
+            21,
+            8,
+            423
+          ]
+        ]
+      },
+      "family_level": {
+        "accuracy": 85.09,
+        "balanced_accuracy": 87.42,
+        "macro_f1": 84.38,
+        "family_recalls_percent": {
+          "Chickenpox": 83.33,
+          "Cowpox": 100.0,
+          "HFMD": 100.0,
+          "Healthy": 94.12,
+          "Measles": 75.0,
+          "Monkeypox": 72.09
+        },
+        "family_support": {
+          "Chickenpox": 12,
+          "Cowpox": 10,
+          "HFMD": 24,
+          "Healthy": 17,
+          "Measles": 8,
+          "Monkeypox": 43
+        },
+        "family_detected": {
+          "Chickenpox": 10,
+          "Cowpox": 10,
+          "HFMD": 24,
+          "Healthy": 16,
+          "Measles": 6,
+          "Monkeypox": 31
+        },
+        "measles_family_recall_percent": 75.0,
+        "measles_family_detected_ratio": "6/8",
+        "confusion_matrix": [
+          [
+            10,
+            0,
+            0,
+            0,
+            0,
+            2
+          ],
+          [
+            0,
+            10,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            24,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            16,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            6,
+            1
+          ],
+          [
+            4,
+            4,
+            1,
+            2,
+            1,
+            31
+          ]
+        ]
+      }
+    },
+    "mobilenet_v3_small": {
+      "image_level": {
+        "accuracy": 80.97,
+        "balanced_accuracy": 81.64,
+        "macro_f1": 79.23,
+        "weighted_f1": 80.98,
+        "class_recalls_percent": {
+          "Chickenpox": 87.42,
+          "Cowpox": 71.22,
+          "HFMD": 95.78,
+          "Healthy": 90.25,
+          "Measles": 74.55,
+          "Monkeypox": 70.6
+        },
+        "class_support": {
+          "Chickenpox": 159,
+          "Cowpox": 139,
+          "HFMD": 332,
+          "Healthy": 236,
+          "Measles": 110,
+          "Monkeypox": 585
+        },
+        "class_detected": {
+          "Chickenpox": 139,
+          "Cowpox": 99,
+          "HFMD": 318,
+          "Healthy": 213,
+          "Measles": 82,
+          "Monkeypox": 413
+        },
+        "measles_recall_percent": 74.55,
+        "measles_detected_ratio": "82/110",
+        "confusion_matrix": [
+          [
+            139,
+            0,
+            3,
+            0,
+            0,
+            17
+          ],
+          [
+            10,
+            99,
+            0,
+            9,
+            0,
+            21
+          ],
+          [
+            1,
+            1,
+            318,
+            5,
+            5,
+            2
+          ],
+          [
+            1,
+            1,
+            7,
+            213,
+            4,
+            10
+          ],
+          [
+            10,
+            2,
+            0,
+            2,
+            82,
+            14
+          ],
+          [
+            68,
+            40,
+            21,
+            28,
+            15,
+            413
+          ]
+        ]
+      },
+      "family_level": {
+        "accuracy": 85.96,
+        "balanced_accuracy": 86.57,
+        "macro_f1": 83.93,
+        "family_recalls_percent": {
+          "Chickenpox": 100.0,
+          "Cowpox": 70.0,
+          "HFMD": 100.0,
+          "Healthy": 100.0,
+          "Measles": 75.0,
+          "Monkeypox": 74.42
+        },
+        "family_support": {
+          "Chickenpox": 12,
+          "Cowpox": 10,
+          "HFMD": 24,
+          "Healthy": 17,
+          "Measles": 8,
+          "Monkeypox": 43
+        },
+        "family_detected": {
+          "Chickenpox": 12,
+          "Cowpox": 7,
+          "HFMD": 24,
+          "Healthy": 17,
+          "Measles": 6,
+          "Monkeypox": 32
+        },
+        "measles_family_recall_percent": 75.0,
+        "measles_family_detected_ratio": "6/8",
+        "confusion_matrix": [
+          [
+            12,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            7,
+            0,
+            1,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            24,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            17,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0,
+            0,
+            6,
+            1
+          ],
+          [
+            4,
+            3,
+            2,
+            1,
+            1,
+            32
+          ]
+        ]
+      }
+    }
+  }
+}

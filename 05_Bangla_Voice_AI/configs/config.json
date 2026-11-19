@@ -1,0 +1,30 @@
+{
+  "experiment_name": "ShasthoSetu_Bangla_Voice_AI_Benchmark",
+  "dataset": {
+    "name": "FLEURS Bengali Speech Recognition Benchmark (bn_in)",
+    "sampling_rate": 16000,
+    "split_strategy": "Speaker-Independent Grouped Partition",
+    "test_split_path": "data/processed/split_manifest.csv"
+  },
+  "model": {
+    "architecture": "Whisper-Tiny (OpenAI)",
+    "pretrained_checkpoint": "openai/whisper-tiny",
+    "task": "transcribe",
+    "language": "bn",
+    "device": "cuda:0",
+    "fp16": true
+  },
+  "evaluation": {
+    "target_split": "test",
+    "sample_count": 61,
+    "speaker_count": 23,
+    "metrics": ["CER", "WER", "Levenshtein_Similarity", "Latency_Seconds", "RTF"],
+    "clinical_voice_tests": [
+      "রোগীর রক্তচাপ ১২০ বাই ৮০",
+      "প্যারাসিটামল ৫০০ মিলিগ্রাম দিনে তিনবার",
+      "জরুরী বিভাগে দ্রুত স্থানান্তর করুন",
+      "অক্সিজেন স্যাচুরেশন ৯২ শতাংশ",
+      "ডায়াবেটিস পরীক্ষা ও ইসিজি রিপোর্ট পাঠান"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+[2026-11-18 03:01:08] ======================================================================
+[2026-11-18 03:01:08] ShasthoSetu AI — Measles & Viral Skin Lesions Vision Pipeline
+[2026-11-18 03:01:08] ======================================================================
+[2026-11-18 03:01:08] Checking CUDA device and hardware environment...
+[2026-11-18 03:01:08] Active GPU: NVIDIA GeForce RTX 5060 Ti (Total VRAM: 15.93 GB)
+[2026-11-18 03:01:08] Dataset partitions: Train=7268, Val=1558, Test=1558 (Total Clean Unique=10384)
+[2026-11-18 03:01:08] Class counts in training: [np.int64(708), np.int64(642), np.int64(1567), np.int64(1104), np.int64(533), np.int64(2714)]
+[2026-11-18 03:01:08] Calculated inverse class weights: [np.float64(1.7109), np.float64(1.8868), np.float64(0.773), np.float64(1.0972), np.float64(2.2727), np.float64(0.4463)]
+[2026-11-18 03:01:08] 
+============================== Training resnet18 ==============================

@@ -1,0 +1,54 @@
+{
+  "audit_timestamp": "2026-11-18T02:28:00Z",
+  "drive_storage_snapshot": {
+    "C": {
+      "total_gb": 190.83,
+      "used_gb": 181.32,
+      "free_gb": 9.5
+    },
+    "D": {
+      "total_gb": 465.76,
+      "used_gb": 460.5,
+      "free_gb": 5.26
+    },
+    "E": {
+      "total_gb": 153.34,
+      "used_gb": 151.76,
+      "free_gb": 1.58
+    },
+    "F": {
+      "total_gb": 309.22,
+      "used_gb": 302.99,
+      "free_gb": 6.23
+    },
+    "G": {
+      "total_gb": 757.0,
+      "used_gb": 744.43,
+      "free_gb": 12.57
+    }
+  },
+  "storage_requirements": {
+    "morbilliform_exanthema_estimated_gb": {
+      "compressed_archive_gb": 0.33,
+      "extracted_raw_gb": 0.35,
+      "curated_crops_gb": 0.32,
+      "checkpoints_and_outputs_gb": 0.2,
+      "temp_and_buffer_gb": 0.3,
+      "total_required_gb": 1.5
+    },
+    "mendeley_mcvsld_estimated_gb": {
+      "compressed_archive_gb": 0.7,
+      "extracted_raw_gb": 1.2,
+      "curated_crops_gb": 0.8,
+      "checkpoints_and_outputs_gb": 0.3,
+      "temp_and_buffer_gb": 0.5,
+      "total_required_gb": 3.5
+    }
+  },
+  "evaluation": {
+    "drive_f_feasibility": "FAIL (0.90 GB free vs 1.50 GB minimum required for Morbilliform; 3.50 GB for MCVSLD)",
+    "drive_g_feasibility": "PASS (12.57 GB free available)",
+    "safety_decision": "DOWNLOAD_BLOCKED_ON_DRIVE_F",
+    "policy_enforcement": "No automated data deletion of user files. Do not download large datasets to F: while only about 0.9 GB remains."
+  }
+}

@@ -1,0 +1,180 @@
+[
+  {
+    "stem": "0174",
+    "disk_file": "0174.jpg",
+    "dimensions": "912x1144",
+    "file_size": 62275,
+    "sha256": "5a743236819909faa475d63227bee3ce74fc7fde3a1ae46f60d8cfb850627bda",
+    "ocr_text_preview": "Shaheed Suhrawardy Medical College & Hপsতitলl | শহীদ সেSuরrওwardy ঙিকল কলেজ হাসপাতাল | Shur-u-Bangla Nigar Dhaka 1207 | Block | R | ^ mg | Cap/lab | 0",
+    "csv_match_count": 1,
+    "csv_matches": [
+      {
+        "raw_row_index": 174,
+        "raw_filename": "0174,jpg",
+        "en_preview": "Histal 4 mg tablet should be taken one tablet at night for 30 days. Tumona 10 mg tablet should be ta",
+        "bn_preview": "হিস্টাল ৪ মি.গ্রা ট্যাবলেট রাতে একটি করে ৩০ দিন খেতে হবে। টুমোনা ১০ মি.গ্রা ট্যাবলেট রাতে একটি করে ৩"
+      }
+    ]
+  },
+  {
+    "stem": "0185",
+    "disk_file": "0185.jpg",
+    "dimensions": "897x1180",
+    "file_size": 59451,
+    "sha256": "d4cb9a0396571c0a75287547aa79799b29fd53e42fb91ad6a2f694bebfde0299",
+    "ocr_text_preview": "R | Poiica Case | I;l0 Paysical Assault | 18 | ) | পয | ENT | ('241)",
+    "csv_match_count": 2,
+    "csv_matches": [
+      {
+        "raw_row_index": 185,
+        "raw_filename": "0185.jpg",
+        "en_preview": "\nHistal 4 mg tablet should be taken one tablet at night for 21 days. Benkil 250 mg tablet should be ",
+        "bn_preview": "হিস্টাল ৪ মি.গ্রা ট্যাবলেট রাতে একটি করে ২১ দিন খেতে হবে। বেনকিল ২৫০ মি.গ্রা ট্যাবলেট সকালে ও রাতে এ"
+      },
+      {
+        "raw_row_index": 186,
+        "raw_filename": "0185.jpg",
+        "en_preview": "\nDiclofen 50 mg tablet should be taken after a full meal one tablet in the morning and at night for ",
+        "bn_preview": "ডাইক্লোফেন ৫০ মি.গ্রা ট্যাবলেট ভরা পেটে সকালে ও রাতে একটি করে ৩ দিন খেতে হবে। ম্যাক্সপ্রো ২০ মি.গ্রা"
+      }
+    ]
+  },
+  {
+    "stem": "0186",
+    "disk_file": "0186.jpg",
+    "dimensions": "938x1254",
+    "file_size": 46816,
+    "sha256": "0e9bb7f1a34bc7a62a6f93eb5b8baae97de21a9d922c630c1f8b56f714910d48",
+    "ocr_text_preview": "Sher-e-Bangla Nagar Dhaka-1207 | R | Caplrab   D১' o Lo{ \"mg | $ 6 | .১_+..8...+..2.!,.. | 9 দিন | ('^%) | Cap/Tab  M৭ প 9 স7 ong",
+    "csv_match_count": 0,
+    "csv_matches": []
+  },
+  {
+    "stem": "0674",
+    "disk_file": "0674.jpeg",
+    "dimensions": "780x1086",
+    "file_size": 63846,
+    "sha256": "364969a300358051545283344c4ad1ca64a1fb697951eb4599e9c8f98b8de677",
+    "ocr_text_preview": "HealthCare Global Enterprises Ltd; | HICE৫ | 48)33 | 44453379 | Palie' | Consult | ৎ | MAL",
+    "csv_match_count": 0,
+    "csv_matches": []
+  },
+  {
+    "stem": "0675",
+    "disk_file": "0675.jpeg",
+    "dimensions": "754x900",
+    "file_size": 45566,
+    "sha256": "20f9e8912c002a424192392c69b2ca3820a8a8d821ec3ab362f07fe6e8ff755b",
+    "ocr_text_preview": "CHUS | Centre hospitalier universitaire de Sherbrooke | 819 346-1110 | Mme, M | B | Iere wiwpwov | ($১ | TPU",
+    "csv_match_count": 1,
+    "csv_matches": [
+      {
+        "raw_row_index": 674,
+        "raw_filename": "0675.jpg",
+        "en_preview": "Acetaminophen 650 mg tablet should be taken as directed for four days.",
+        "bn_preview": "অ্যাসিটামিনোফেন ৬৫০ মিলিগ্রাম ট্যাবলেট নির্দেশ অনুযায়ী চার দিন সেবন করতে হবে।"
+      }
+    ]
+  },
+  {
+    "stem": "0676",
+    "disk_file": "0676.jpeg",
+    "dimensions": "406x560",
+    "file_size": 16161,
+    "sha256": "cb7f76fa6f9928073d3755f7fe17bf03cb5d6ac35cdf11b292543ea47c0054b1",
+    "ocr_text_preview": "34{1 | 154!2 | 14|43= | )2 ? | 44' | 3 | C_&৮ _ | 405",
+    "csv_match_count": 2,
+    "csv_matches": [
+      {
+        "raw_row_index": 675,
+        "raw_filename": "0676.jpg",
+        "en_preview": "Liposomal Amphotericin IV B injection 350 mg should be administered as directed for four weeks. Amph",
+        "bn_preview": "লিপোসোমাল অ্যামফোটেরিসিন IV B ইনজেকশন ৩৫০ মিলিগ্রাম নির্দেশ অনুযায়ী চার সপ্তাহ দিতে হবে। অ্যামফোটের"
+      },
+      {
+        "raw_row_index": 676,
+        "raw_filename": "0676.jpg",
+        "en_preview": "Ferox capsule should be taken three times daily in the morning, afternoon, and at night for five day",
+        "bn_preview": "ফেরক্স ক্যাপসুল প্রতিদিন সকালে, দুপুরে ও রাতে তিনবার পাঁচ দিন সেবন করতে হবে।"
+      }
+    ]
+  },
+  {
+    "stem": "0747",
+    "disk_file": "0747.jpeg",
+    "dimensions": "386x516",
+    "file_size": 18301,
+    "sha256": "91acc19806e9ed39f802f94a100f4c8e5ed4eede0133330ec53ad70a0eaf67f6",
+    "ocr_text_preview": "7 | IVc)ল৮  297 | 7 | CIদ১৮ { | U~w4 | ১304- | 4)%4",
+    "csv_match_count": 0,
+    "csv_matches": []
+  },
+  {
+    "stem": "0729",
+    "disk_file": "0729.jpeg",
+    "dimensions": "750x435",
+    "file_size": 34366,
+    "sha256": "355bd02d18ef0ae880d1976d5c6e2fb8f88d9f90e08b82cfa68c95cc8b44d19e",
+    "ocr_text_preview": "WIG51L ^|0 | sit Late | 19/06/2021 Suturday | পtzqiusi5 ^0৫e: | 19/06/1021 | UvLd  | ৫৭ | ৬$",
+    "csv_match_count": 1,
+    "csv_matches": [
+      {
+        "raw_row_index": 729,
+        "raw_filename": "0729.jpg",
+        "en_preview": "The patient has been suffering from jaundice for approximately one month. There is associated prurit",
+        "bn_preview": "রোগী প্রায় এক মাস ধরে জন্ডিসে ভুগছেন। এর সঙ্গে চুলকানি রয়েছে এবং মলের রং ফ্যাকাশে। শারীরিক পরীক্ষা"
+      }
+    ]
+  },
+  {
+    "stem": "0775",
+    "disk_file": "0775.jpeg",
+    "dimensions": "750x435",
+    "file_size": 34366,
+    "sha256": "355bd02d18ef0ae880d1976d5c6e2fb8f88d9f90e08b82cfa68c95cc8b44d19e",
+    "ocr_text_preview": "WIG51L ^|0 | sit Late | 19/06/2021 Suturday | পtzqiusi5 ^0৫e: | 19/06/1021 | UvLd  | ৫৭ | ৬$",
+    "csv_match_count": 1,
+    "csv_matches": [
+      {
+        "raw_row_index": 774,
+        "raw_filename": "0775.jpg",
+        "en_preview": "No regular medicines are listed here as the patient needs admission. The patient has obstructive jau",
+        "bn_preview": "এখানে নিয়মিত কোনো ওষুধের তালিকা দেওয়া নেই কারণ রোগীকে হাসপাতালে ভর্তির প্রয়োজন। রোগীর অবস্ট্রাকটিভ জ"
+      }
+    ]
+  },
+  {
+    "stem": "0756",
+    "disk_file": "0756.jpeg",
+    "dimensions": "504x573",
+    "file_size": 29637,
+    "sha256": "225b69977fd7624468657e019202d89785a65d6ef093f55ea5a2a694f86c5ee1",
+    "ocr_text_preview": "ডI CI1 াগুম সয` | DR UD ALDULUIUICuEEr | UletIrIU? | 4!1[)1[3\"044|[[1101!41 | দ৫0 | |^40 | \"7 | 5_ নিব",
+    "csv_match_count": 1,
+    "csv_matches": [
+      {
+        "raw_row_index": 755,
+        "raw_filename": "0756.jpg",
+        "en_preview": "Tablet Diutrol Plus should be taken one tablet in the morning and one tablet at night. Tablet Sabito",
+        "bn_preview": "ট্যাবলেট ডিউট্রল প্লাস সকালে ১টি এবং রাতে ১টি করে খেতে হবে। ট্যাবলেট সাবিটর ৫০ সকালে আধা ট্যাবলেট এব"
+      }
+    ]
+  },
+  {
+    "stem": "0757",
+    "disk_file": "0757.jpeg",
+    "dimensions": "504x573",
+    "file_size": 29637,
+    "sha256": "225b69977fd7624468657e019202d89785a65d6ef093f55ea5a2a694f86c5ee1",
+    "ocr_text_preview": "ডI CI1 াগুম সয` | DR UD ALDULUIUICuEEr | UletIrIU? | 4!1[)1[3\"044|[[1101!41 | দ৫0 | |^40 | \"7 | 5_ নিব",
+    "csv_match_count": 1,
+    "csv_matches": [
+      {
+        "raw_row_index": 756,
+        "raw_filename": "0757.jpg",
+        "en_preview": "Tablet Diutrol Plus should be taken one tablet in the morning and one tablet at night. Tablet Sabito",
+        "bn_preview": "ট্যাবলেট ডিউট্রল প্লাস সকালে ১টি এবং রাতে ১টি করে খেতে হবে। ট্যাবলেট সাবিটর ৫০ সকালে আধা ট্যাবলেট এব"
+      }
+    ]
+  }
+]

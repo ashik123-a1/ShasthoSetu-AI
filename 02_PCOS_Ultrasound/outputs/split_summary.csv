@@ -1,0 +1,5 @@
+split,total,Dominant_Follicle,Normal,PCO
+Train,209,99,29,81
+Val,45,22,6,17
+Test (Held-Out),45,21,6,18
+Total Unique,299,142,41,116

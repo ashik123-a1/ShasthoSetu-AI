@@ -1,0 +1,369 @@
+{
+  "summary": {
+    "total_detections": 44,
+    "latency_ms": 1029.0,
+    "bangla_tokens_count": 24,
+    "english_tokens_count": 13,
+    "mixed_tokens_count": 1,
+    "mean_bangla_confidence": 0.5597,
+    "mean_english_confidence": 0.6963,
+    "medication_entity_recall_pct": 100.0,
+    "bangla_clinical_sig_recall_pct": 100.0,
+    "cross_translation_drift_pct": 0.0,
+    "script_preservation_verified": true
+  },
+  "tokens": [
+    {
+      "text": "331",
+      "confidence": 0.0227,
+      "script_type": "Numeric / Symbolic",
+      "has_bn": false,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u09ac\u09be\u0982\u09b2\u09be\u09a6\u09c7\u09b6 \u09ab\u09b0\u09ae \u09a8\u0982 \u09ed\u09ec\u09ef",
+      "confidence": 0.9693,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09ac\u09b9\u09bf\u09b0\u09cd\u09ac\u09bf\u09ad\u09be\u0997\u09c0\u09df \u09b0\u09cb\u0997\u09c0\u09b0 \u099f\u09bf\u0995\u09bf\u099f",
+      "confidence": 0.2978,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u09a4\u09be\u09b0\u09bf\u0996",
+      "confidence": 0.9999,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u099a\u09bf\u0995\u09bf\u09ce\u09b8\u09be",
+      "confidence": 0.5948,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "Cap",
+      "confidence": 0.8812,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": "Roxim 400",
+      "confidence": 0.8664,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09e7+\u09e6+\u09e7",
+      "confidence": 0.3892,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u09e9990009999009",
+      "confidence": 0.0293,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u098f\u09a6\u09bf\u09a8",
+      "confidence": 0.9849,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "- \u09a4\u09a6\u09cd\u09a7",
+      "confidence": 0.0332,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "Cap Maxpro 2Omng",
+      "confidence": 0.2684,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": true
+    },
+    {
+      "text": "1+0+1..... \u099a\u09b2\u09ac\u09c7",
+      "confidence": 0.7648,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "Tab. Rolac 1Omg",
+      "confidence": 0.5883,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": true
+    },
+    {
+      "text": "1+1+1.",
+      "confidence": 0.9412,
+      "script_type": "Numeric / Symbolic",
+      "has_bn": false,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09a6\u09bf\u09a8",
+      "confidence": 0.8372,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09ad\u09e9l\u09ee",
+      "confidence": 0.0386,
+      "script_type": "Mixed Script",
+      "has_bn": true,
+      "has_en": true,
+      "is_low_conf": true
+    },
+    {
+      "text": "Tab Tnabil",
+      "confidence": 0.9405,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": "0+0+\u09e7 \u09aa\u09cd\u09b0\u09a4\u09bf\u09a6\u09bf\u09a8 \u09b0\u09be\u09a4\u09c7",
+      "confidence": 0.6745,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "<3",
+      "confidence": 0.4711,
+      "script_type": "Numeric / Symbolic",
+      "has_bn": false,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "Tab Trilock 10 mng",
+      "confidence": 0.3332,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": true
+    },
+    {
+      "text": "[",
+      "confidence": 0.158,
+      "script_type": "Numeric / Symbolic",
+      "has_bn": false,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u09aa\u09cd\u09b0\u09a4\u09bf\u09a6\u09bf\u09a8 \u09b0\u09be\u09a4\u09c7 \u09e7\u099f\u09be \u0995\u09b0\u09c7 \u0996\u09be\u09ac\u09c7\u09a8-",
+      "confidence": 0.6934,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "3h",
+      "confidence": 0.0295,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u09ac\u09be\u0983\u09ac\u09be\u0983\u09b8\u09b8\u09c7\u0983)]\u09a1\u09c8\u09cd\u099f\u09bf\u09ab-\u09ea\u09e7 \u09ee\u09ef-\u09ea\u09dc\u09ea\u09e6",
+      "confidence": 0.2708,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u09ac\u099a\u09bf\u09ac",
+      "confidence": 0.245,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u099f\u09bf\u0995\u09c7\u099f",
+      "confidence": 0.4861,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "_)0|",
+      "confidence": 0.3159,
+      "script_type": "Numeric / Symbolic",
+      "has_bn": false,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "Drop",
+      "confidence": 0.7017,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": "Nasal",
+      "confidence": 0.9998,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": "-\u09ab\u09cb\u0981\u099f\u09be",
+      "confidence": 0.4647,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u09ac\u09ae\u09cd\u09a7 \u09b9\u09b2\u09c7)",
+      "confidence": 0.5387,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "20mg",
+      "confidence": 0.726,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": "Afrin",
+      "confidence": 1.0,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": ">-3",
+      "confidence": 0.789,
+      "script_type": "Numeric / Symbolic",
+      "has_bn": false,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09b2\u09be\u0995\u09c7",
+      "confidence": 0.723,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u0989\u09a1\u09df",
+      "confidence": 0.6607,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09ac\u09be\u09b0",
+      "confidence": 0.2861,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "\u09a6\u09bf\u09a8\u09c7 \u09ea",
+      "confidence": 0.5709,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    },
+    {
+      "text": "Drops",
+      "confidence": 0.7266,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09ac\u09be\u09a8\u09cd\u09a8",
+      "confidence": 0.8973,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "Beuflox-D",
+      "confidence": 0.9903,
+      "script_type": "English Text",
+      "has_bn": false,
+      "has_en": true,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09ab\u09cb\u099f\u09be",
+      "confidence": 0.9137,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": false
+    },
+    {
+      "text": "\u09b8\u09cd\u09b8\u09a5\u09be\u09a3\u09c7",
+      "confidence": 0.1081,
+      "script_type": "Bangla Unicode",
+      "has_bn": true,
+      "has_en": false,
+      "is_low_conf": true
+    }
+  ]
+}

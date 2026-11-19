@@ -1,0 +1,65 @@
+# Virtual environments
+_shared/venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.ipynb_checkpoints/
+
+# Raw medical & clinical data (HIPAA / Privacy compliance)
+01_PCOS_Clinical/data/raw/*
+02_PCOS_Ultrasound/data/raw/*
+03_Measles_Viral_Rash/data/raw/*
+04_Prescription_OCR/data/raw/*
+05_Bangla_Voice_AI/data/raw/*
+
+# Processed patient records & large arrays
+01_PCOS_Clinical/data/processed/*
+02_PCOS_Ultrasound/data/processed/*
+03_Measles_Viral_Rash/data/processed/*
+04_Prescription_OCR/data/processed/*
+05_Bangla_Voice_AI/data/processed/*
+
+# Keep data dirs tracked
+!**/data/raw/.gitkeep
+!**/data/processed/.gitkeep
+
+# Large model checkpoints
+*.pth
+*.pt
+*.bin
+*.onnx
+*.safetensors
+*.joblib
+
+# Logs and system caches
+*.log
+.DS_Store
+Thumbs.db
+
+# Local UI-00 reference repository clones & Playwright scratch artifacts
+_reference_repos/
+node_modules/
+apps/web/dist/
+apps/web/test-results/
+apps/web/playwright-report/
+services/api/data/
+*.db
+*.db-wal
+*.db-shm
+.env
+
+
+# Archives & additional caches/raw assets
+*.zip
+*.tar.gz
+.pytest_cache/
+06_DermoPed_Pediatric_Skin/data/raw/*
+06_DermoPed_Pediatric_Skin/data/processed/*
+venv/
+**/venv/
+.coverage
+apps/web/.vite/

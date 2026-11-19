@@ -1,0 +1,4 @@
+Experiment,Backbone,Loss_Sampler,Val_Macro_F1,Val_Chickenpox_Recall,Val_Pediculosis_Recall,Test_Image_Acc,Test_Patient_Acc,Device
+EXP_A (Baseline v1),Fully Trainable,Double-weighting / Shuffle,48.37%,91.67%,5.00%,95.45%,75.00% (3/4),Colab T4 GPU
+EXP_B (Controlled v2),Fully Trainable,WeightedRandomSampler + Unweighted Loss,57.76%,100.00%,15.00%,92.73%,75.00% (3/4),Colab T4 GPU
+EXP_D (Regularized v3),Frozen (conv1..l3) + Dropout 0.5,WeightedRandomSampler + Unweighted Loss,43.90%,100.00%,0.00%,100.00%,100.00% (4/4),Local PC (CPU execution)

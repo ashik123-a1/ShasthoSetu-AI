@@ -1,0 +1,143 @@
+{
+  "metadata": {
+    "timestamp": "2026-11-18 20:45:59",
+    "hardware": "NVIDIA GeForce RTX 5060 Ti",
+    "device": "cuda:0",
+    "total_samples": 26,
+    "smoke_samples": 6,
+    "extended_samples": 20,
+    "random_seed": 42
+  },
+  "disk_space": {
+    "C:\\": {
+      "total_gb": 190.83,
+      "used_gb": 185.65,
+      "free_gb": 5.17
+    },
+    "F:\\": {
+      "total_gb": 309.22,
+      "used_gb": 295.82,
+      "free_gb": 13.39
+    },
+    "G:\\": {
+      "total_gb": 757.0,
+      "used_gb": 648.47,
+      "free_gb": 108.53
+    }
+  },
+  "models_evaluated": {
+    "Whisper-Base": {
+      "model_id": "openai/whisper-base",
+      "overall_26_samples": {
+        "sample_count": 26,
+        "mean_sample_raw_wer": 315.47,
+        "median_sample_raw_wer": 111.81,
+        "corpus_raw_wer": 243.33,
+        "mean_sample_norm_wer": 315.24,
+        "median_sample_norm_wer": 110.82,
+        "corpus_norm_wer": 242.83,
+        "mean_sample_raw_cer": 211.06,
+        "corpus_raw_cer": 180.4,
+        "mean_sample_norm_cer": 205.39,
+        "corpus_norm_cer": 175.62,
+        "mean_bn_char_pct": 0.0,
+        "exact_match_rate": 0.0
+      },
+      "smoke_test_6_samples": {
+        "sample_count": 6,
+        "mean_sample_raw_wer": 120.55,
+        "median_sample_raw_wer": 116.66,
+        "corpus_raw_wer": 117.33,
+        "mean_sample_norm_wer": 120.55,
+        "median_sample_norm_wer": 116.66,
+        "corpus_norm_wer": 117.33,
+        "mean_sample_raw_cer": 101.22,
+        "corpus_raw_cer": 100.69,
+        "mean_sample_norm_cer": 99.82,
+        "corpus_norm_cer": 99.31,
+        "mean_bn_char_pct": 0.0,
+        "exact_match_rate": 0.0
+      },
+      "extended_research_20_samples": {
+        "sample_count": 20,
+        "mean_sample_raw_wer": 373.95,
+        "median_sample_raw_wer": 107.73,
+        "corpus_raw_wer": 266.67,
+        "mean_sample_norm_wer": 373.64,
+        "median_sample_norm_wer": 107.44,
+        "corpus_norm_wer": 266.01,
+        "mean_sample_raw_cer": 244.01,
+        "corpus_raw_cer": 193.28,
+        "mean_sample_norm_cer": 237.06,
+        "corpus_norm_cer": 187.96,
+        "mean_bn_char_pct": 0.0,
+        "exact_match_rate": 0.0
+      }
+    },
+    "Whisper-Small-Bengali": {
+      "model_id": "anuragshas/whisper-small-bn",
+      "overall_26_samples": {
+        "sample_count": 26,
+        "mean_sample_raw_wer": 45.8,
+        "median_sample_raw_wer": 44.72,
+        "corpus_raw_wer": 45.62,
+        "mean_sample_norm_wer": 38.23,
+        "median_sample_norm_wer": 40.5,
+        "corpus_norm_wer": 39.09,
+        "mean_sample_raw_cer": 13.55,
+        "corpus_raw_cer": 14.58,
+        "mean_sample_norm_cer": 12.24,
+        "corpus_norm_cer": 13.44,
+        "mean_bn_char_pct": 98.37,
+        "exact_match_rate": 0.0
+      },
+      "smoke_test_6_samples": {
+        "sample_count": 6,
+        "mean_sample_raw_wer": 45.55,
+        "median_sample_raw_wer": 40.0,
+        "corpus_raw_wer": 45.33,
+        "mean_sample_norm_wer": 33.89,
+        "median_sample_norm_wer": 30.0,
+        "corpus_norm_wer": 33.33,
+        "mean_sample_raw_cer": 11.41,
+        "corpus_raw_cer": 11.03,
+        "mean_sample_norm_cer": 9.39,
+        "corpus_norm_cer": 8.97,
+        "mean_bn_char_pct": 97.68,
+        "exact_match_rate": 0.0
+      },
+      "extended_research_20_samples": {
+        "sample_count": 20,
+        "mean_sample_raw_wer": 45.88,
+        "median_sample_raw_wer": 45.58,
+        "corpus_raw_wer": 45.68,
+        "mean_sample_norm_wer": 39.53,
+        "median_sample_norm_wer": 43.27,
+        "corpus_norm_wer": 40.15,
+        "mean_sample_raw_cer": 14.19,
+        "corpus_raw_cer": 15.15,
+        "mean_sample_norm_cer": 13.09,
+        "corpus_norm_cer": 14.16,
+        "mean_bn_char_pct": 98.58,
+        "exact_match_rate": 0.0
+      }
+    }
+  },
+  "gpu_benchmarks": {
+    "Whisper-Base": {
+      "model_id": "openai/whisper-base",
+      "parameters": 72593920,
+      "mean_latency_ms": 586.52,
+      "median_latency_ms": 389.81,
+      "peak_vram_mb": 341.47
+    },
+    "Whisper-Small-Bengali": {
+      "model_id": "anuragshas/whisper-small-bn",
+      "parameters": 241734912,
+      "mean_latency_ms": 2198.24,
+      "median_latency_ms": 2135.1,
+      "peak_vram_mb": 1097.13
+    }
+  },
+  "final_decision": "BENGALI_MODEL_IMPROVED"
+}

@@ -1,0 +1,204 @@
+{
+  "project": "ShasthoSetu AI — Multimodal Healthcare Research Platform",
+  "audit_version": "v2.0_corrected_source_family",
+  "audit_date": "2026-11-18",
+  "auditor": "Senior ML Research Auditor & MLOps Engineer",
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5060 Ti 16GB",
+    "driver": "596.36",
+    "cuda": "12.8",
+    "pytorch": "2.11.0+cu128",
+    "os": "Microsoft Windows 11 Enterprise"
+  },
+  "modules": {
+    "01_PCOS_Clinical": {
+      "modality": "Tabular Clinical ML",
+      "execution_type": "Actually Trained (XGBoost)",
+      "dataset_source": "Mendeley Data tw34c7hv7z/1 (CC BY 4.0)",
+      "sample_counts": {
+        "total_patients": 88,
+        "train": 70,
+        "test_held_out": 18,
+        "features": 20
+      },
+      "certified_primary_benchmark": {
+        "protocol": "Repeated 50-Fold Stratified CV (10x5)",
+        "mean_balanced_accuracy": 0.8857,
+        "std_balanced_accuracy": 0.0829,
+        "mean_macro_f1": 0.8839,
+        "std_macro_f1": 0.0833,
+        "mean_sensitivity": 0.9000,
+        "mean_specificity": 0.8714,
+        "mean_roc_auc": 0.9327
+      },
+      "held_out_test_n18": {
+        "balanced_accuracy": 0.9444,
+        "macro_f1": 0.9443,
+        "sensitivity": 0.8889,
+        "specificity": 1.0000,
+        "roc_auc": 0.9877
+      },
+      "top_biomarker": "Estradiol (e2) - Permutation Drop: 0.4408, Gain: 0.3283",
+      "clinical_safety_gate": "Rotterdam Criteria Mandate: Biomarkers provide screening triage; PCOS diagnosis requires pelvic ultrasound and ovulatory history correlation."
+    },
+    "02_PCOS_Ultrasound": {
+      "modality": "Bedside Ovarian Ultrasound Vision",
+      "execution_type": "Actually Trained on GPU (ResNet18)",
+      "dataset_source": "Frontiers in Endocrinology 2025 / GitHub HananSaadat (MIT)",
+      "sample_counts": {
+        "total_images": 299,
+        "dominant_follicle": 142,
+        "pco": 116,
+        "normal": 41
+      },
+      "certified_primary_benchmark": {
+        "protocol": "15-Fold Repeated Stratified Group CV (Zero Sweep Leakage)",
+        "mean_balanced_accuracy": 0.8453,
+        "std_balanced_accuracy": 0.0733,
+        "mean_macro_f1": 0.8542,
+        "std_macro_f1": 0.0653
+      },
+      "historical_held_out_test_n45": {
+        "status": "POTENTIALLY_CONTAMINATED_HELD_OUT_TEST",
+        "reason": "8 near-duplicate pairs (pHash <= 6) crossed between splits (e.g. PCO_60 in Train, PCO_59 in Test with 0.9886 pixel correlation)",
+        "test_accuracy": 0.8667,
+        "test_balanced_accuracy": 0.8624,
+        "test_macro_f1": 0.8770
+      },
+      "clinical_safety_gate": "Ultrasound morphology indicates polycystic appearance, not systemic PCOS. Normal class limited (N=41). External multi-center validation required."
+    },
+    "03_Measles_Viral_Rash": {
+      "modality": "Pediatric Viral Exanthem Vision (MCVSLD)",
+      "execution_type": "Actually Trained on GPU (ResNet18 & MobileNetV3)",
+      "dataset_source": "Mendeley Data dfztdtfsxz/1 (CC BY 4.0 - Daffodil Int. University, Bangladesh)",
+      "sample_counts": {
+        "total_clean_unique_images": 10384,
+        "unique_source_families": 755,
+        "average_crops_per_family": 13.75,
+        "train_families": 528,
+        "train_images": 7279,
+        "val_families": 113,
+        "val_images": 1544,
+        "test_families": 114,
+        "test_images": 1561
+      },
+      "corrected_group_isolated_benchmark": {
+        "status": "CERTIFIED_PRIMARY_BENCHMARK (Zero Source-Family Leakage)",
+        "model": "ResNet18",
+        "best_epoch_on_val": 8,
+        "val_macro_f1": 0.8422,
+        "val_balanced_accuracy": 0.8719,
+        "unseen_test_families_count": 114,
+        "unseen_test_images_count": 1561,
+        "image_level_accuracy": 0.8334,
+        "image_level_balanced_accuracy": 0.8509,
+        "image_level_macro_f1": 0.8262,
+        "image_level_measles_sensitivity": 0.8091,
+        "image_level_measles_detected": "89 / 110",
+        "family_level_majority_vote_accuracy": 0.8509,
+        "family_level_majority_vote_macro_f1": 0.8438,
+        "family_level_measles_detected": "6 / 8 unseen families (75.0%)",
+        "class_recalls": {
+          "Chickenpox": 0.8176,
+          "Cowpox": 0.8849,
+          "HFMD": 0.9849,
+          "Healthy": 0.8856,
+          "Measles": 0.8091,
+          "Monkeypox": 0.7231
+        }
+      },
+      "mobilenetv3_group_isolated_benchmark": {
+        "model": "MobileNetV3-Small",
+        "image_level_accuracy": 0.8097,
+        "image_level_balanced_accuracy": 0.8164,
+        "image_level_macro_f1": 0.7923,
+        "image_level_measles_sensitivity": 0.7455,
+        "family_level_majority_vote_accuracy": 0.8596,
+        "family_level_majority_vote_macro_f1": 0.8393
+      },
+      "historical_image_level_benchmark": {
+        "status": "HISTORICAL_CONTAMINATED_IMAGE_LEVEL_BENCHMARK",
+        "reason": "100% of test images (1,558/1,558) shared root photographs with Train",
+        "test_accuracy": 0.9910,
+        "test_macro_f1": 0.9908,
+        "measles_crop_recall": 0.9912
+      },
+      "clinical_safety_gate": "2D image classification cannot replace clinical pediatric workup. Mandatory Koplik buccal check, prodromal fever/3 Cs verification, and serological IgM/PCR confirmation required."
+    },
+    "04_Prescription_OCR": {
+      "modality": "Bilingual Medical Prescription OCR",
+      "execution_type": "Pretrained Inference Benchmarking Only (EasyOCR)",
+      "dataset_source": "Mendeley Data tg2hm7n2bs/2 (CC BY 4.0 - BSMRAAU, Bangladesh)",
+      "sample_counts": {
+        "total_matched_prescriptions": 997,
+        "test_held_out": 152
+      },
+      "metrics": {
+        "throughput_pages_per_second": 1.43,
+        "mean_latency_seconds_per_image": 0.698,
+        "character_error_rate_ocr_to_narrative": 1.0107,
+        "word_error_rate_ocr_to_narrative": 1.1732,
+        "medication_token_recall_unvalidated": 0.0696
+      },
+      "clinical_safety_gate": {
+        "quarantined_for_human_pharmacist_review": 152,
+        "human_review_required_percent": 100.0,
+        "automated_reminders_permitted": 0,
+        "automated_reminders_permitted_percent": 0.0,
+        "policy": "100% Mandatory Human Pharmacist Sign-Off. Automated patient reminders permanently disabled."
+      }
+    },
+    "05_Bangla_Voice_AI": {
+      "modality": "Bengali Speech Recognition (ASR)",
+      "execution_type": "Pretrained Inference Benchmarking Only (Whisper-Tiny & Base)",
+      "dataset_source": "Google FLEURS bn_in (CC BY 4.0)",
+      "sample_counts": {
+        "total_utterances": 402,
+        "speakers": 150,
+        "test_held_out": 61,
+        "test_speakers": 23
+      },
+      "models": {
+        "Whisper-Tiny": {
+          "parameters_m": 39,
+          "mean_latency_seconds": 0.2849,
+          "sample_mean_rtf": 0.0216,
+          "aggregate_speedup_x": 48.09,
+          "peak_vram_mb": 182.8,
+          "cer_percent": 129.64,
+          "wer_percent": 137.54,
+          "bengali_unicode_char_proportion": 0.0,
+          "exact_match_rate": 0.0
+        },
+        "Whisper-Base": {
+          "parameters_m": 74,
+          "mean_latency_seconds": 0.3648,
+          "sample_mean_rtf": 0.0275,
+          "aggregate_speedup_x": 37.56,
+          "peak_vram_mb": 335.0,
+          "cer_percent": 106.28,
+          "wer_percent": 116.14,
+          "bengali_unicode_char_proportion": 0.0,
+          "exact_match_rate": 0.0
+        }
+      },
+      "clinical_safety_gate": "Raw Whisper outputs Romanized Banglish with acoustic confusions on medical terms. Strictly air-gapped from EHR. Supervised IndicLoRA fine-tuning required."
+    },
+    "06_DermoPed_Pediatric_Skin": {
+      "modality": "Pediatric Dermatology Lesion Crops (Supplemental Appendix)",
+      "execution_type": "Actually Trained (ResNet18)",
+      "dataset_source": "DermoPed Research Dataset",
+      "sample_counts": {
+        "test_crops": 110,
+        "test_patients": 4
+      },
+      "metrics": {
+        "crop_level_accuracy": 0.9273,
+        "crop_level_macro_f1": 0.8965,
+        "patient_level_accuracy": 0.7500,
+        "patient_level_macro_f1": 0.7333
+      },
+      "clinical_insight": "Patient clustering disclosure: High crop accuracy (92.73%) masks single-patient misclassification (75.0% patient accuracy)."
+    }
+  }
+}

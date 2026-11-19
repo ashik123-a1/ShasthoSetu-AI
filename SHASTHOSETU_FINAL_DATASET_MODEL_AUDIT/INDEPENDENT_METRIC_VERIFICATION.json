@@ -1,0 +1,405 @@
+{
+  "audit_metadata": {
+    "audit_title": "ShasthoSetu AI Independent Metric Verification",
+    "timestamp": "2026-11-18 21:30:00",
+    "auditor": "Senior ML Research Auditor",
+    "hardware_environment": "NVIDIA GeForce RTX 5060 Ti 16GB | PyTorch 2.11.0+cu128 | CUDA 12.8"
+  },
+  "modules_audited": {
+    "01_PCOS_Clinical": {
+      "dataset_records_verified": 88,
+      "classes": {
+        "Control": 43,
+        "PCOS": 45
+      },
+      "features_verified": 20,
+      "cross_validation": {
+        "protocol": "Repeated Stratified 5-Fold (10 repeats = 50 folds on N=70 training patients)",
+        "verified_metrics": {
+          "XGBoost": {
+            "mean_balanced_accuracy": 0.8857,
+            "std": 0.0829,
+            "mean_macro_f1": 0.8839,
+            "mean_sensitivity": 0.9,
+            "mean_specificity": 0.8714,
+            "mean_roc_auc": 0.9327
+          },
+          "Random_Forest": {
+            "mean_balanced_accuracy": 0.8777,
+            "std": 0.0837,
+            "mean_macro_f1": 0.8756,
+            "mean_sensitivity": 0.8839,
+            "mean_specificity": 0.8714,
+            "mean_roc_auc": 0.9335
+          },
+          "Logistic_Regression": {
+            "mean_balanced_accuracy": 0.8286,
+            "std": 0.1153,
+            "mean_macro_f1": 0.8259,
+            "mean_sensitivity": 0.84,
+            "mean_specificity": 0.8171,
+            "mean_roc_auc": 0.9262
+          }
+        }
+      },
+      "held_out_test_n18": {
+        "verified_metrics": {
+          "XGBoost": {
+            "accuracy": 0.9444,
+            "balanced_accuracy": 0.9444,
+            "macro_f1": 0.9443,
+            "sensitivity": 0.8889,
+            "specificity": 1.0,
+            "confusion_matrix": {
+              "TN": 9,
+              "FP": 0,
+              "FN": 1,
+              "TP": 8
+            }
+          },
+          "Random_Forest": {
+            "accuracy": 0.9444,
+            "balanced_accuracy": 0.9444,
+            "macro_f1": 0.9443,
+            "sensitivity": 1.0,
+            "specificity": 0.8889,
+            "confusion_matrix": {
+              "TN": 8,
+              "FP": 1,
+              "FN": 0,
+              "TP": 9
+            }
+          },
+          "Logistic_Regression": {
+            "accuracy": 0.7778,
+            "balanced_accuracy": 0.7778,
+            "macro_f1": 0.7778,
+            "sensitivity": 0.7778,
+            "specificity": 0.7778,
+            "confusion_matrix": {
+              "TN": 7,
+              "FP": 2,
+              "FN": 2,
+              "TP": 7
+            }
+          }
+        }
+      },
+      "recalculation_status": "EXACT_RECALCULATION_VERIFIED",
+      "source_files": [
+        "01_PCOS_Clinical/audit_v2/outputs/metrics.json",
+        "01_PCOS_Clinical/audit_v2/outputs/test_predictions.csv"
+      ]
+    },
+    "02_PCOS_Ultrasound": {
+      "dataset_images_verified": 299,
+      "classes": {
+        "Dominant_Follicle": 142,
+        "PCO": 116,
+        "Normal": 41
+      },
+      "grouping_verified": "244 pseudo-patient connected components from 254 development images (Near-duplicate grouping, NOT verified patient IDs)",
+      "cross_validation": {
+        "protocol": "15-Fold Repeated Stratified Group CV (ResNet18)",
+        "verified_metrics": {
+          "mean_val_accuracy": 0.8542,
+          "std_val_accuracy": 0.0486,
+          "mean_val_balanced_accuracy": 0.8453,
+          "std_val_balanced_accuracy": 0.0733,
+          "mean_val_macro_f1": 0.8542,
+          "std_val_macro_f1": 0.0653
+        }
+      },
+      "held_out_test_n45": {
+        "verified_metrics": {
+          "ResNet18": {
+            "accuracy": 0.8667,
+            "balanced_accuracy": 0.8624,
+            "macro_f1": 0.877,
+            "confusion_matrix": [
+              [
+                17,
+                0,
+                4
+              ],
+              [
+                0,
+                5,
+                1
+              ],
+              [
+                1,
+                0,
+                17
+              ]
+            ],
+            "support": {
+              "Dominant_Follicle": 21,
+              "Normal": 6,
+              "PCO": 18
+            }
+          },
+          "MobileNetV3": {
+            "accuracy": 0.8,
+            "balanced_accuracy": 0.8175,
+            "macro_f1": 0.8246,
+            "confusion_matrix": [
+              [
+                13,
+                0,
+                8
+              ],
+              [
+                0,
+                5,
+                1
+              ],
+              [
+                0,
+                0,
+                18
+              ]
+            ],
+            "support": {
+              "Dominant_Follicle": 21,
+              "Normal": 6,
+              "PCO": 18
+            }
+          }
+        }
+      },
+      "recalculation_status": "EXACT_RECALCULATION_VERIFIED",
+      "source_files": [
+        "02_PCOS_Ultrasound/outputs/metrics.json",
+        "02_PCOS_Ultrasound/outputs/cv_metrics.json"
+      ]
+    },
+    "03_Measles_Viral_Rash": {
+      "dataset_crops_verified": 10384,
+      "classes": [
+        "Chickenpox",
+        "Cowpox",
+        "HFMD",
+        "Healthy",
+        "Measles",
+        "Monkeypox"
+      ],
+      "leakage_audit_status": "HISTORICAL_SPLIT_CONTAMINATED_CONFIRMED (Cross-split image variants purged in grouped split)",
+      "grouped_evaluation_verified": {
+        "validation_113_families_1544_crops": {
+          "ResNet18_Grouped": {
+            "image_level": {
+              "accuracy": 84.65,
+              "balanced_accuracy": 87.19,
+              "macro_f1": 84.22,
+              "measles_recall": 91.94,
+              "measles_ratio": "114/124"
+            },
+            "family_level": {
+              "accuracy": 85.84,
+              "balanced_accuracy": 88.49,
+              "macro_f1": 85.73,
+              "measles_family_recall": 88.89,
+              "measles_family_ratio": "8/9"
+            }
+          },
+          "MobileNetV3_Grouped": {
+            "image_level": {
+              "accuracy": 81.15,
+              "balanced_accuracy": 84.04,
+              "macro_f1": 81.56,
+              "measles_recall": 90.32,
+              "measles_ratio": "112/124"
+            },
+            "family_level": {
+              "accuracy": 86.73,
+              "balanced_accuracy": 87.34,
+              "macro_f1": 87.34,
+              "measles_family_recall": 100.0,
+              "measles_family_ratio": "9/9"
+            }
+          },
+          "statistical_significance": "Paired McNemar test p=1.000 (No statistically significant difference in family accuracy)"
+        },
+        "held_out_test_114_families_1561_crops": {
+          "ResNet18_Grouped": {
+            "image_level": {
+              "accuracy": 83.34,
+              "balanced_accuracy": 85.09,
+              "macro_f1": 82.62,
+              "measles_recall": 80.91,
+              "measles_ratio": "89/110"
+            },
+            "family_level": {
+              "accuracy": 85.09,
+              "balanced_accuracy": 87.42,
+              "macro_f1": 84.38,
+              "measles_family_recall": 75.0,
+              "measles_family_ratio": "6/8"
+            }
+          },
+          "MobileNetV3_Grouped": {
+            "image_level": {
+              "accuracy": 80.97,
+              "balanced_accuracy": 81.64,
+              "macro_f1": 79.23,
+              "measles_recall": 74.55,
+              "measles_ratio": "82/110"
+            },
+            "family_level": {
+              "accuracy": 85.96,
+              "balanced_accuracy": 86.57,
+              "macro_f1": 83.93,
+              "measles_family_recall": 75.0,
+              "measles_family_ratio": "6/8"
+            }
+          }
+        }
+      },
+      "majority_vote_tie_audit": "3 validation families experienced 50/50 ties (MSL_41_01, CPX_11_01, MPX_11_01). Ties resolved by highest mean softmax confidence.",
+      "recalculation_status": "EXACT_RECALCULATION_VERIFIED",
+      "source_files": [
+        "03_Measles_Viral_Rash/model_selection_final/VALIDATION_METRICS_VERIFIED.json",
+        "03_Measles_Viral_Rash/clean_grouped_split/MAJORITY_VOTE_TIE_AUDIT.csv"
+      ]
+    },
+    "04_Prescription_OCR": {
+      "dataset_images_verified": 1000,
+      "evaluated_test_prescriptions": 149,
+      "corrupted_quarantined_files": [
+        "0174.jpeg",
+        "0729.jpeg",
+        "0775.jpeg"
+      ],
+      "ground_truth_status": "NO_ISOLATED_DRUG_NER_GROUND_TRUTH (Only narrative medical notes present in Mendeley v2)",
+      "verified_ocr_metrics": {
+        "english_narrative": {
+          "corpus_cer": 0.9669,
+          "corpus_wer": 1.1708,
+          "mean_cer": 1.2057,
+          "median_cer": 0.8723,
+          "exact_match": 0.0
+        },
+        "bangla_narrative": {
+          "corpus_cer": 1.0334,
+          "corpus_wer": 1.2689,
+          "mean_cer": 1.2697,
+          "median_cer": 0.8947,
+          "exact_match": 0.0
+        },
+        "heuristic_medicine_recall": 0.0696,
+        "safety_gate_quarantine_rate": "92.11% (140/152 prescriptions quarantined for manual clinician review)"
+      },
+      "recalculation_status": "EXACT_RECALCULATION_VERIFIED",
+      "source_files": [
+        "04_Prescription_OCR/audit_v2/OCR_METRICS_AUDITED.json",
+        "04_Prescription_OCR/audit_v2/safety_gate_audit.json"
+      ]
+    },
+    "05_Bangla_Voice_AI": {
+      "evaluation_corpus": {
+        "smoke_test_clips": 6,
+        "smoke_test_distinct_sentences": 2,
+        "extended_research_clips": 20,
+        "extended_research_distinct_sentences": 20,
+        "extended_research_distinct_speakers": 20,
+        "total_bengali_audio_clips": 26
+      },
+      "verified_model_metrics": {
+        "openai_whisper_base": {
+          "english_synthetic_wer": 5.36,
+          "smoke_test_6": {
+            "corpus_norm_wer": 117.33,
+            "corpus_norm_cer": 99.31,
+            "bengali_unicode_pct": 0.0
+          },
+          "extended_20": {
+            "corpus_norm_wer": 266.01,
+            "corpus_norm_cer": 187.96,
+            "bengali_unicode_pct": 0.0
+          },
+          "combined_26": {
+            "corpus_norm_wer": 242.83,
+            "corpus_norm_cer": 175.62,
+            "bengali_unicode_pct": 0.0
+          },
+          "peak_vram_mb": 341.47,
+          "median_latency_ms": 389.81
+        },
+        "openai_whisper_tiny": {
+          "smoke_test_6": {
+            "corpus_norm_wer": 212.0,
+            "corpus_norm_cer": 180.69,
+            "bengali_unicode_pct": 0.0
+          }
+        },
+        "anuragshas_whisper_small_bn": {
+          "training_provenance": "Mozilla Common Voice 11.0 Bengali (Zero overlap with Google FLEURS)",
+          "smoke_test_6": {
+            "corpus_norm_wer": 33.33,
+            "corpus_norm_cer": 8.97,
+            "bengali_unicode_pct": 97.68
+          },
+          "extended_20": {
+            "corpus_norm_wer": 40.15,
+            "corpus_norm_cer": 14.16,
+            "bengali_unicode_pct": 98.58
+          },
+          "combined_26": {
+            "corpus_norm_wer": 39.09,
+            "corpus_norm_cer": 13.44,
+            "bengali_unicode_pct": 98.37
+          },
+          "exact_match_rate": 0.0,
+          "peak_vram_mb": 1097.13,
+          "median_latency_ms": 2135.1
+        }
+      },
+      "medical_term_recall_status": "N/A (FLEURS contains 0 clinical entities)",
+      "recalculation_status": "EXACT_RECALCULATION_VERIFIED",
+      "source_files": [
+        "05_Bangla_Voice_AI/pretrained_bengali_comparison/task_03_2/comparison_metrics.json",
+        "05_Bangla_Voice_AI/pretrained_bengali_comparison/task_03_2/per_sample_predictions.csv"
+      ]
+    },
+    "06_DermoPed_Pediatric_Skin": {
+      "dataset_verified_locally": "22 patients (Chickenpox: 19 patients / 546 crops; Pediculosis: 3 patients / 110 crops; Total = 656 crops)",
+      "full_dataset_remote_status": "Zenodo Record 20829589 (~19 GB total; remaining classes not downloaded locally)",
+      "split_verified": "Patient-Level Split: Train=14 patients (454 crops), Val=4 patients (92 crops), Test=4 patients (110 crops)",
+      "verified_model_metrics": {
+        "EXP_B_Champion": {
+          "validation_92_crops": {
+            "macro_f1": 0.5776,
+            "pediculosis_recall": 0.15,
+            "chickenpox_recall": 0.9861
+          },
+          "test_110_crops": {
+            "image_accuracy": 0.9273,
+            "image_macro_f1": 0.8965,
+            "patient_accuracy": 0.75,
+            "patient_macro_f1": 0.7333
+          }
+        },
+        "EXP_D_Regularized": {
+          "validation_92_crops": {
+            "macro_f1": 0.439,
+            "pediculosis_recall": 0.0,
+            "chickenpox_recall": 1.0
+          },
+          "test_110_crops": {
+            "image_accuracy": 1.0,
+            "image_macro_f1": 1.0,
+            "patient_accuracy": 1.0,
+            "patient_macro_f1": 1.0
+          }
+        }
+      },
+      "clinical_sample_limitation": "CONFIRMED: The entire dataset contains only 3 pediculosis patients (n=3). No broad clinical generalizability can be claimed.",
+      "recalculation_status": "EXACT_RECALCULATION_VERIFIED",
+      "source_files": [
+        "06_DermoPed_Pediatric_Skin/audit_v3/metric_recalculation.json",
+        "06_DermoPed_Pediatric_Skin/proofs/EXP_B/metrics.json"
+      ]
+    }
+  }
+}

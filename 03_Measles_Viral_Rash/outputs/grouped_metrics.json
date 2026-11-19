@@ -1,0 +1,140 @@
+{
+  "resnet18": {
+    "best_epoch": 8,
+    "best_val_macro_f1": 84.22,
+    "test_accuracy": 83.34,
+    "test_balanced_accuracy": 85.09,
+    "test_macro_f1": 82.62,
+    "class_recalls_percent": {
+      "Chickenpox": 81.76,
+      "Cowpox": 88.49,
+      "HFMD": 98.49,
+      "Healthy": 88.56,
+      "Measles": 80.91,
+      "Monkeypox": 72.31
+    },
+    "measles_crops_detected": "89/110",
+    "confusion_matrix": [
+      [
+        130,
+        5,
+        0,
+        5,
+        0,
+        19
+      ],
+      [
+        1,
+        123,
+        0,
+        4,
+        0,
+        11
+      ],
+      [
+        0,
+        0,
+        327,
+        2,
+        2,
+        1
+      ],
+      [
+        0,
+        0,
+        6,
+        209,
+        2,
+        19
+      ],
+      [
+        10,
+        0,
+        0,
+        1,
+        89,
+        10
+      ],
+      [
+        60,
+        52,
+        21,
+        21,
+        8,
+        423
+      ]
+    ],
+    "family_level_accuracy": 85.09,
+    "family_level_macro_f1": 84.38,
+    "measles_families_detected": "6/8"
+  },
+  "mobilenet_v3_small": {
+    "best_epoch": 8,
+    "best_val_macro_f1": 81.56,
+    "test_accuracy": 80.97,
+    "test_balanced_accuracy": 81.64,
+    "test_macro_f1": 79.23,
+    "class_recalls_percent": {
+      "Chickenpox": 87.42,
+      "Cowpox": 71.22,
+      "HFMD": 95.78,
+      "Healthy": 90.25,
+      "Measles": 74.55,
+      "Monkeypox": 70.6
+    },
+    "measles_crops_detected": "82/110",
+    "confusion_matrix": [
+      [
+        139,
+        0,
+        3,
+        0,
+        0,
+        17
+      ],
+      [
+        10,
+        99,
+        0,
+        9,
+        0,
+        21
+      ],
+      [
+        1,
+        1,
+        318,
+        5,
+        5,
+        2
+      ],
+      [
+        1,
+        1,
+        7,
+        213,
+        4,
+        10
+      ],
+      [
+        10,
+        2,
+        0,
+        2,
+        82,
+        14
+      ],
+      [
+        68,
+        40,
+        21,
+        28,
+        15,
+        413
+      ]
+    ],
+    "family_level_accuracy": 85.96,
+    "family_level_macro_f1": 83.93,
+    "measles_families_detected": "6/8"
+  }
+}

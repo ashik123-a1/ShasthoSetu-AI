@@ -1,0 +1,10 @@
+{
+  "os": "Windows-10-10.0.19045-SP0",
+  "python_version": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "platform": "AMD64",
+  "processor": "AMD64 Family 25 Model 97 Stepping 2, AuthenticAMD",
+  "numpy_version": "2.5.5",
+  "pandas_version": "3.1.1",
+  "joblib_version": "1.6.0",
+  "xgboost_available": true
+}
