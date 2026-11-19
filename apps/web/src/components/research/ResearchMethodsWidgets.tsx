@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Layers, ShieldCheck, Sigma } from "lucide-react";
+import { CheckCircle2, GitBranch, Layers, ShieldCheck, Sigma } from "lucide-react";
+import { subscribeTelemetryTick } from "../charts/AgriStyleTelemetry";
 
 /**
  * Numbered chapter header ported from AgriSense Fusion MethodsKit.jsx
@@ -445,6 +446,328 @@ export function ClinicalEquationExplorer({ locale }: { locale: "en" | "bn" }) {
         <div className="rounded-xl bg-emerald-500/10 border border-emerald-400/30 px-4 py-2.5 text-xs font-mono text-emerald-200">
           <strong>AUDITED WORKED PROOF:</strong> {active.workedExample}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+   3. ALL-SYSTEMS ANIMATED WORKFLOW PIPELINES (5 End-to-End Clinical Flows)
+   ============================================================================ */
+interface PipelineNodeDef {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  title: string;
+  sub: string;
+  color: string;
+  badge: string;
+}
+
+interface SystemWorkflowDef {
+  id: string;
+  num: string;
+  eyebrow: string;
+  title: string;
+  pillText: string;
+  accent: string;
+  footerSummary: string;
+  nodes: PipelineNodeDef[];
+}
+
+const SHARED_EDGES = [
+  { id: "e1", d: "M 194 68 C 220 68, 220 108, 244 108", speed: 0.44 },
+  { id: "e2", d: "M 194 174 C 220 174, 220 136, 244 136", speed: 0.51 },
+  { id: "e3", d: "M 432 108 C 456 108, 456 68, 482 68", speed: 0.47 },
+  { id: "e4", d: "M 432 136 C 456 136, 456 174, 482 174", speed: 0.56 },
+  { id: "e5", d: "M 664 68 C 689 68, 689 108, 714 108", speed: 0.43 },
+  { id: "e6", d: "M 664 174 C 689 174, 689 136, 714 136", speed: 0.59 },
+] as const;
+
+const SYSTEM_WORKFLOWS: SystemWorkflowDef[] = [
+  {
+    id: "wf-pcos",
+    num: "01",
+    eyebrow: "SYSTEM 01 • ROTTERDAM DUAL-TRACK PCOS WORKFLOW",
+    title: "PCOS Clinical Labs (M01) + Ovarian Ultrasound (M02) End-to-End Flow",
+    pillText: "N=88 Cohort • 299 Unique USG",
+    accent: "#38bdf8",
+    footerSummary: "M01 & M02 execute strictly independently: lab risk never merges naively into morphological PCOM scan predictions.",
+    nodes: [
+      { id: "pcos_labs", x: 16, y: 34, w: 178, h: 68, title: "1A. 20 Lab Form", sub: "BMI, LH/FSH, HOMA-IR", color: "#38bdf8", badge: "N=88" },
+      { id: "pcos_usg", x: 16, y: 140, w: 178, h: 68, title: "1B. Ovarian USG", sub: "pHash Dedup -> 299", color: "#2dd4bf", badge: "289 PT" },
+      { id: "pcos_prep", x: 244, y: 86, w: 188, h: 72, title: "2. Feature Engine", sub: "SimpleImputer + ResNet18", color: "#22d3ee", badge: "FINAL" },
+      { id: "pcos_xgb", x: 482, y: 34, w: 182, h: 68, title: "3A. XGBoost Hold", sub: "94.44% • 88.57% CV", color: "#38bdf8", badge: "JOBLIB" },
+      { id: "pcos_cnn", x: 482, y: 140, w: 182, h: 68, title: "3B. Rotterdam Rule", sub: "86.67% USG != Diag.", color: "#f2c879", badge: "GUARD" },
+      { id: "pcos_brief", x: 714, y: 86, w: 170, h: 72, title: "4. OB-GYN Brief", sub: "Doctor Review Queue", color: "#34d399", badge: "CLINIC" },
+    ],
+  },
+  {
+    id: "wf-rash",
+    num: "02",
+    eyebrow: "SYSTEM 02 • VIRAL RASH (M03) & DERMOPED (M06) VISION WORKFLOW",
+    title: "Source-Family Leak-Free Skin Triage & Pediatric Red-Flag Escalation",
+    pillText: "755 Families • N=22 Disclosed",
+    accent: "#818cf8",
+    footerSummary: "Quarantined 99.10% leaky model excluded; pediatric red flags override vision scores straight to emergency care.",
+    nodes: [
+      { id: "rash_img", x: 16, y: 34, w: 178, h: 68, title: "1A. Lesion Image", sub: "10,384 MCVSLD Crops", color: "#818cf8", badge: "755 FAM" },
+      { id: "ped_flags", x: 16, y: 140, w: 178, h: 68, title: "1B. Red-Flag Rule", sub: "Breathing/Petechiae", color: "#fb7185", badge: "TRIAGE" },
+      { id: "rash_cnn", x: 244, y: 86, w: 188, h: 72, title: "2. Grouped CNN", sub: "0% Cross-Split Leak", color: "#818cf8", badge: "RESNET" },
+      { id: "rash_6cls", x: 482, y: 34, w: 182, h: 68, title: "3A. 6-Class Prob", sub: "84.65% Val • 84.22 F1", color: "#38bdf8", badge: "M03" },
+      { id: "derm_expb", x: 482, y: 140, w: 182, h: 68, title: "3B. EXP_B Caveat", sub: "19 CPX vs 3 Pedicul.", color: "#f2c879", badge: "N=22" },
+      { id: "derm_doc", x: 714, y: 86, w: 170, h: 72, title: "4. Doctor Review", sub: "Non-Diag. Warning", color: "#34d399", badge: "SAFE" },
+    ],
+  },
+  {
+    id: "wf-ocr",
+    num: "03",
+    eyebrow: "SYSTEM 03 • SAFE PRESCRIPTION OCR & MANDATORY HTTP 422 GATE",
+    title: "EasyOCR Bilingual Extraction & Human-Confirmed Medication Schedule Flow",
+    pillText: "697 Train • 150 Val • 152 Test",
+    accent: "#f2c879",
+    footerSummary: "Even if frontend scripts are bypassed, SQLite CHECK & FastAPI HTTP 422 block unverified OCR doses from reminders.",
+    nodes: [
+      { id: "rx_ingest", x: 16, y: 34, w: 178, h: 68, title: "1A. Rx Upload", sub: "1,000 Audited (8 Quar)", color: "#f2c879", badge: "992 ADM" },
+      { id: "bbox_laser", x: 16, y: 140, w: 178, h: 68, title: "1B. 0052.jpg Proof", sub: "Bilingual 44-Token", color: "#38bdf8", badge: "SMOKE" },
+      { id: "easyocr", x: 244, y: 86, w: 188, h: 72, title: "2. EasyOCR bn+en", sub: "CRAFT + PyPDF Engine", color: "#2dd4bf", badge: "LOCAL" },
+      { id: "conf_audit", x: 482, y: 34, w: 182, h: 68, title: "3A. Dose Parser", sub: "CER/WER NOT_VALIDATED", color: "#fb7185", badge: "HONEST" },
+      { id: "http422", x: 482, y: 140, w: 182, h: 68, title: "3B. HTTP 422 Lock", sub: "verified_by_user_id", color: "#f2c879", badge: "422 LOCK" },
+      { id: "schedule", x: 714, y: 86, w: 170, h: 72, title: "4. Med Routine", sub: "Asia/Dhaka Alarms", color: "#34d399", badge: "SQLITE" },
+    ],
+  },
+  {
+    id: "wf-voice",
+    num: "04",
+    eyebrow: "SYSTEM 04 • BANGLA VOICE ASR & CLINICAL NORMALIZATION (PHASE G)",
+    title: "Whisper-Small-BN Speech Pipeline & Abstention-Gated RAG Roadmap",
+    pillText: "26 FLEURS Clips • Phase G Deferred",
+    accent: "#c084fc",
+    footerSummary: "Offline FLEURS audit proved 98.37% Bengali script vs Base 0%; live conversation & medical RAG activate in Phase G.",
+    nodes: [
+      { id: "vox_wav", x: 16, y: 34, w: 178, h: 68, title: "1A. 16kHz Audio", sub: "Mic / Patient .WAV", color: "#c084fc", badge: "PHASE G" },
+      { id: "vox_fleurs", x: 16, y: 140, w: 178, h: 68, title: "1B. FLEURS Ref", sub: "22 Speakers • 26 Clip", color: "#38bdf8", badge: "BENCH" },
+      { id: "vox_whisp", x: 244, y: 86, w: 188, h: 72, title: "2. Whisper-BN", sub: "241.7M Small-BN", color: "#c084fc", badge: "39% WER" },
+      { id: "vox_bn", x: 482, y: 34, w: 182, h: 68, title: "3A. Script Check", sub: "98.37% BN Unicode", color: "#2dd4bf", badge: "UNICODE" },
+      { id: "vox_abstain", x: 482, y: 140, w: 182, h: 68, title: "3B. Abstain Gate", sub: "No Unchecked Diag.", color: "#f2c879", badge: "SAFETY" },
+      { id: "vox_edit", x: 714, y: 86, w: 170, h: 72, title: "4. Editable Text", sub: "Patient + RAG Draft", color: "#38bdf8", badge: "DEFER" },
+    ],
+  },
+  {
+    id: "wf-blood",
+    num: "05",
+    eyebrow: "SYSTEM 05 • BLOOD CONNECT PROXIMITY & CONSENT PRIVACY WORKFLOW",
+    title: "5 / 10 / 20 km Donor Matching, Masked Phone Gate & Dual Confirmation",
+    pillText: "8 Divisions • 0 Unauthorized Phone Leaks",
+    accent: "#fb7185",
+    footerSummary: "Phones stay HIDDEN_UNTIL_CONSENT, no fixed 90-day cutoff rule applies, and hospital cross-matching is mandatory.",
+    nodes: [
+      { id: "bc_req", x: 16, y: 34, w: 178, h: 68, title: "1A. Blood Request", sub: "Group, Units, Urgency", color: "#fb7185", badge: "MAX 5/HR" },
+      { id: "bc_donors", x: 16, y: 140, w: 178, h: 68, title: "1B. 8-Div Donors", sub: "Geo-Indexed Profiles", color: "#38bdf8", badge: "8 DIV" },
+      { id: "bc_haversine", x: 244, y: 86, w: 188, h: 72, title: "2. Haversine Geo", sub: "5 / 10 / 20 / 50 km", color: "#2dd4bf", badge: "LEAFLET" },
+      { id: "bc_privacy", x: 482, y: 34, w: 182, h: 68, title: "3A. Consent Lock", sub: "HIDDEN_UNTIL_CONSENT", color: "#f2c879", badge: "PRIVACY" },
+      { id: "bc_bank", x: 482, y: 140, w: 182, h: 68, title: "3B. Blood Bank", sub: "Lab Cross-Match Req", color: "#fb7185", badge: "CLINIC" },
+      { id: "bc_done", x: 714, y: 86, w: 170, h: 72, title: "4. Dual Confirm", sub: "Auto-Revoke & Trust", color: "#34d399", badge: "CLOSED" },
+    ],
+  },
+];
+
+export function AllSystemsWorkflowPipelines({ pauseMotion = false }: { pauseMotion?: boolean }) {
+  const [filterId, setFilterId] = useState<string>("all");
+  const [selectedNodes, setSelectedNodes] = useState<Record<string, string>>({
+    "wf-pcos": "pcos_cnn",
+    "wf-rash": "rash_cnn",
+    "wf-ocr": "http422",
+    "wf-voice": "vox_whisp",
+    "wf-blood": "bc_privacy",
+  });
+
+  const pathRefs = useRef<Record<string, SVGPathElement | null>>({});
+  const dotRefs = useRef<Record<string, SVGCircleElement | null>>({});
+
+  const visibleWorkflows =
+    filterId === "all" ? SYSTEM_WORKFLOWS : SYSTEM_WORKFLOWS.filter((w) => w.id === filterId);
+
+  useEffect(() => {
+    const placeAll = (sec: number) => {
+      visibleWorkflows.forEach((wf) => {
+        SHARED_EDGES.forEach((edge, idx) => {
+          const key = `${wf.id}:${edge.id}`;
+          const pathEl = pathRefs.current[key];
+          const dotEl = dotRefs.current[key];
+          if (!pathEl || !dotEl || typeof pathEl.getTotalLength !== "function") return;
+          const len = pathEl.getTotalLength();
+          if (!len) return;
+          const t = (sec * edge.speed + idx * 0.19) % 1;
+          const pt = pathEl.getPointAtLength(t * len);
+          dotEl.setAttribute("cx", pt.x.toFixed(1));
+          dotEl.setAttribute("cy", pt.y.toFixed(1));
+        });
+      });
+    };
+
+    placeAll(0.45);
+    if (pauseMotion) return undefined;
+
+    const start = performance.now();
+    return subscribeTelemetryTick((nowMs) => {
+      placeAll((nowMs - start) / 1000);
+    });
+  }, [pauseMotion, filterId]);
+
+  return (
+    <div className="space-y-5">
+      {/* Header + Filter Strip (All 5 Shown by Default) */}
+      <div className="ss-sapphire-card rounded-3xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-wider text-[#2dd4bf]">
+            <GitBranch className="w-4 h-4" />
+            <span>FULL END-TO-END WORKFLOWS • ALL 5 CLINICAL &amp; AI SYSTEMS</span>
+          </div>
+          <h3 className="text-lg font-bold text-white">
+            Interactive Data &amp; Safety Architecture Across Every Core Module
+          </h3>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setFilterId("all")}
+            className={`min-h-9 px-3.5 rounded-full font-mono text-[11px] font-bold cursor-pointer border transition ${
+              filterId === "all"
+                ? "bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 border-transparent"
+                : "bg-[#040a18]/80 border-white/15 text-slate-200 hover:border-sky-400/50"
+            }`}
+          >
+            All 5 Systems (Stacked)
+          </button>
+          {SYSTEM_WORKFLOWS.map((wf) => (
+            <button
+              key={wf.id}
+              type="button"
+              onClick={() => setFilterId(wf.id)}
+              className={`min-h-9 px-3 rounded-full font-mono text-[11px] font-bold cursor-pointer border transition ${
+                filterId === wf.id
+                  ? "bg-white text-slate-950 border-transparent"
+                  : "bg-[#040a18]/80 border-white/15 text-slate-300 hover:border-sky-400/50"
+              }`}
+            >
+              {wf.num}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stacked System Workflow Cards */}
+      <div className="space-y-5">
+        {visibleWorkflows.map((wf) => {
+          const activeNodeId = selectedNodes[wf.id] ?? wf.nodes[2].id;
+          const activeNode = wf.nodes.find((n) => n.id === activeNodeId) ?? wf.nodes[2];
+          return (
+            <div key={wf.id} className="ss-sapphire-card rounded-3xl p-5 sm:p-6 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <div className="font-mono text-[10px] font-bold uppercase tracking-wider" style={{ color: wf.accent }}>
+                    {wf.eyebrow}
+                  </div>
+                  <h4 className="text-base sm:text-lg font-bold text-white">{wf.title}</h4>
+                </div>
+                <span
+                  className="font-mono text-[11px] font-bold px-2.5 py-1 rounded-full border"
+                  style={{
+                    color: wf.accent,
+                    backgroundColor: `${wf.accent}18`,
+                    borderColor: `${wf.accent}44`,
+                  }}
+                >
+                  {wf.pillText}
+                </span>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl bg-[#040a18]/90 border border-white/10 p-3">
+                <svg viewBox="0 0 900 245" className="w-full min-w-[660px] h-auto" role="img" aria-label={wf.title}>
+                  {SHARED_EDGES.map((edge, eIdx) => {
+                    const edgeColor = wf.nodes[eIdx % wf.nodes.length]?.color ?? wf.accent;
+                    const key = `${wf.id}:${edge.id}`;
+                    return (
+                      <g key={key}>
+                        <path
+                          ref={(el) => {
+                            pathRefs.current[key] = el;
+                          }}
+                          d={edge.d}
+                          fill="none"
+                          stroke={`${edgeColor}55`}
+                          strokeWidth="2.4"
+                          strokeDasharray="6 5"
+                        />
+                        <circle
+                          ref={(el) => {
+                            dotRefs.current[key] = el;
+                          }}
+                          cx="0"
+                          cy="0"
+                          r="4.5"
+                          fill={edgeColor}
+                        />
+                      </g>
+                    );
+                  })}
+
+                  {wf.nodes.map((node) => {
+                    const isSel = node.id === activeNode.id;
+                    return (
+                      <g
+                        key={node.id}
+                        className="cursor-pointer"
+                        onClick={() => setSelectedNodes((prev) => ({ ...prev, [wf.id]: node.id }))}
+                        onMouseEnter={() => setSelectedNodes((prev) => ({ ...prev, [wf.id]: node.id }))}
+                      >
+                        <rect
+                          x={node.x}
+                          y={node.y}
+                          width={node.w}
+                          height={node.h}
+                          rx="14"
+                          fill={isSel ? "#0c1e3e" : "#071226"}
+                          stroke={isSel ? node.color : `${node.color}66`}
+                          strokeWidth={isSel ? "2.2" : "1.2"}
+                        />
+                        <text x={node.x + 12} y={node.y + 25} fill="#FFFFFF" fontSize="12.5" fontWeight="800">
+                          {node.title}
+                        </text>
+                        <text x={node.x + 12} y={node.y + 46} fill="#9eb3d1" fontSize="10" className="font-mono">
+                          {node.sub}
+                        </text>
+                        <rect x={node.x + node.w - 60} y={node.y + 8} width="52" height="16" rx="8" fill={`${node.color}28`} />
+                        <text
+                          x={node.x + node.w - 34}
+                          y={node.y + 19}
+                          textAnchor="middle"
+                          fill={node.color}
+                          fontSize="8"
+                          fontWeight="800"
+                          className="font-mono"
+                        >
+                          {node.badge}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+
+              <div className="rounded-xl bg-[#040a18]/80 border border-white/15 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="font-semibold text-white">
+                  Stage: <span style={{ color: activeNode.color }}>{activeNode.title}</span> — {activeNode.sub}
+                </span>
+                <span className="font-mono text-[11px] text-slate-300">{wf.footerSummary}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
