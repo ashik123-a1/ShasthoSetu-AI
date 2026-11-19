@@ -1,0 +1,7 @@
+{"type":"entity","name":"ShasthoSetu_AI_Platform","entityType":"TelemedicineSystem","observations":["Bangla-first telemedicine, privacy-first Blood Connect, 6 non-diagnostic clinical AI modules","Zero-PHI enforcement bars SUPPORT role from clinical PHR","Mandatory HTTP 422 human verification gate on Prescription OCR"]}
+{"type":"entity","name":"guideline-mcp","entityType":"CustomMCPServer","observations":["Exposes search_clinical_guidelines, list_approved_rag_sources, get_frozen_model_register, check_clinical_safety_guard","Supports stdio, SSE (port 8101), and Streamable HTTP"]}
+{"type":"entity","name":"directory-mcp","entityType":"CustomMCPServer","observations":["Exposes 43 approved doctors across 8 departments, 12 diagnostic tests, 12 facilities, and masked Blood Connect requests","Zero-PHI phone masking enforced"]}
+{"type":"entity","name":"care-record-mcp","entityType":"CustomMCPServer","observations":["Enforces RBAC and ERR_ZERO_PHI_FORBIDDEN for SUPPORT role","Exposes HTTP 422 medication activation gate checks"]}
+{"type":"relation","from":"ShasthoSetu_AI_Platform","to":"guideline-mcp","relationType":"EXPOSES_RAG_AND_AUDIT_TOOLS"}
+{"type":"relation","from":"ShasthoSetu_AI_Platform","to":"directory-mcp","relationType":"EXPOSES_CLINICIAN_AND_BLOOD_DIRECTORY"}
+{"type":"relation","from":"ShasthoSetu_AI_Platform","to":"care-record-mcp","relationType":"ENFORCES_RBAC_AND_OCR_GATE"}

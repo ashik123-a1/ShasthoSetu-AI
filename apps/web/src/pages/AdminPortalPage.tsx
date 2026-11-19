@@ -10,6 +10,7 @@ import { Skeleton, StatusBadge, useToast } from "../components/ui";
 import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
 import { LandGuardBentoAnalytics } from "../components/portal/LandGuardBentoAnalytics";
 import { AdminRagGovernance } from "../components/ai/AdminRagGovernance";
+import { McpArchitectureExplorer } from "../components/research/McpArchitectureExplorer";
 
 export function AdminPortalPage({ section = "dashboard" }: { section?: string }) {
   const navigate = useNavigate();
@@ -332,6 +333,7 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
           {section === "rag" && (
             <div className="space-y-6">
               <AdminRagGovernance />
+              <McpArchitectureExplorer compact />
             </div>
           )}
 

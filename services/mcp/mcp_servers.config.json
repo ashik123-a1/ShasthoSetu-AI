@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "project": "ShasthoSetu AI",
+  "custom_servers_built": [
+    {
+      "id": "guideline-mcp",
+      "module": "services/mcp/guideline_mcp.py",
+      "default_ports": { "sse": 8101, "streamable_http": 8111 },
+      "transports": ["stdio", "sse", "streamable-http"],
+      "security_tier": "READ_ONLY_PUBLIC_AND_CLINICIAN",
+      "zero_phi_scope": "Approved medical knowledge & audit artifacts only (zero PHI)"
+    },
+    {
+      "id": "directory-mcp",
+      "module": "services/mcp/directory_mcp.py",
+      "default_ports": { "sse": 8102, "streamable_http": 8112 },
+      "transports": ["stdio", "sse", "streamable-http"],
+      "security_tier": "READ_ONLY_PUBLIC_MASKED",
+      "zero_phi_scope": "43 approved doctors, 12 labs/facilities, Blood Connect phones hidden until consent"
+    },
+    {
+      "id": "care-record-mcp",
+      "module": "services/mcp/care_record_mcp.py",
+      "default_ports": { "sse": 8103, "streamable_http": 8113 },
+      "transports": ["stdio", "sse", "streamable-http"],
+      "security_tier": "RBAC_AND_ZERO_PHI_ENFORCED",
+      "zero_phi_scope": "Denies SUPPORT via ERR_ZERO_PHI_FORBIDDEN; enforces HTTP 422 OCR verification gate; ADMIN-only audit logs"
+    }
+  ],
+  "public_servers_integrated": [
+    {
+      "id": "filesystem",
+      "package": "@modelcontextprotocol/server-filesystem",
+      "transport": "stdio",
+      "sandbox_roots": ["docs", "SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT/final_lock"]
+    },
+    {
+      "id": "memory",
+      "package": "@modelcontextprotocol/server-memory",
+      "transport": "stdio",
+      "backing_store": "services/mcp/data/clinical_kg_memory.jsonl"
+    },
+    {
+      "id": "sequential-thinking",
+      "package": "@modelcontextprotocol/server-sequential-thinking",
+      "transport": "stdio"
+    },
+    {
+      "id": "cloudcamp-bd",
+      "endpoint": "https://cloudcamp-bd-mcp.equisaas-bd.com",
+      "transport": "sse"
+    }
+  ]
+}

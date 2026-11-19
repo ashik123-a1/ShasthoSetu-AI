@@ -48,6 +48,7 @@ import {
   MethodsChapterHeader,
   StickyClinicalStory,
 } from "../components/research/ResearchMethodsWidgets";
+import { McpArchitectureExplorer } from "../components/research/McpArchitectureExplorer";
 
 const LazyHolographicBodyScanner3D = lazy(() =>
   import("../components/three/HolographicBodyScanner3D").then((m) => ({
@@ -937,6 +938,18 @@ export function PublicResearchPage() {
               </div>
             )}
           </div>
+        </section>
+
+        {/* CHAPTER 09: SHASTHOSETU MCP ARCHITECTURE & LIVE SERVER HUB */}
+        <section id="res-mcp" className="scroll-mt-28 space-y-6">
+          <MethodsChapterHeader
+            num="09"
+            eyebrow="MODEL CONTEXT PROTOCOL (MCP) • BUILT 3 + USED 3+ + ARCHITECTURE"
+            title="Live ShasthoSetu MCP Hub &"
+            goldAccent="Zero-PHI Tool Governance"
+            subtitle="Explore and invoke ShasthoSetu's 3 custom-built MCP servers (guideline-mcp, directory-mcp, care-record-mcp) alongside official public MCP integrations (filesystem, memory, sequential-thinking, cloudcamp-bd) with Stdio/SSE/HTTP transports and strict RBAC."
+          />
+          <McpArchitectureExplorer />
         </section>
       </main>
       <PublicFooter />

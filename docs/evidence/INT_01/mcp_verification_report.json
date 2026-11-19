@@ -1,0 +1,1078 @@
+{
+  "generated_at_utc": "2026-11-19T20:12:24.266196+00:00",
+  "protocol_client": "mcp.ClientSession (stdio JSON-RPC)",
+  "summary": {
+    "custom_built_total": 3,
+    "custom_built_passed": 3,
+    "public_stdio_total": 3,
+    "public_stdio_passed": 3,
+    "external_sse_configured": 1,
+    "zero_phi_support_block_verified": true,
+    "blood_phone_masking_verified": true
+  },
+  "custom_servers": [
+    {
+      "server_id": "guideline-mcp",
+      "transport": "stdio",
+      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
+      "args": [
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\guideline_mcp.py",
+        "--transport",
+        "stdio"
+      ],
+      "status": "PASS",
+      "server_info": {
+        "name": "guideline-mcp",
+        "version": "",
+        "protocol_version": ""
+      },
+      "tools_count": 4,
+      "tools": [
+        "search_clinical_guidelines",
+        "list_approved_rag_sources",
+        "get_frozen_model_register",
+        "check_clinical_safety_guard"
+      ],
+      "resources": [
+        "guideline://rag/status",
+        "guideline://audit/final-lock"
+      ],
+      "tool_calls": [
+        {
+          "tool": "search_clinical_guidelines",
+          "arguments": {
+            "query": "PCOS insulin irregular",
+            "language": "en",
+            "top_k": 3
+          },
+          "is_error": false,
+          "preview": {
+            "query": "PCOS insulin irregular",
+            "language_filter": "en",
+            "safety_screen": {
+              "language_detected": "en",
+              "emergency_detected": false,
+              "prompt_injection_detected": false,
+              "flags": []
+            },
+            "total_approved_chunks_scanned": 35,
+            "count": 3,
+            "matches": [
+              {
+                "chunk_id": "rchk-7004c86e79e64d22",
+                "source_id": "rsrc-c19d3c71a509497b",
+                "source_title": "Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide",
+                "publisher": "WHO Fact Sheets & MedlinePlus (Synthesized Reference)",
+                "category": "PCOS Education",
+                "section_heading": "পিসিওএস (PCOS) কী এবং সাধারণ লক্ষণ (বাংলা)",
+                "language": "bilingual",
+                "score": 8.5,
+                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide\nSection: পিসিওএস (PCOS) কী এবং সাধারণ লক্ষণ (বাংলা)\n\nপলিসিস্টিক ওভারি সিনড্রোম বা **PCOS** হলো প্রজননক্ষম বয়সী নারী ও কিশোরীদের একটি প্রচলিত হরমোনজনিত ও বিপাকীয় (endocrine & metabolic) অবস্থা। বিশ্ব স্বাস্থ্য সংস্থা (WHO) এবং আন্তর্জাতিক Rotterdam মানদণ্ড অনুযায়ী শুধুমাত্র একটি লক্ষণ বা একটি টেস্টের ভিত্তিতে PCOS নিশ্চিত রোগ নির্ণয় করা য"
+              },
+              {
+                "chunk_id": "rchk-9432c00349bb46b6",
+                "source_id": "rsrc-c19d3c71a509497b",
+                "source_title": "Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide",
+                "publisher": "WHO Fact Sheets & MedlinePlus (Synthesized Reference)",
+                "category": "PCOS Education",
+                "section_heading": "Overview & Common Symptoms (English)",
+                "language": "bilingual",
+                "score": 7.0,
+                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide\nSection: Overview & Common Symptoms (English)\n\nPolycystic ovary syndrome (PCOS) is a common hormonal and metabolic condition affecting women and adolescents of reproductive age. According to World Health Organization (WHO) and international Rotterdam guidance, PCOS cannot be diagnosed from a single symptom or blood test alone; a qualified cl"
+              },
+              {
+                "chunk_id": "rchk-67dcf8c59f7548bf",
+                "source_id": "rsrc-92e58c4e51f44476",
+                "source_title": "Ultrasound & PCOM Terminology Explained (Bilingual Guide)",
+                "publisher": "MedlinePlus Diagnostic Tests & International PCOS Evidence Summary",
+                "category": "Ultrasound / PCOM Terminology",
+                "section_heading": "What Does \"PCOM\" Mean on an Ultrasound Report? (English)",
+                "language": "bilingual",
+                "score": 5.0,
+                "excerpt": "Source: Ultrasound & PCOM Terminology Explained (Bilingual Guide)\nSection: What Does \"PCOM\" Mean on an Ultrasound Report? (English)\n\n**PCOM** stands for **Polycystic Ovarian Morphology**. When a pelvic or transvaginal ultrasound report mentions PCOM or \"polycystic ovaries,\" it describes a visual structural pattern—typically an increased number of small antral follicles (often 2–9 mm in size) arranged near the ovarian"
+              }
+            ],
+            "policy": "Grounded informational excerpts ONLY — never diagnostic or prescribing advice."
+          }
+        },
+        {
+          "tool": "list_approved_rag_sources",
+          "arguments": {},
+          "is_error": false,
+          "preview": {
+            "approved_source_count": 14,
+            "total_active_chunks": 35,
+            "sources": [
+              {
+                "id": "rsrc-d746d9df289840b1",
+                "slug": "shasthosetu-clinician-governance-ref",
+                "title": "Clinician Consultation, OCR Verification & Research Preview Boundaries (Doctor Reference)",
+                "title_bn": "চিকিৎসকদের জন্য ক্লিনিকাল তদারকি ও এআই সীমানা নির্দেশিকা",
+                "publisher": "ShasthoSetu AI Clinical Governance",
+                "category": "Clinician Reference",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2026-11-19",
+                "active_chunks": 2
+              },
+              {
+                "id": "rsrc-f6f66dfd11894931",
+                "slug": "medlineplus-general-lab-terms",
+                "title": "Common Medical & Laboratory Test Terms Explained (Bilingual Guide)",
+                "title_bn": "সাধারণ মেডিকেল ও ল্যাব টেস্টের অর্থ",
+                "publisher": "MedlinePlus Lab Test Information (Synthesized Reference)",
+                "category": "General Medical Terms",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2024-11-01",
+                "active_chunks": 3
+              },
+              {
+                "id": "rsrc-99a2b77be21c4aab",
+                "slug": "bd-999-emergency-warnings",
+                "title": "Emergency Warning Signs & Immediate Care Guidance (Bangladesh)",
+                "title_bn": "জরুরি চিকিৎসা বিপদচিহ্ন ও ৯৯৯ নির্দেশিকা",
+                "publisher": "ShasthoSetu Emergency Safety Policy & WHO/CDC Red Flags",
+                "category": "Emergency Warning Information",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2026-11-19",
+                "active_chunks": 2
+              },
+              {
+                "id": "rsrc-cabdfc1a40444fe9",
+                "slug": "who-maternal-healthcare-education",
+                "title": "Maternal Healthcare & Antenatal Warning Education (Bilingual Reference)",
+                "title_bn": "মাতৃস্বাস্থ্য ও গর্ভকালীন জরুরি সতর্কতা",
+                "publisher": "WHO Antenatal & Maternal Health Guidance (Synthesized Reference)",
+                "category": "Maternal Healthcare Education",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2025-01-15",
+                "active_chunks": 2
+              },
+              {
+                "id": "rsrc-ce39eec29fff41bd",
+                "slug": "who-cdc-measles-viral-rash",
+                "title": "Measles, Chickenpox & Viral Rash Education (Bilingual Reference)",
+                "title_bn": "হাম, জলবসন্ত ও ভাইরাল র‍্যাশ সচেতনতা",
+                "publisher": "WHO & CDC Immunization/Infectious Guidance (Synthesized Reference)",
+                "category": "Measles & Viral Rash Education",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2025-05-01",
+                "active_chunks": 3
+              },
+              {
+                "id": "rsrc-d9e6646650a648bb",
+                "slug": "who-medication-literacy-safety",
+                "title": "Medication Literacy, Safety & Antibiotic Stewardship (Bilingual Guide)",
+                "title_bn": "নিরাপদ ওষুধ ব্যবহার ও অ্যান্টিবায়োটিক সতর্কতা",
+                "publisher": "WHO Medication Without Harm & MedlinePlus Consumer Medication Safety",
+                "category": "Medication Literacy & Safety",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2024-09-20",
+                "active_chunks": 3
+              },
+              {
+                "id": "rsrc-1e3d4f8d6fc94ec9",
+                "slug": "dghs-unicef-pediatric-health-epi",
+                "title": "Pediatric Health, Danger Signs & Bangladesh EPI Immunization Schedule",
+                "title_bn": "শিশুর বিপদচিহ্ন ও বাংলাদেশের ইপিআই (EPI) টিকা সূচি",
+                "publisher": "WHO IMCI, UNICEF Bangladesh & DGHS Bangladesh EPI Reference",
+                "category": "Pediatric Health & EPI",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2025-03-10",
+                "active_chunks": 3
+              },
+              {
+                "id": "rsrc-c19d3c71a509497b",
+                "slug": "who-medlineplus-pcos-education",
+                "title": "Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide",
+                "title_bn": "পিসিওএস (PCOS) — রোগী শিক্ষা ও লক্ষণ পরিচিতি",
+                "publisher": "WHO Fact Sheets & MedlinePlus (Synthesized Reference)",
+                "category": "PCOS Education",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2025-02-07",
+                "active_chunks": 3
+              },
+              {
+                "id": "rsrc-89d585be8aed4097",
+                "slug": "medlineplus-consultation-preparation",
+                "title": "Preparing for Your Doctor Consultation (Bilingual Checklist)",
+                "title_bn": "ডাক্তারের পরামর্শের আগে প্রস্তুতি তালিকা",
+                "publisher": "MedlinePlus Talking With Your Doctor (Synthesized Reference)",
+                "category": "Doctor Consultation Preparation",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2024-10-05",
+                "active_chunks": 2
+              },
+              {
+                "id": "rsrc-e79e6a799e0f4bf2",
+                "slug": "bangladesh-prescription-terminology",
+                "title": "Prescription Terminology & Dosing Abbreviations (Bangladesh & International)",
+                "title_bn": "প্রেসক্রিপশনের সংক্ষিপ্ত রূপ ও ডোজ নির্দেশনা পরিচিতি",
+                "publisher": "ShasthoSetu Clinical Literacy & MedlinePlus Safe Medication Terminology",
+                "category": "Prescription Terminology",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2026-11-19",
+                "active_chunks": 3
+              },
+              {
+                "id": "rsrc-94868b03d39c4b75",
+                "slug": "shasthosetu-platform-service-faq",
+                "title": "ShasthoSetu AI Platform Operational Guide — Appointments, Demo Payments & Safe-OCR",
+                "title_bn": "স্বাস্থ্যসেতু প্ল্যাটফর্ম ব্যবহারবিধি (বুকিং, ডেমো পেমেন্ট ও Safe-OCR)",
+                "publisher": "ShasthoSetu AI Documentation",
+                "category": "Healthcare Service FAQs",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2026-11-19",
+                "active_chunks": 2
+              },
+              {
+                "id": "rsrc-ff9117c9e34947e5",
+                "slug": "shasthosetu-support-zero-phi-faq",
+                "title": "ShasthoSetu Support Operations, Zero-PHI Privacy & Account Help FAQ",
+                "title_bn": "সাপোর্ট ডেস্ক ও Zero-PHI প্রাইভেসি নীতি",
+                "publisher": "ShasthoSetu AI Support Operations",
+                "category": "Healthcare Service FAQs",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2026-11-19",
+                "active_chunks": 2
+              },
+              {
+                "id": "rsrc-92e58c4e51f44476",
+                "slug": "ultrasound-pcom-terminology-guide",
+                "title": "Ultrasound & PCOM Terminology Explained (Bilingual Guide)",
+                "title_bn": "আল্ট্রাসাউন্ড রিপোর্টে PCOM ও ফলিকল শব্দার্থ",
+                "publisher": "MedlinePlus Diagnostic Tests & International PCOS Evidence Summary",
+                "category": "Ultrasound / PCOM Terminology",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2024-08-15",
+                "active_chunks": 3
+              },
+              {
+                "id": "rsrc-f0889a5ac5e64531",
+                "slug": "who-blood-donation-safety",
+                "title": "Voluntary Blood Donation Education & Cross-Match Safety",
+                "title_bn": "রক্তদান ও ব্লাড ব্যাংক ক্রস-ম্যাচিং নিরাপত্তা",
+                "publisher": "WHO Blood Safety & Availability (Synthesized Reference)",
+                "category": "Blood Donation Education",
+                "language": "bilingual",
+                "review_status": "APPROVED",
+                "publication_date": "2025-06-14",
+                "active_chunks": 2
+              }
+            ]
+          }
+        },
+        {
+          "tool": "get_frozen_model_register",
+          "arguments": {
+            "module": ""
+          },
+          "is_error": false,
+          "preview": {
+            "register_file": "FINAL_RESEARCH_MODEL_REGISTER.csv",
+            "filter": "ALL",
+            "count": 16,
+            "models": [
+              {
+                "model_id": "M01-XGB-01",
+                "module": "01_PCOS_Clinical",
+                "model_name": "XGBoost Classifier (Clinical Champion)",
+                "architecture": "Gradient Boosted Decision Trees (XGBClassifier)",
+                "primary_metric": "Test Balanced Accuracy / Macro F1: 94.44% (17/18 correct) / 94.43% F1 (CV: 88.57% Bal Acc)",
+                "audit_status": "VERIFIED_VALID_BENCHMARK",
+                "sha256_prefix": "1af755f7a45d0604",
+                "scientific_classification": "LOCALLY_TRAINED_CHECKPOINT"
+              },
+              {
+                "model_id": "M01-RF-02",
+                "module": "01_PCOS_Clinical",
+                "model_name": "Random Forest Classifier",
+                "architecture": "RandomForestClassifier (scikit-learn)",
+                "primary_metric": "Test Balanced Accuracy / Macro F1: 94.44% (17/18 correct) / 94.43% F1 (CV: 87.77% Bal Acc)",
+                "audit_status": "VERIFIED_VALID_BENCHMARK",
+                "sha256_prefix": "N/A",
+                "scientific_classification": "EVALUATED_MODEL_WITHOUT_STORED_WEIGHTS"
+              },
+              {
+                "model_id": "M01-LR-03",
+                "module": "01_PCOS_Clinical",
+                "model_name": "Logistic Regression Baseline",
+                "architecture": "LogisticRegression (L2 regularized)",
+                "primary_metric": "Test Balanced Accuracy / Macro F1: 77.78% (14/18 correct) / 77.78% F1 (CV: 82.86% Bal Acc)",
+                "audit_status": "VERIFIED_VALID_BENCHMARK",
+                "sha256_prefix": "N/A",
+                "scientific_classification": "EVALUATED_MODEL_WITHOUT_STORED_WEIGHTS"
+              },
+              {
+                "model_id": "M02-RESNET-01",
+                "module": "02_PCOS_Ultrasound",
+                "model_name": "ResNet18 Ultrasound Morphology (Champion)",
+                "architecture": "ResNet18 Deep Convolutional Network",
+                "primary_metric": "Held-out Test Accuracy / Macro F1: 86.67% (39/45 correct) / 87.70% F1 (CV: 85.42% Acc)",
+                "audit_status": "VERIFIED_VALID_BENCHMARK_WITH_LIMITATION",
+                "sha256_prefix": "e60e15e76e17fc1e",
+                "scientific_classification": "LOCALLY_TRAINED_CHECKPOINT"
+              },
+              {
+                "model_id": "M02-MOBILENET-02",
+                "module": "02_PCOS_Ultrasound",
+                "model_name": "MobileNetV3 Ultrasound Morphology",
+                "architecture": "MobileNetV3-Small Deep CNN",
+                "primary_metric": "Held-out Test Accuracy / Macro F1: 80.00% (36/45 correct) / 82.46% F1",
+                "audit_status": "VERIFIED_VALID_BENCHMARK_WITH_LIMITATION",
+                "sha256_prefix": "bb59e7cd9e5ade3c",
+                "scientific_classification": "LOCALLY_TRAINED_CHECKPOINT"
+              },
+              {
+                "model_id": "M03-RESNET-GROUPED-01",
+                "module": "03_Measles_Viral_Rash",
+                "model_name": "ResNet18 Grouped (Champion Research-Demo Model)",
+                "architecture": "ResNet18 Deep Convolutional Network",
+                "primary_metric": "Val Image Acc / Macro F1 / Measles Recall: 84.65% Img Acc / 84.22% Macro F1 / 91.94% Measles Recall (Val Family Acc: 85.84%)",
+                "audit_status": "VERIFIED_VALID_BENCHMARK_WITH_LIMITATION",
+                "sha256_prefix": "809a202a7f9e3a05",
+                "scientific_classification": "LOCALLY_TRAINED_CHECKPOINT"
+              },
+              {
+                "model_id": "M03-MOBILENET-GROUPED-02",
+                "module": "03_Measles_Viral_Rash",
+                "model_name": "MobileNetV3 Grouped",
+                "architecture": "MobileNetV3-Small Deep CNN",
+                "primary_metric": "Val Image Acc / Macro F1 / Measles Recall: 81.15% Img Acc / 81.56% Macro F1 / 90.32% Measles Recall (Val Family Acc: 86.73%, Measles 9/9)",
+                "audit_status": "VERIFIED_VALID_BENCHMARK_WITH_LIMITATION",
+                "sha256_prefix": "c80a4da6421f1440",
+                "scientific_classification": "LOCALLY_TRAINED_CHECKPOINT"
+              },
+              {
+                "model_id": "M03-RESNET-CONTAMINATED-03",
+                "module": "03_Measles_Viral_Rash",
+                "model_name": "ResNet18 Historical (Contaminated Baseline)",
+                "architecture": "ResNet18 Deep Convolutional Network",
+                "primary_metric": "Contaminated Test Accuracy / Macro F1: 99.10% (INVALID DUE TO DATA LEAKAGE)",
+                "audit_status": "VERIFIED_CONTAMINATED_HISTORICAL",
+                "sha256_prefix": "c64970a2f2b294ed",
+                "scientific_classification": "HISTORICAL_CONTAMINATED_CHECKPOINT"
+              },
+              {
+                "model_id": "M03-MOBILENET-CONTAMINATED-04",
+                "module": "03_Measles_Viral_Rash",
+                "model_name": "MobileNetV3 Historical (Contaminated Baseline)",
+                "architecture": "MobileNetV3-Small Deep CNN",
+                "primary_metric": "Contaminated Test Accuracy / Macro F1: 98.20% (INVALID DUE TO DATA LEAKAGE)",
+                "audit_status": "VERIFIED_CONTAMINATED_HISTORICAL",
+                "sha256_prefix": "22d5da38740ce2ab",
+                "scientific_classification": "HISTORICAL_CONTAMINATED_CHECKPOINT"
+              },
+              {
+                "model_id": "M04-EASYOCR-PIPELINE-01",
+                "module": "04_Prescription_OCR",
+                "model_name": "EasyOCR Bilingual Inference Pipeline",
+                "architecture": "CRAFT (Text Detection) + ResNet-CTC (Text Recognition)",
+                "primary_metric": "Bilingual Ingestion & Triage Quarantine Rate: Smoke Test (0052.jpg): 44 tokens. Aggregate Test: 92.11% Quarantined (CER/WER NOT VALIDATED)",
+                "audit_status": "NOT_VALIDATED_FOR_ACCURACY_SAFETY_GATE_PASS",
+                "sha256_prefix": "DIRECTORY_PACKAG",
+                "scientific_classification": "GENERIC_PRETRAINED_INFERENCE_PIPELINE"
+              },
+              {
+                "model_id": "M05-WHISPER-BASE-01",
+                "module": "05_Bangla_Voice_AI",
+                "model_name": "OpenAI Whisper-Base",
+                "architecture": "Sequence-to-Sequence Transformer (74M params)",
+                "primary_metric": "Word Error Rate (WER) / Bengali Unicode %: English: 5.36% WER. Bengali: 117.33% WER, 0.0% Bengali Unicode (Banglish failure)",
+                "audit_status": "VERIFIED_ENGLISH_ONLY_BENGALI_REJECTED",
+                "sha256_prefix": "DIRECTORY_PACKAG",
+                "scientific_classification": "GENERIC_PRETRAINED_INFERENCE_PIPELINE"
+              },
+              {
+                "model_id": "M05-WHISPER-TINY-02",
+                "module": "05_Bangla_Voice_AI",
+                "model_name": "OpenAI Whisper-Tiny",
+                "architecture": "Sequence-to-Sequence Transformer (39M params)",
+                "primary_metric": "Word Error Rate (WER) / Bengali Unicode %: Bengali: 227.78% Mean WER, 0.0% Bengali Unicode (Repetition loops)",
+                "audit_status": "VERIFIED_DEFECTIVE_ON_BENGALI",
+                "sha256_prefix": "DIRECTORY_PACKAG",
+                "scientific_classification": "GENERIC_PRETRAINED_INFERENCE_PIPELINE"
+              },
+              {
+                "model_id": "M05-WHISPER-SMALL-BN-03",
+                "module": "05_Bangla_Voice_AI",
+                "model_name": "Whisper-Small Bengali Fine-Tuned (anuragshas)",
+                "architecture": "Sequence-to-Sequence Transformer (241.7M params)",
+                "primary_metric": "Corpus Norm WER / CER / Bengali Unicode %: Combined 26 clips: 39.09% WER, 13.44% CER, 98.37% Bengali Unicode (Latency: 2.14s)",
+                "audit_status": "VERIFIED_VALID_BENCHMARK_PROTOTYPE",
+                "sha256_prefix": "bf137c74899cb685",
+                "scientific_classification": "EXTERNALLY_FINE_TUNED_DOWNLOADED_CHECKPOINT"
+              },
+              {
+                "model_id": "M06-EXP-B-01",
+                "module": "06_DermoPed_Pediatric_Skin",
+                "model_name": "ResNet18 EXP_B Controlled v2 (Champion)",
+                "architecture": "ResNet18 Deep Convolutional Network",
+                "primary_metric": "Test Image Acc / Macro F1 / Patient Acc: Image Acc: 92.73% (102/110), Macro F1: 89.65%, Patient Acc: 75.0% (3/4)",
+                "audit_status": "VERIFIED_VALID_BENCHMARK_WITH_SEVERE_LIMITATION",
+                "sha256_prefix": "5a98479c66044e3a",
+                "scientific_classification": "LOCALLY_TRAINED_CHECKPOINT"
+              },
+              {
+                "model_id": "M06-EXP-D-02",
+                "module": "06_DermoPed_Pediatric_Skin",
+                "model_name": "ResNet18 EXP_D Regularized v3",
+                "architecture": "ResNet18 (Frozen Backbone, Dropout 0.5)",
+                "primary_metric": "Validation Macro F1 / Pediculosis Recall: Val Macro F1: 43.90%, Pediculosis Recall: 0.00% (Severe underfitting)",
+                "audit_status": "REJECTED_UNDERFIT_MODEL",
+                "sha256_prefix": "e9ef59b4bc6de88d",
+                "scientific_classification": "LOCALLY_TRAINED_CHECKPOINT"
+              },
+              {
+                "model_id": "M06-EXP-A-03",
+                "module": "06_DermoPed_Pediatric_Skin",
+                "model_name": "ResNet18 EXP_A Baseline v1",
+                "architecture": "ResNet18 (Weighted Loss, Random Shuffle)",
+                "primary_metric": "Test Image Acc / Macro F1: Image Acc: 90.91%, Macro F1: 87.27%",
+                "audit_status": "HISTORICAL_BASELINE_SUPERSEDED",
+                "sha256_prefix": "N/A",
+                "scientific_classification": "EVALUATED_MODEL_WITHOUT_STORED_WEIGHTS"
+              }
+            ]
+          }
+        },
+        {
+          "tool": "check_clinical_safety_guard",
+          "arguments": {
+            "text": "chest pain severe difficulty breathing"
+          },
+          "is_error": false,
+          "preview": {
+            "input_preview": "chest pain severe difficulty breathing",
+            "language_detected": "en",
+            "is_emergency": true,
+            "is_prompt_injection": false,
+            "asks_dosage_or_rx": false,
+            "flags": [
+              "EMERGENCY_RED_FLAG"
+            ],
+            "recommended_action": "EMERGENCY_ESCALATION_999_OR_HOSPITAL"
+          }
+        }
+      ],
+      "latency_ms": 552.3
+    },
+    {
+      "server_id": "directory-mcp",
+      "transport": "stdio",
+      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
+      "args": [
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\directory_mcp.py",
+        "--transport",
+        "stdio"
+      ],
+      "status": "PASS",
+      "server_info": {
+        "name": "directory-mcp",
+        "version": "",
+        "protocol_version": ""
+      },
+      "tools_count": 4,
+      "tools": [
+        "find_approved_doctors",
+        "get_department_counts",
+        "search_facilities_and_diagnostics",
+        "find_blood_requests_safe"
+      ],
+      "resources": [
+        "directory://overview"
+      ],
+      "tool_calls": [
+        {
+          "tool": "get_department_counts",
+          "arguments": {},
+          "is_error": false,
+          "preview": {
+            "department_count": 9,
+            "total_approved_doctors": 43,
+            "departments": [
+              {
+                "specialty": "Dermatology & Skin Care",
+                "doctor_count": 6,
+                "online_count": 5
+              },
+              {
+                "specialty": "Pediatrics & Child Care",
+                "doctor_count": 6,
+                "online_count": 5
+              },
+              {
+                "specialty": "Cardiology",
+                "doctor_count": 5,
+                "online_count": 4
+              },
+              {
+                "specialty": "Endocrinology",
+                "doctor_count": 5,
+                "online_count": 4
+              },
+              {
+                "specialty": "General Physician",
+                "doctor_count": 5,
+                "online_count": 4
+              },
+              {
+                "specialty": "Gynecology & Obstetrics",
+                "doctor_count": 5,
+                "online_count": 4
+              },
+              {
+                "specialty": "Internal Medicine",
+                "doctor_count": 5,
+                "online_count": 4
+              },
+              {
+                "specialty": "Orthopedics",
+                "doctor_count": 5,
+                "online_count": 4
+              },
+              {
+                "specialty": "Gynecology & PCOS",
+                "doctor_count": 1,
+                "online_count": 1
+              }
+            ]
+          }
+        },
+        {
+          "tool": "find_approved_doctors",
+          "arguments": {
+            "specialty": "Gynecology",
+            "limit": 3
+          },
+          "is_error": false,
+          "preview": {
+            "filters": {
+              "specialty": "Gynecology",
+              "district": "ALL",
+              "online_only": false
+            },
+            "count": 3,
+            "doctors": [
+              {
+                "id": "doc-farhana",
+                "doctor_code": "SS7001",
+                "display_name": "Dr. Farhana Rahman (Demo)",
+                "display_name_bn": "ডাঃ ফারহানা রহমান (ডেমো)",
+                "degrees": "MBBS, FCPS (OB-GYN)",
+                "specialty": "Gynecology & PCOS",
+                "district": "Dhaka",
+                "experience_years": 11,
+                "languages_csv": "bn,en",
+                "is_online_now": true,
+                "consultation_fee_minor_poisha": 50000,
+                "rating": 4.9,
+                "reviews_count": 412,
+                "avatar_url": "/images/doctors/doc-f-01.jpg",
+                "open_slots_count": 9,
+                "consultation_fee_bdt": 500
+              },
+              {
+                "id": "doc-demo-gyn-5",
+                "doctor_code": "SS7013",
+                "display_name": "Dr. Dilruba Parvin (Demo)",
+                "display_name_bn": "ডাঃ দিলরুবা পারভীন",
+                "degrees": "MBBS, MCPS (OB-GYN)",
+                "specialty": "Gynecology & Obstetrics",
+                "district": "Mymensingh",
+                "experience_years": 10,
+                "languages_csv": "bn,en",
+                "is_online_now": true,
+                "consultation_fee_minor_poisha": 50000,
+                "rating": 4.9,
+                "reviews_count": 439,
+                "avatar_url": "/images/doctors/doc-f-01.jpg",
+                "open_slots_count": 3,
+                "consultation_fee_bdt": 500
+              },
+              {
+                "id": "doc-demo-gyn-2",
+                "doctor_code": "SS7010",
+                "display_name": "Dr. Tanzina Ahmed (Demo)",
+                "display_name_bn": "ডাঃ তানজিনা আহমেদ",
+                "degrees": "MBBS (CU), FCPS (OB-GYN Final), CMU",
+                "specialty": "Gynecology & Obstetrics",
+                "district": "Dhaka",
+                "experience_years": 8,
+                "languages_csv": "bn,en",
+                "is_online_now": true,
+                "consultation_fee_minor_poisha": 32000,
+                "rating": 4.9,
+                "reviews_count": 370,
+                "avatar_url": "/images/doctors/doc-f-06.jpg",
+                "open_slots_count": 3,
+                "consultation_fee_bdt": 320
+              }
+            ]
+          }
+        },
+        {
+          "tool": "find_blood_requests_safe",
+          "arguments": {},
+          "is_error": false,
+          "preview": {
+            "privacy_gate": "ZERO_PHI_PHONE_MASKING_ENFORCED",
+            "clinical_notice": "Discovery coordination ONLY — certified hospital cross-matching mandatory prior to transfusion.",
+            "request_count": 4,
+            "blood_requests": [
+              {
+                "id": "breq-dmch-emg",
+                "patient_ref_label": "Ward-14 Hematology Patient (Demo)",
+                "blood_group": "O+",
+                "units_required": 2,
+                "units_fulfilled": 0,
+                "urgency_level": "EMERGENCY",
+                "hospital_name": "Dhaka Medical College Hospital (DMCH)",
+                "hospital_verified": true,
+                "division": "Dhaka",
+                "district": "Dhaka",
+                "status": "OPEN",
+                "created_at_utc": "2026-11-19T15:32:44.706Z",
+                "contact_phone_policy": "HIDDEN_UNTIL_CONSENT"
+              },
+              {
+                "id": "breq-cmch-emg",
+                "patient_ref_label": "Surgical Unit-2 Patient (Demo)",
+                "blood_group": "B+",
+                "units_required": 1,
+                "units_fulfilled": 0,
+                "urgency_level": "EMERGENCY",
+                "hospital_name": "Chattogram Medical College Hospital (CMCH)",
+                "hospital_verified": true,
+                "division": "Chattogram",
+                "district": "Chattogram",
+                "status": "OPEN",
+                "created_at_utc": "2026-11-19T15:32:44.706Z",
+                "contact_phone_policy": "HIDDEN_UNTIL_CONSENT"
+              },
+              {
+                "id": "breq-rmch-urg",
+                "patient_ref_label": "Maternal Care Ward-4 (Demo)",
+                "blood_group": "A+",
+                "units_required": 1,
+                "units_fulfilled": 0,
+                "urgency_level": "URGENT",
+                "hospital_name": "Rajshahi Medical College Hospital (RMCH)",
+                "hospital_verified": false,
+                "division": "Rajshahi",
+                "district": "Rajshahi",
+                "status": "OPEN",
+                "created_at_utc": "2026-11-19T15:32:44.706Z",
+                "contact_phone_policy": "HIDDEN_UNTIL_CONSENT"
+              },
+              {
+                "id": "breq-somch-sch",
+                "patient_ref_label": "Thalassemia Routine Schedule (Demo)",
+                "blood_group": "AB-",
+                "units_required": 1,
+                "units_fulfilled": 0,
+                "urgency_level": "SCHEDULED",
+                "hospital_name": "Sylhet MAG Osmani Medical College Hospital",
+                "hospital_verified": true,
+                "division": "Sylhet",
+                "district": "Sylhet",
+                "status": "OPEN",
+                "created_at_utc": "2026-11-19T15:32:44.706Z",
+                "contact_phone_policy": "HIDDEN_UNTIL_CONSENT"
+              }
+            ],
+            "available_donor_buckets": [
+              {
+                "blood_group": "O+",
+                "division": "Dhaka",
+                "ready_donors": 2
+              },
+              {
+                "blood_group": "A+",
+                "division": "Dhaka",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "A+",
+                "division": "Rajshahi",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "A-",
+                "division": "Rangpur",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "AB-",
+                "division": "Sylhet",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "B+",
+                "division": "Chattogram",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "B+",
+                "division": "Dhaka",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "B-",
+                "division": "Barishal",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "O+",
+                "division": "Khulna",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "O+",
+                "division": "Mymensingh",
+                "ready_donors": 1
+              },
+              {
+                "blood_group": "O-",
+                "division": "Dhaka",
+                "ready_donors": 1
+              }
+            ]
+          }
+        }
+      ],
+      "latency_ms": 526.7
+    },
+    {
+      "server_id": "care-record-mcp",
+      "transport": "stdio",
+      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
+      "args": [
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\care_record_mcp.py",
+        "--transport",
+        "stdio"
+      ],
+      "status": "PASS",
+      "server_info": {
+        "name": "care-record-mcp",
+        "version": "",
+        "protocol_version": ""
+      },
+      "tools_count": 4,
+      "tools": [
+        "get_patient_care_summary",
+        "list_pending_ocr_reviews",
+        "check_medication_activation_gate",
+        "list_immutable_audit_summary"
+      ],
+      "resources": [
+        "care://policy/acl-matrix"
+      ],
+      "tool_calls": [
+        {
+          "tool": "get_patient_care_summary",
+          "arguments": {
+            "requester_role": "SUPPORT"
+          },
+          "is_error": false,
+          "preview": {
+            "allowed": false,
+            "error_code": "ERR_ZERO_PHI_FORBIDDEN",
+            "requester_role": "SUPPORT",
+            "reason": "Support desk agents are strictly barred from accessing clinical PHR, prescription text, or diagnosis records."
+          }
+        },
+        {
+          "tool": "get_patient_care_summary",
+          "arguments": {
+            "requester_role": "PATIENT"
+          },
+          "is_error": false,
+          "preview": {
+            "allowed": true,
+            "found": true,
+            "requester_role": "PATIENT",
+            "privacy_mode": "PHONES_AND_RAW_PHI_SCRUBBED",
+            "patient_profile": {
+              "id": "pp-rahima-self",
+              "display_name": "রহিমা বেগম (Rahima Begum)",
+              "district": "Dhaka",
+              "blood_group": "O+",
+              "phone_contact": "HIDDEN_UNTIL_CONSENT",
+              "is_synthetic": true
+            },
+            "counts": {
+              "appointments": 1,
+              "medication_plans": 1,
+              "pcos_cycle_logs": 2,
+              "pediatric_vaccines": 0
+            }
+          }
+        },
+        {
+          "tool": "check_medication_activation_gate",
+          "arguments": {},
+          "is_error": false,
+          "preview": {
+            "found": true,
+            "ocr_job_id": "ocr-job-d735baf9daad4cab",
+            "job_status": "NEEDS_REVIEW",
+            "authorization_state": "RAW_OCR",
+            "uncertain_fields_count": 3,
+            "can_activate_reminder": false,
+            "http_gate_code": 422,
+            "policy": "Mandatory HTTP 422 Human Verification Gate — Never auto-activate unverified OCR schedules."
+          }
+        },
+        {
+          "tool": "list_immutable_audit_summary",
+          "arguments": {
+            "requester_role": "ADMIN",
+            "limit": 3
+          },
+          "is_error": false,
+          "preview": {
+            "allowed": true,
+            "requester_role": "ADMIN",
+            "total_audit_log_rows": 304,
+            "doctor_verification_events_count": 4,
+            "recent_events": [
+              {
+                "id": "aud-325d24c28d374ae7",
+                "actor_role": "PATIENT",
+                "action_type": "LOGIN_SUCCESS",
+                "target_resource": "sessions",
+                "outcome": "SUCCESS",
+                "created_at_utc": "2026-11-19T19:53:45.176Z"
+              },
+              {
+                "id": "aud-62fd329065404ff6",
+                "actor_role": "PATIENT",
+                "action_type": "LOGIN_SUCCESS",
+                "target_resource": "sessions",
+                "outcome": "SUCCESS",
+                "created_at_utc": "2026-11-19T19:50:23.220Z"
+              },
+              {
+                "id": "aud-cfb552d18d9d406f",
+                "actor_role": "PATIENT",
+                "action_type": "LOGIN_SUCCESS",
+                "target_resource": "sessions",
+                "outcome": "SUCCESS",
+                "created_at_utc": "2026-11-19T19:39:48.285Z"
+              }
+            ]
+          }
+        }
+      ],
+      "latency_ms": 512.0
+    }
+  ],
+  "public_servers": [
+    {
+      "server_id": "filesystem",
+      "transport": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\docs",
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT\\final_lock"
+      ],
+      "status": "PASS",
+      "server_info": {
+        "name": "filesystem",
+        "version": "",
+        "protocol_version": ""
+      },
+      "tools_count": 16,
+      "tools": [
+        "read_file",
+        "read_text_file",
+        "read_media_file",
+        "read_multiple_files",
+        "write_file",
+        "append_file",
+        "edit_file",
+        "create_directory",
+        "list_directory",
+        "list_directory_with_sizes",
+        "directory_tree",
+        "move_file",
+        "copy_file",
+        "search_files",
+        "get_file_info",
+        "list_allowed_directories"
+      ],
+      "resources": [],
+      "tool_calls": [
+        {
+          "tool": "list_allowed_directories",
+          "arguments": {},
+          "is_error": false,
+          "preview": "Allowed directories:\nF:\\Clude cccccccccccccccccccccccc\\data we test\\docs\nF:\\Clude cccccccccccccccccccccccc\\data we test\\SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT\\final_lock"
+        }
+      ],
+      "latency_ms": 1026.3
+    },
+    {
+      "server_id": "memory",
+      "transport": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "status": "PASS",
+      "server_info": {
+        "name": "memory",
+        "version": "",
+        "protocol_version": ""
+      },
+      "tools_count": 9,
+      "tools": [
+        "create_entities",
+        "create_relations",
+        "add_observations",
+        "delete_entities",
+        "delete_observations",
+        "delete_relations",
+        "read_graph",
+        "search_nodes",
+        "open_nodes"
+      ],
+      "resources": [],
+      "tool_calls": [
+        {
+          "tool": "read_graph",
+          "arguments": {},
+          "is_error": false,
+          "preview": {
+            "entities": [
+              {
+                "name": "ShasthoSetu_AI_Platform",
+                "entityType": "TelemedicineSystem",
+                "observations": [
+                  "Bangla-first telemedicine, privacy-first Blood Connect, 6 non-diagnostic clinical AI modules",
+                  "Zero-PHI enforcement bars SUPPORT role from clinical PHR",
+                  "Mandatory HTTP 422 human verification gate on Prescription OCR"
+                ]
+              },
+              {
+                "name": "guideline-mcp",
+                "entityType": "CustomMCPServer",
+                "observations": [
+                  "Exposes search_clinical_guidelines, list_approved_rag_sources, get_frozen_model_register, check_clinical_safety_guard",
+                  "Supports stdio, SSE (port 8101), and Streamable HTTP"
+                ]
+              },
+              {
+                "name": "directory-mcp",
+                "entityType": "CustomMCPServer",
+                "observations": [
+                  "Exposes 43 approved doctors across 8 departments, 12 diagnostic tests, 12 facilities, and masked Blood Connect requests",
+                  "Zero-PHI phone masking enforced"
+                ]
+              },
+              {
+                "name": "care-record-mcp",
+                "entityType": "CustomMCPServer",
+                "observations": [
+                  "Enforces RBAC and ERR_ZERO_PHI_FORBIDDEN for SUPPORT role",
+                  "Exposes HTTP 422 medication activation gate checks"
+                ]
+              }
+            ],
+            "relations": [
+              {
+                "from": "ShasthoSetu_AI_Platform",
+                "to": "guideline-mcp",
+                "relationType": "EXPOSES_RAG_AND_AUDIT_TOOLS"
+              },
+              {
+                "from": "ShasthoSetu_AI_Platform",
+                "to": "directory-mcp",
+                "relationType": "EXPOSES_CLINICIAN_AND_BLOOD_DIRECTORY"
+              },
+              {
+                "from": "ShasthoSetu_AI_Platform",
+                "to": "care-record-mcp",
+                "relationType": "ENFORCES_RBAC_AND_OCR_GATE"
+              }
+            ]
+          }
+        }
+      ],
+      "latency_ms": 782.4
+    },
+    {
+      "server_id": "sequential-thinking",
+      "transport": "stdio",
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
+      "status": "PASS",
+      "server_info": {
+        "name": "sequential-thinking",
+        "version": "",
+        "protocol_version": ""
+      },
+      "tools_count": 1,
+      "tools": [
+        "sequentialthinking"
+      ],
+      "resources": [],
+      "tool_calls": [
+        {
+          "tool": "sequentialthinking",
+          "arguments": {
+            "thought": "Verify Zero-PHI barrier prevents SUPPORT role from reading clinical OCR/PHR records before response.",
+            "nextThoughtNeeded": false,
+            "thoughtNumber": 1,
+            "totalThoughts": 1
+          },
+          "is_error": false,
+          "preview": {
+            "thoughtNumber": 1,
+            "totalThoughts": 1,
+            "nextThoughtNeeded": false,
+            "branches": [],
+            "thoughtHistoryLength": 1
+          }
+        }
+      ],
+      "latency_ms": 1013.4
+    }
+  ],
+  "external_sse_servers": [
+    {
+      "server_id": "cloudcamp-bd",
+      "transport": "sse",
+      "url": "https://cloudcamp-bd-mcp.equisaas-bd.com",
+      "reachable": true,
+      "http_status": 403,
+      "latency_ms": 265.0,
+      "note": "Endpoint responded with HTTP 403 (configured external SSE server)"
+    }
+  ]
+}

@@ -48,6 +48,7 @@ const RESEARCH_SECTIONS: RailSectionItem[] = [
   { id: "res-register", num: "06", labelEn: "SHA Register", labelBn: "রেজিস্টার" },
   { id: "res-quiz", num: "07", labelEn: "Quiz Check", labelBn: "কুইজ যাচাই" },
   { id: "res-sandbox", num: "08", labelEn: "Sandbox", labelBn: "স্যান্ডবক্স" },
+  { id: "res-mcp", num: "09", labelEn: "MCP Hub", labelBn: "এমসিপি হাব" },
 ];
 
 const BLOOD_CONNECT_SECTIONS: RailSectionItem[] = [

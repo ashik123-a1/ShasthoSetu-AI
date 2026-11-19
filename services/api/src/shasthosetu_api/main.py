@@ -17,6 +17,7 @@ from .routers import (
     blood_connect,
     doctor,
     journal,
+    mcp_hub,
     patient,
     public,
     support,
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
     app.include_router(support.router)
     app.include_router(admin.router)
     app.include_router(admin_rag.router)
+    app.include_router(mcp_hub.router)
     return app
 
 
