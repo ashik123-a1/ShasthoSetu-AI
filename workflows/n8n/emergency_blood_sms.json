@@ -1,0 +1,68 @@
+{
+  "name": "ShasthoSetu Emergency Blood SMS Dispatcher",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "emergency-blood-trigger",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.body.urgency}}",
+              "value2": "CRITICAL"
+            }
+          ]
+        }
+      },
+      "name": "Filter Critical Urgency",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:8000/v1/automation/webhooks/emergency-blood",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Notify FastAPI Dispatcher",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [680, 200]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter Critical Urgency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Critical Urgency": {
+      "main": [
+        [
+          {
+            "node": "Notify FastAPI Dispatcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

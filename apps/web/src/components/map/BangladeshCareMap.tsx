@@ -70,11 +70,11 @@ interface DivisionHub {
   districts: string[];
 }
 
-const BD_CENTER: [number, number] = [23.685, 90.356];
-const BD_INITIAL_ZOOM = 7;
+const BD_CENTER: [number, number] = [23.82, 90.30];
+const BD_INITIAL_ZOOM = 7.25;
 const BD_BOUNDS: L.LatLngBoundsExpression = [
-  [20.59, 88.0],
-  [26.64, 92.69],
+  [21.45, 88.10],
+  [26.45, 92.55],
 ];
 
 const DIVISION_HUBS: DivisionHub[] = [
@@ -372,9 +372,15 @@ export function BangladeshCareMap({
       map.closePopup();
       const size = map.getSize();
       if (size.x > 64 && size.y > 64) {
-        map.flyToBounds(BD_BOUNDS, { padding: [14, 14], duration: motionPaused ? 0 : 1.0 });
+        map.fitBounds(BD_BOUNDS, { padding: [8, 8], maxZoom: 7.8, animate: !motionPaused });
+        const currentZoom = map.getZoom();
+        if (currentZoom < 7.1 && size.y >= 500) {
+          map.setView(BD_CENTER, 7.25, { animate: !motionPaused });
+        } else if (currentZoom < 6.7 && size.y >= 400) {
+          map.setView(BD_CENTER, 6.85, { animate: !motionPaused });
+        }
       } else {
-        map.flyTo(BD_CENTER, BD_INITIAL_ZOOM, { duration: motionPaused ? 0 : 1.0 });
+        map.setView(BD_CENTER, BD_INITIAL_ZOOM, { animate: !motionPaused });
       }
     }
     setSelectedDivKey("dhaka");
@@ -445,7 +451,15 @@ export function BangladeshCareMap({
     const fitBangladesh = () => {
       const size = map.getSize();
       if (size.x > 64 && size.y > 64) {
-        map.fitBounds(BD_BOUNDS, { padding: [14, 14], animate: false });
+        map.fitBounds(BD_BOUNDS, { padding: [8, 8], maxZoom: 7.8, animate: false });
+        const currentZoom = map.getZoom();
+        if (currentZoom < 7.1 && size.y >= 500) {
+          map.setView(BD_CENTER, 7.25, { animate: false });
+        } else if (currentZoom < 6.7 && size.y >= 400) {
+          map.setView(BD_CENTER, 6.85, { animate: false });
+        }
+      } else {
+        map.setView(BD_CENTER, BD_INITIAL_ZOOM, { animate: false });
       }
     };
 
@@ -701,7 +715,7 @@ export function BangladeshCareMap({
         {/* LEFT COLUMN (7 cols): Interactive Leaflet Map Shell */}
         <div className="lg:col-span-7 rounded-2xl border border-slate-800/90 bg-slate-950/90 shadow-2xl overflow-clip flex flex-col">
           {/* Map Top Bar */}
-          <div className="px-3.5 py-2.5 border-b border-slate-800/80 bg-slate-950/95 shrink-0 flex flex-wrap items-center justify-between gap-2">
+          <div className="px-3 py-2 border-b border-slate-800/80 bg-slate-950/95 shrink-0 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
               <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wider">
@@ -720,7 +734,7 @@ export function BangladeshCareMap({
               <button
                 type="button"
                 onClick={handleUseGps}
-                className="min-h-9 px-2.5 rounded-lg bg-slate-900 hover:bg-teal-500 hover:text-slate-950 text-teal-300 border border-teal-500/40 text-xs font-mono font-bold inline-flex items-center gap-1 cursor-pointer transition"
+                className="min-h-8 px-2.5 rounded-lg bg-slate-900 hover:bg-teal-500 hover:text-slate-950 text-teal-300 border border-teal-500/40 text-xs font-mono font-bold inline-flex items-center gap-1 cursor-pointer transition"
               >
                 <LocateFixed className="w-3.5 h-3.5" />
                 <span>{locale === "bn" ? "নিকটতম GPS" : "Nearest GPS"}</span>
@@ -728,7 +742,7 @@ export function BangladeshCareMap({
               <button
                 type="button"
                 onClick={resetBdMap}
-                className="min-h-9 px-2.5 rounded-lg bg-slate-900 hover:bg-cyan-500 hover:text-slate-950 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold inline-flex items-center gap-1 cursor-pointer transition"
+                className="min-h-8 px-2.5 rounded-lg bg-slate-900 hover:bg-cyan-500 hover:text-slate-950 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold inline-flex items-center gap-1 cursor-pointer transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>{locale === "bn" ? "সমগ্র বাংলাদেশ" : "Reset Map"}</span>
@@ -737,7 +751,7 @@ export function BangladeshCareMap({
           </div>
 
           {gpsStatus ? (
-            <div className="px-3.5 py-1.5 border-b border-slate-800/60 bg-slate-950/90 shrink-0 text-[11px] font-mono text-teal-300 flex items-center gap-1.5">
+            <div className="px-3 py-1 border-b border-slate-800/60 bg-slate-950/90 shrink-0 text-[11px] font-mono text-teal-300 flex items-center gap-1.5">
               <Navigation className="w-3.5 h-3.5" />
               <span>{gpsStatus}</span>
             </div>
@@ -747,8 +761,8 @@ export function BangladeshCareMap({
           <div
             className={`relative w-full flex-1 ${
               compact
-                ? "min-h-[460px] sm:min-h-[540px] lg:min-h-[580px]"
-                : "min-h-[500px] sm:min-h-[580px] lg:min-h-[640px]"
+                ? "h-[500px] sm:h-[560px] lg:h-[620px]"
+                : "h-[580px] sm:h-[650px] lg:h-[720px]"
             }`}
           >
             <div className="absolute inset-0">
@@ -757,7 +771,7 @@ export function BangladeshCareMap({
           </div>
 
           {/* Map Footnote Banner */}
-          <div className="px-3.5 py-2.5 border-t border-slate-800/80 bg-slate-950/95 shrink-0 flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 gap-2">
+          <div className="px-3 py-2 border-t border-slate-800/80 bg-slate-950/95 shrink-0 flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 gap-2">
             <span className="inline-flex items-center gap-1.5 text-amber-400">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               {locale === "bn"

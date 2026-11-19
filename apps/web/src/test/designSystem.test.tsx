@@ -6,6 +6,9 @@ import { MemoryRouter } from "react-router-dom";
 import App from "../App";
 import { bnCatalog, enCatalog } from "../lib/i18n";
 import { formatBdtFromPoisha, formatDhakaDateTime } from "../lib/formatters";
+import { MedicalReceiptDocument } from "../components/billing/MedicalReceiptDocument";
+import { MedicalPrescriptionDocument } from "../components/prescriptions/MedicalPrescriptionDocument";
+import { DoctorProfileDetailModal } from "../components/doctors/DoctorProfileDetailModal";
 
 function flattenKeys(obj: Record<string, unknown>, prefix = ""): Record<string, string> {
   const out: Record<string, string> = {};
@@ -234,5 +237,86 @@ describe("UI-01 ShasthoSetu Design System & Reusable Primitives", () => {
     renderApp(["/care-map"]);
     expect(screen.getByTestId("care-map-page")).toBeInTheDocument();
     expect(screen.getByTestId("bangladesh-care-map")).toBeInTheDocument();
+  });
+
+  it("13. Renders MedicalReceiptDocument with logo, helpline, hospital dispatch header, itemized fee breakdown & watermark", () => {
+    const mockReceipt = {
+      receipt_number: "DEMO-RCP-9001",
+      payment_method: "DEMO_BKASH",
+      amount_minor_poisha: 50000,
+      status: "DEMO_PAID",
+      booking_reference: "APT-DEMO-9001",
+      patient_name: "রহিমা বেগম (Rahima Begum)",
+      patient_id_code: "SS-PT-884920",
+      doctor_name: "Dr. Farhana Rahman (Demo)",
+      doctor_degrees: "MBBS, FCPS (OB-GYN)",
+      doctor_specialty: "Gynecology & PCOS",
+      doctor_bmdc: "BMDC-DEMO-44102",
+    };
+    render(<MedicalReceiptDocument receipt={mockReceipt} locale="en" />);
+    expect(screen.getByText("ShasthoSetu AI • স্বাস্থ্যসেতু")).toBeInTheDocument();
+    expect(screen.getByText("DEMO-RCP-9001")).toBeInTheDocument();
+    expect(screen.getByText("ShasthoPay MFS (Simulated)")).toBeInTheDocument();
+    expect(screen.getByText("BMDC-DEMO-44102")).toBeInTheDocument();
+    expect(screen.getByText(/Helpline: 16263/)).toBeInTheDocument();
+    expect(screen.getByText(/Telehealth Specialist Clinical Consultation/)).toBeInTheDocument();
+  });
+
+  it("14. Renders MedicalPrescriptionDocument with doctor credentials, BMDC reg, patient vitals & structured Rx table", () => {
+    const mockRx = {
+      rx_reference: "DEMO-RX-9001",
+      doctor_name: "Dr. Farhana Rahman (Demo)",
+      doctor_degrees: "MBBS, FCPS (OB-GYN)",
+      doctor_specialty: "Gynecology & PCOS",
+      doctor_bmdc: "BMDC-DEMO-44102",
+      patient_name: "রহিমা বেগম (Rahima Begum)",
+      patient_age: "30Y",
+      patient_sex: "Female",
+      patient_blood_group: "O+",
+      patient_bp: "118/78",
+      patient_weight: "58 kg",
+      diagnosis_summary: "PCOS cycle irregularity & insulin resistance monitoring (Demo)",
+      medications_json: JSON.stringify([
+        { name: "Tab. Metformin 500mg", dose: "1 tablet", frequency: "0+0+1 After Dinner", duration: "14 days" },
+      ]),
+      advice_notes: "Regular 30-min walking and balanced diet.",
+    };
+    render(<MedicalPrescriptionDocument prescription={mockRx} locale="en" />);
+    expect(screen.getAllByText("Dr. Farhana Rahman (Demo)").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/BMDC-DEMO-44102/)).toBeInTheDocument();
+    expect(screen.getAllByText("DEMO-RX-9001").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Tab. Metformin 500mg")).toBeInTheDocument();
+    expect(screen.getByText(/PCOS cycle irregularity/)).toBeInTheDocument();
+  });
+
+  it("15. Renders DoctorProfileDetailModal with full clinical credentials, BMDC reg, bio, rating & slot booking", () => {
+    const mockDoctor = {
+      id: "doc-farhana",
+      display_name: "Dr. Farhana Rahman (Demo)",
+      display_name_bn: "ডাঃ ফারহানা রহমান (ডেমো)",
+      degrees: "MBBS, FCPS (OB-GYN)",
+      specialty: "Gynecology & PCOS",
+      bmdc_demo_reg: "BMDC-DEMO-44102",
+      practice_location: "Dhanmondi Care Hub (Demo)",
+      district: "Dhaka",
+      experience_years: 11,
+      is_online_now: 1,
+      consultation_fee_minor_poisha: 50000,
+      bio: "Specialist in PCOS tracking and maternal follow-ups.",
+      doctor_code: "SS-DOC-FAR",
+    };
+    render(
+      <DoctorProfileDetailModal
+        doctor={mockDoctor}
+        locale="en"
+        onClose={() => {}}
+        onSelectForBooking={() => {}}
+      />
+    );
+    expect(screen.getByText("Dr. Farhana Rahman (Demo)")).toBeInTheDocument();
+    expect(screen.getByText("BMDC-DEMO-44102")).toBeInTheDocument();
+    expect(screen.getByText("MBBS, FCPS (OB-GYN)")).toBeInTheDocument();
+    expect(screen.getByText(/11 Years Clinical Exp/)).toBeInTheDocument();
+    expect(screen.getByText("Book Appointment with this Doctor")).toBeInTheDocument();
   });
 });

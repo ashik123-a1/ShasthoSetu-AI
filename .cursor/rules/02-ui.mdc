@@ -1,0 +1,19 @@
+---
+description: Frontend UI Standards, Accessibility, Bilingual Support & Theme
+globs: apps/web/src/**/*
+---
+
+# ShasthoSetu Frontend UI Standards
+
+1. **Theme & Styling**:
+   - Dark sapphire glassmorphism: `#050B14`, `#0F172A`, cyan/teal neon accents (`#38bdf8`, `#14b8a6`, `#34d399`).
+   - Tailwind utility classes combined with custom glass panels (`ss-sapphire-card`, `ss-glass-panel`).
+
+2. **Bilingual Requirement (Bengali + English)**:
+   - All patient-facing and doctor-facing components must support seamless EN/BN toggle via `useI18n()`.
+   - Bengali typography must use readable sans fonts (SolaimanLipi / Noto Sans Bengali fallbacks).
+
+3. **Accessibility & Responsive**:
+   - WCAG 2.1 AA compliant contrast.
+   - All interactive elements must have aria labels and focus indicators.
+   - Fully responsive for mobile viewports (minimum 360px width) up to 4K displays.

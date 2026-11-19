@@ -165,6 +165,16 @@ export function LoginPage() {
   const [activeDemoId, setActiveDemoId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const isPublicTunnel = typeof window !== "undefined" && (
+    window.location.hostname.endsWith(".trycloudflare.com") ||
+    window.location.hostname.includes("ngrok") ||
+    (window.location.hostname !== "127.0.0.1" && window.location.hostname !== "localhost")
+  );
+
+  const visibleDemoAccounts = isPublicTunnel
+    ? DEMO_ACCOUNTS.filter((acc) => acc.id === "patient")
+    : DEMO_ACCOUNTS;
+
   const performLogin = async (idVal: string, pwVal: string, demoId?: string) => {
     setError(null);
     setSubmitting(true);
@@ -365,8 +375,20 @@ export function LoginPage() {
           </div>
 
           {/* One-Click Demo Role Cards */}
+          {isPublicTunnel && (
+            <div className="mb-3 p-2.5 rounded-lg bg-amber-950/40 border border-amber-600/40 text-[11px] text-amber-200 flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold">{locale === "bn" ? "পাবলিক টানেল নিরাপত্তা লক:" : "Public Tunnel Security Lock:"}</span>{" "}
+                {locale === "bn"
+                  ? "চিকিৎসক ও অ্যাডমিন প্রিভিলেজড অ্যাক্সেস পাবলিক টানেলে সুরক্ষিত রাখা হয়েছে। ইভ্যালুয়েশনের জন্য ডেমো রোগী হিসেবে প্রবেশ করুন অথবা অনুমোদিত ক্রেডেনশিয়াল দিন।"
+                  : "Doctor & Admin privileged accounts are secured on public tunnel per BMDC/Zero-PHI governance. Evaluators can explore freely via Demo Patient or enter assigned credentials."}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2.5">
-            {DEMO_ACCOUNTS.map((acc) => {
+            {visibleDemoAccounts.map((acc) => {
               const isBusy = submitting && activeDemoId === acc.id;
               return (
                 <button

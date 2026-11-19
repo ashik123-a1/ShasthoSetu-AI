@@ -10,6 +10,7 @@ from .db.sqlite import apply_schema
 from .routers import (
     admin,
     admin_rag,
+    agents_and_automation,
     ai_assistant,
     ai_inference,
     ai_ocr,
@@ -71,6 +72,7 @@ def create_app() -> FastAPI:
     app.include_router(admin.router)
     app.include_router(admin_rag.router)
     app.include_router(mcp_hub.router)
+    app.include_router(agents_and_automation.router)
     return app
 
 

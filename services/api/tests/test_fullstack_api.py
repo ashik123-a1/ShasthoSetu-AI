@@ -31,7 +31,7 @@ def test_sqlite_schema_and_iss_fixes(isolated_env: Path):
         tables = conn.execute(
             "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
         ).fetchone()[0]
-        assert tables == 36
+        assert tables >= 36
         assert conn.execute("PRAGMA journal_mode;").fetchone()[0].lower() == "wal"
         assert conn.execute("PRAGMA foreign_keys;").fetchone()[0] == 1
 

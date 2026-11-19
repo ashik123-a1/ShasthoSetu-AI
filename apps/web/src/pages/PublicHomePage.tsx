@@ -284,7 +284,7 @@ export function PublicHomePage() {
       titleBn: "০১ • রোগী পোর্টাল, PHR ভল্ট ও ডেমো পেমেন্ট",
       titleEn: "01 • Patient Portal, PHR Vault & Demo Checkout",
       badge: "PATIENT RBAC",
-      descBn: "স্বয়ং ও শিশু-নির্ভরশীল প্রোফাইল, অ্যাটমিক বুকিং, bKash/Nagad/Card ডেমো রসিদ ও মানব-যাচাইকৃত OCR।",
+      descBn: "স্বয়ং ও শিশু-নির্ভরশীল প্রোফাইল, অ্যাটমিক বুকিং, ShasthoPay MFS / কার্ড ডেমো রসিদ ও মানব-যাচাইকৃত OCR।",
       descEn: "Adult & child dependent isolation, atomic slot reservations, watermarked simulated receipts, and human-gated OCR schedules.",
       ctaPath: "/patient/dashboard",
     },
@@ -456,8 +456,8 @@ export function PublicHomePage() {
     {
       qBn: "স্বাস্থ্যসেতু এআই-এর পেমেন্ট সিস্টেম কি আসল টাকা কাটে?",
       qEn: "Are payments in ShasthoSetu AI real monetary charges?",
-      aBn: "না। এই প্ল্যাটফর্মের bKash/Nagad/Card চেকআউট সম্পূর্ণ সিমুলেটেড (DEMO / SIMULATED)। এখানে কোনো আসল পিন, ওটিপি বা কার্ড নম্বর নেওয়া হয় না এবং প্রতিটি রসিদে স্পষ্ট ওয়াটারমার্ক থাকে।",
-      aEn: "No. Every bKash/Nagad/Card checkout is strictly SIMULATED / DEMO with zero PIN, OTP, CVV, or card storage and a watermarked simulation notice on every receipt.",
+      aBn: "না। এই প্ল্যাটফর্মের ShasthoPay MFS / কার্ড চেকআউট সম্পূর্ণ সিমুলেটেড (DEMO / SIMULATED)। এখানে কোনো আসল পিন, ওটিপি বা কার্ড নম্বর নেওয়া হয় না এবং প্রতিটি রসিদে স্পষ্ট ওয়াটারমার্ক থাকে।",
+      aEn: "No. Every ShasthoPay / Card checkout is strictly SIMULATED / DEMO with zero PIN, OTP, CVV, or card storage and a watermarked simulation notice on every receipt.",
     },
     {
       qBn: "প্রেসক্রিপশন OCR কি নিজে থেকেই ওষুধের রিমাইন্ডার চালু করে?",

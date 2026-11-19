@@ -1,0 +1,15 @@
+spec_version: "kiro-1.0"
+component: "shasthosetu-clinical-core"
+description: "Core clinical decision support and privacy orchestration spec"
+contract:
+  input:
+    patient_query: "string"
+    language: "en | bn"
+    audio_format: "wav | webm | null"
+  invariants:
+    zero_phi: "enforced_via_presidio"
+    response_mode: "non_diagnostic_triage"
+    fail_closed: true
+  slas:
+    max_triage_latency_ms: 1800
+    emergency_detection_latency_ms: 150

@@ -1,0 +1,725 @@
+{
+  "timestamp_utc": "2026-11-19T16:11:02Z",
+  "total_clips": 18,
+  "cohorts": {
+    "Human Bengali FLEURS (N=6)": {
+      "rows": [],
+      "models": {
+        "anuragshas/whisper-small-bn (Forced BN)": {
+          "mean_wer": 0.4556,
+          "mean_cer": 0.1141,
+          "mean_bengali_ratio": 0.9768,
+          "avg_latency_ms": 1518.59
+        },
+        "openai/whisper-base (Forced EN)": {
+          "mean_wer": 1.1167,
+          "mean_cer": 0.9819,
+          "mean_bengali_ratio": 0.0,
+          "avg_latency_ms": 212.01
+        },
+        "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)": {
+          "mean_wer": 0.4556,
+          "mean_cer": 0.1141,
+          "mean_bengali_ratio": 0.9768,
+          "avg_latency_ms": 2502.77
+        }
+      }
+    },
+    "Synthetic English Clinical (N=6)": {
+      "rows": [],
+      "models": {
+        "anuragshas/whisper-small-bn (Forced BN)": {
+          "mean_wer": 1.0,
+          "mean_cer": 0.9549,
+          "mean_bengali_ratio": 0.9859,
+          "avg_latency_ms": 1533.13
+        },
+        "openai/whisper-base (Forced EN)": {
+          "mean_wer": 0.0839,
+          "mean_cer": 0.03,
+          "mean_bengali_ratio": 0.0,
+          "avg_latency_ms": 128.5
+        },
+        "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)": {
+          "mean_wer": 0.0839,
+          "mean_cer": 0.03,
+          "mean_bengali_ratio": 0.0,
+          "avg_latency_ms": 240.32
+        }
+      }
+    },
+    "Synthetic Mixed Code-Switch (N=6)": {
+      "rows": [],
+      "models": {
+        "anuragshas/whisper-small-bn (Forced BN)": {
+          "mean_wer": 1.0593,
+          "mean_cer": 1.1464,
+          "mean_bengali_ratio": 0.9741,
+          "avg_latency_ms": 1575.17
+        },
+        "openai/whisper-base (Forced EN)": {
+          "mean_wer": 0.4824,
+          "mean_cer": 0.1838,
+          "mean_bengali_ratio": 0.0,
+          "avg_latency_ms": 139.24
+        },
+        "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)": {
+          "mean_wer": 0.4824,
+          "mean_cer": 0.1838,
+          "mean_bengali_ratio": 0.0,
+          "avg_latency_ms": 158.63
+        }
+      }
+    }
+  },
+  "detailed_samples": [
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "BN_01",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_01.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল, তবে আদালতের জরুরিরায় আসার পরে এটি বাচানো হয়।",
+      "wer": 0.3333,
+      "cer": 0.0617,
+      "bn_ratio": 0.9706,
+      "latency_ms": 2381.91
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "BN_02",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_02.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "এটিকে মঙ্গোলবার কেটে ফেলার কথা ছিল, তবে আদালতে জরুরি রায় আসার পরে এটি বাচানো হয়।",
+      "wer": 0.4,
+      "cer": 0.0741,
+      "bn_ratio": 0.9706,
+      "latency_ms": 1463.37
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "BN_03",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_03.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "এটিকে মূঙ্গলবার কেঁটে খেলার কথা ছিল, কবে আদালতে জরুরই রায় আসার পরে এটি বাচানো হয়।",
+      "wer": 0.6,
+      "cer": 0.1111,
+      "bn_ratio": 0.971,
+      "latency_ms": 1457.47
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "BN_04",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_04.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "চপ্ত্রান্ত্র বিশ্লেশন করে ফলাফল একটি পাবলিক ওয়েব সাইটে প্রকাশ করা হবে।",
+      "wer": 0.6,
+      "cer": 0.2188,
+      "bn_ratio": 0.9836,
+      "latency_ms": 1310.09
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "BN_05",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_05.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "চক্রান্ত বিশ্লেশন করে ফলাফল একটি প্যাপলিক ওয়েবসাইডে পোস্ট করা হবে।",
+      "wer": 0.4,
+      "cer": 0.1094,
+      "bn_ratio": 0.9828,
+      "latency_ms": 1288.78
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "BN_06",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_06.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "চক্রান্ত বিশ্লেশন করে ফলাফল একটি পাবলি কোয়েফসাইটে পোস্ট করা হবে।",
+      "wer": 0.4,
+      "cer": 0.1094,
+      "bn_ratio": 0.9821,
+      "latency_ms": 1209.93
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "EN_01",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_01.wav",
+      "ref_text": "Patient blood pressure is 120 over 80 and heart rate is 72 beats per minute.",
+      "hyp_text": "প্যাশন্ট ব্লদ প্রশ্যর ইস য়ননান্যান্ড্রট এন হার্ড রাইড এস সেমটিক্য বিডেস প্রমিনেড।",
+      "wer": 1.0,
+      "cer": 0.9737,
+      "bn_ratio": 0.9859,
+      "latency_ms": 1537.19
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "EN_02",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_02.wav",
+      "ref_text": "Prescribe Amoxicillin 500 milligrams capsules three times daily after meals for seven days.",
+      "hyp_text": "প্রস্ক্রাইবামক্সাসিলন ফাইভানদোনিলগ্রামেমস কাপ্সলস ত্রিকামস ডাইলি আফ্টোর মিলজ ফের সেমন ডাইজ।",
+      "wer": 1.0,
+      "cer": 0.9451,
+      "bn_ratio": 0.9878,
+      "latency_ms": 1673.4
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "EN_03",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_03.wav",
+      "ref_text": "Patient presents with high fever productive cough and severe chest discomfort.",
+      "hyp_text": "পায়িন্ড প্রেসন্তস ও হাই ফিভেরের প্রডাক্তিফ কফ এন সাবের চেষ্ট ডস্কম্ফর্ট।",
+      "wer": 1.0,
+      "cer": 0.9231,
+      "bn_ratio": 0.9841,
+      "latency_ms": 1376.32
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "EN_04",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_04.wav",
+      "ref_text": "Urgent referral required transfer patient to intensive care unit immediately.",
+      "hyp_text": "অর্জন্ড রিফেরল ড্রান্সফর পেশন্ট তে অন্তেন্সফ কের ইউনেড অমিডিয়ালি।",
+      "wer": 1.0,
+      "cer": 0.9221,
+      "bn_ratio": 0.9828,
+      "latency_ms": 1275.89
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "EN_05",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_05.wav",
+      "ref_text": "Order fasting blood sugar serum creatinine lipid profile and 12-lead electrocardiogram.",
+      "hyp_text": "অর্ডর ফাস্টিং ব্লদস্বর্গেরম ক্রিয়াডেনিন লিপেড প্রফাইল এন কোল্ড লিড ইল্ট্রোকার্ডিয়াগ্রাম।",
+      "wer": 1.0,
+      "cer": 0.9885,
+      "bn_ratio": 0.9877,
+      "latency_ms": 1704.28
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "EN_06",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_06.wav",
+      "ref_text": "Pediatric patient has maculopapular rash on face and trunk suspected measles infection.",
+      "hyp_text": "পিডিয়েট্যেট্রিক পেশন্ট হাজ মাকলো পাপলিয়ার রাশ অনফিস এন ট্রংক সাস্প্ক্টিড মিজলস ইনফক্ষন।",
+      "wer": 1.0,
+      "cer": 0.977,
+      "bn_ratio": 0.9872,
+      "latency_ms": 1631.73
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "MIX_01",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_01.wav",
+      "ref_text": "Patient er blood pressure 130 over 80 and temperature 101 degrees Fahrenheit.",
+      "hyp_text": "পায়িন্ট এয়ার ব্লদ প্রেশের য়নন্যান্ডোগ্যেন আটি এন টোম্পূরটিয়ের যেন ওন ডগ্রিজ ফেরান হিট।",
+      "wer": 1.0833,
+      "cer": 1.0909,
+      "bn_ratio": 0.9872,
+      "latency_ms": 1668.94
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "MIX_02",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_02.wav",
+      "ref_text": "Cap Moxacil 500 milligram dine tin bar after meal 7 din continue korben.",
+      "hyp_text": "কাপমক্সসিল ফিনদ্রেন মিলগ্রাম ডাইন্টিন বার আফ্টের মিল স্যামড়্যান কনিউ কর্বন।",
+      "wer": 1.0,
+      "cer": 1.0,
+      "bn_ratio": 0.9851,
+      "latency_ms": 1397.69
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "MIX_03",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_03.wav",
+      "ref_text": "Patient complaining of acute chest pain emergency ward e admit korte hobe.",
+      "hyp_text": "পাইশন্ট কম্প্লেনিং অ্যক্যাস্ট পেন অ্যাজন্সি ওয়র্ড ই ইড্মিড কর্টাইহব।",
+      "wer": 1.0,
+      "cer": 0.9324,
+      "bn_ratio": 0.9836,
+      "latency_ms": 1308.47
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "MIX_04",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_04.wav",
+      "ref_text": "Fasting blood sugar ebong ECG report shathe niye next week e follow up ashben.",
+      "hyp_text": "ফাস্টিং ব্লজ স্গের এবং এই সিজি রিপর্জ অথেনাই নিক্স্ট উইকে ফলও-অপ আশবেন।",
+      "wer": 1.0,
+      "cer": 0.8846,
+      "bn_ratio": 0.9667,
+      "latency_ms": 1276.99
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "MIX_05",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_05.wav",
+      "ref_text": "Tab Napa Extra 500 milligram SOS basis e fever ashle khaben.",
+      "hyp_text": "টাবনাপা এক্স্ট্র ফিনাপ্যায় ফিনাপ্যায় এক্স্রে ফিনাপ্যায় ফিনাপ্যায় এক্স্ত্র ফিনাপ্যায় ফিনাপ্যায় এক্সোস পেসি ফিভীয়র অসলকাবান।",
+      "wer": 1.2727,
+      "cer": 1.9833,
+      "bn_ratio": 0.9914,
+      "latency_ms": 2368.75
+    },
+    {
+      "model": "anuragshas/whisper-small-bn (Forced BN)",
+      "sample_id": "MIX_06",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_06.wav",
+      "ref_text": "Pediatric patient er viral exanthem rash dekha geche Koplik spots check koren.",
+      "hyp_text": "পিডিয়েট্রিক পেশন্ট-বেশন্ট-এর ভারল এক্সান্থাম-ম্রাশ-ডেকাকাকলিক স্পাটস চেক করণ।",
+      "wer": 1.0,
+      "cer": 0.9872,
+      "bn_ratio": 0.9306,
+      "latency_ms": 1430.16
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "BN_01",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_01.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "The area of the area is also very small.",
+      "wer": 1.0,
+      "cer": 0.9012,
+      "bn_ratio": 0.0,
+      "latency_ms": 591.42
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "BN_02",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_02.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "The same goes for the other side.",
+      "wer": 1.0,
+      "cer": 0.9259,
+      "bn_ratio": 0.0,
+      "latency_ms": 75.14
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "BN_03",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_03.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "The water is very strong and the water is very strong.",
+      "wer": 1.0,
+      "cer": 0.8765,
+      "bn_ratio": 0.0,
+      "latency_ms": 93.17
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "BN_04",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_04.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "In the next episode, we will focus on the website of the Khalafal team.",
+      "wer": 1.4,
+      "cer": 1.0156,
+      "bn_ratio": 0.0,
+      "latency_ms": 158.83
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "BN_05",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_05.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "Chakra, Tavis, Sleshan, Kore, Falafal, a public website post-corajave.",
+      "wer": 1.0,
+      "cer": 1.0469,
+      "bn_ratio": 0.0,
+      "latency_ms": 210.55
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "BN_06",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_06.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "Chakra and Tobislation were a powerful and powerful weapon of a public website.",
+      "wer": 1.3,
+      "cer": 1.125,
+      "bn_ratio": 0.0,
+      "latency_ms": 142.98
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "EN_01",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_01.wav",
+      "ref_text": "Patient blood pressure is 120 over 80 and heart rate is 72 beats per minute.",
+      "hyp_text": "Patient blood pressure is 120 over 80 and heart rate is 72 beats per minute.",
+      "wer": 0.0,
+      "cer": 0.0,
+      "bn_ratio": 0.0,
+      "latency_ms": 118.94
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "EN_02",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_02.wav",
+      "ref_text": "Prescribe Amoxicillin 500 milligrams capsules three times daily after meals for seven days.",
+      "hyp_text": "Prescribe a Moxasillin 500 mg capsules three times daily after meals for seven days.",
+      "wer": 0.2308,
+      "cer": 0.1429,
+      "bn_ratio": 0.0,
+      "latency_ms": 148.39
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "EN_03",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_03.wav",
+      "ref_text": "Patient presents with high fever productive cough and severe chest discomfort.",
+      "hyp_text": "Patient presence with high fever productive cough and severe chest discomfort.",
+      "wer": 0.0909,
+      "cer": 0.0256,
+      "bn_ratio": 0.0,
+      "latency_ms": 104.01
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "EN_04",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_04.wav",
+      "ref_text": "Urgent referral required transfer patient to intensive care unit immediately.",
+      "hyp_text": "Urgent referral required transfer patient to intensive care unit immediately.",
+      "wer": 0.0,
+      "cer": 0.0,
+      "bn_ratio": 0.0,
+      "latency_ms": 107.51
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "EN_05",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_05.wav",
+      "ref_text": "Order fasting blood sugar serum creatinine lipid profile and 12-lead electrocardiogram.",
+      "hyp_text": "Order fasting blood sugar serum creatinine lipid profile and 12 lead electrocardiogram.",
+      "wer": 0.1818,
+      "cer": 0.0115,
+      "bn_ratio": 0.0,
+      "latency_ms": 150.02
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "EN_06",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_06.wav",
+      "ref_text": "Pediatric patient has maculopapular rash on face and trunk suspected measles infection.",
+      "hyp_text": "Pediatric patient has maculopapular rash on face and trunk suspected measles infection.",
+      "wer": 0.0,
+      "cer": 0.0,
+      "bn_ratio": 0.0,
+      "latency_ms": 142.13
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "MIX_01",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_01.wav",
+      "ref_text": "Patient er blood pressure 130 over 80 and temperature 101 degrees Fahrenheit.",
+      "hyp_text": "Patient ER blood pressure 130 over 80 in temperature 101 degrees Fahrenheit.",
+      "wer": 0.1667,
+      "cer": 0.0519,
+      "bn_ratio": 0.0,
+      "latency_ms": 103.48
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "MIX_02",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_02.wav",
+      "ref_text": "Cap Moxacil 500 milligram dine tin bar after meal 7 din continue korben.",
+      "hyp_text": "CAP Moxasil 500mg Dynetin bar after meal 7 didn't continue Corbin",
+      "wer": 0.6154,
+      "cer": 0.2778,
+      "bn_ratio": 0.0,
+      "latency_ms": 150.88
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "MIX_03",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_03.wav",
+      "ref_text": "Patient complaining of acute chest pain emergency ward e admit korte hobe.",
+      "hyp_text": "Patient complaining of acute chest pain emergency warde admit corti-hold",
+      "wer": 0.3333,
+      "cer": 0.0946,
+      "bn_ratio": 0.0,
+      "latency_ms": 127.8
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "MIX_04",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_04.wav",
+      "ref_text": "Fasting blood sugar ebong ECG report shathe niye next week e follow up ashben.",
+      "hyp_text": "Fasting Blood Sugar Abung ECG Report Chathay 9 next week eFollow up Ashbin",
+      "wer": 0.6429,
+      "cer": 0.2179,
+      "bn_ratio": 0.0,
+      "latency_ms": 155.53
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "MIX_05",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_05.wav",
+      "ref_text": "Tab Napa Extra 500 milligram SOS basis e fever ashle khaben.",
+      "hyp_text": "Tabnappa extra 500 milligram SOS basis e-feaver asholcuban.",
+      "wer": 0.6364,
+      "cer": 0.2167,
+      "bn_ratio": 0.0,
+      "latency_ms": 138.82
+    },
+    {
+      "model": "openai/whisper-base (Forced EN)",
+      "sample_id": "MIX_06",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_06.wav",
+      "ref_text": "Pediatric patient er viral exanthem rash dekha geche Koplik spots check koren.",
+      "hyp_text": "Pediatric patient ER viral Xantham rash deca-ca-cola spots check Koran.",
+      "wer": 0.5,
+      "cer": 0.2436,
+      "bn_ratio": 0.0,
+      "latency_ms": 158.92
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "BN_01",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_01.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল, তবে আদালতের জরুরিরায় আসার পরে এটি বাচানো হয়।",
+      "wer": 0.3333,
+      "cer": 0.0617,
+      "bn_ratio": 0.9706,
+      "latency_ms": 2158.21
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "BN_02",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_02.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "এটিকে মঙ্গোলবার কেটে ফেলার কথা ছিল, তবে আদালতে জরুরি রায় আসার পরে এটি বাচানো হয়।",
+      "wer": 0.4,
+      "cer": 0.0741,
+      "bn_ratio": 0.9706,
+      "latency_ms": 2695.62
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "BN_03",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_03.wav",
+      "ref_text": "এটিকে মঙ্গলবার কেটে ফেলার কথা ছিল তবে আদালতের জরুরী রায় আসার পরে এটি বাঁচানো হয়",
+      "hyp_text": "এটিকে মূঙ্গলবার কেঁটে খেলার কথা ছিল, কবে আদালতে জরুরই রায় আসার পরে এটি বাচানো হয়।",
+      "wer": 0.6,
+      "cer": 0.1111,
+      "bn_ratio": 0.971,
+      "latency_ms": 2697.79
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "BN_04",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_04.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "চপ্ত্রান্ত্র বিশ্লেশন করে ফলাফল একটি পাবলিক ওয়েব সাইটে প্রকাশ করা হবে।",
+      "wer": 0.6,
+      "cer": 0.2188,
+      "bn_ratio": 0.9836,
+      "latency_ms": 2524.07
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "BN_05",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_05.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "চক্রান্ত বিশ্লেশন করে ফলাফল একটি প্যাপলিক ওয়েবসাইডে পোস্ট করা হবে।",
+      "wer": 0.4,
+      "cer": 0.1094,
+      "bn_ratio": 0.9828,
+      "latency_ms": 2457.55
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "BN_06",
+      "cohort": "Human Bengali FLEURS (N=6)",
+      "audio_file": "bn_sample_06.wav",
+      "ref_text": "চক্রান্ত বিশ্লেষণ করে ফলাফল একটি পাবলিক ওয়েবসাইটে পোস্ট করা হবে",
+      "hyp_text": "চক্রান্ত বিশ্লেশন করে ফলাফল একটি পাবলি কোয়েফসাইটে পোস্ট করা হবে।",
+      "wer": 0.4,
+      "cer": 0.1094,
+      "bn_ratio": 0.9821,
+      "latency_ms": 2483.41
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "EN_01",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_01.wav",
+      "ref_text": "Patient blood pressure is 120 over 80 and heart rate is 72 beats per minute.",
+      "hyp_text": "Patient blood pressure is 120 over 80 and heart rate is 72 beats per minute.",
+      "wer": 0.0,
+      "cer": 0.0,
+      "bn_ratio": 0.0,
+      "latency_ms": 704.81
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "EN_02",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_02.wav",
+      "ref_text": "Prescribe Amoxicillin 500 milligrams capsules three times daily after meals for seven days.",
+      "hyp_text": "Prescribe a Moxasillin 500 mg capsules three times daily after meals for seven days.",
+      "wer": 0.2308,
+      "cer": 0.1429,
+      "bn_ratio": 0.0,
+      "latency_ms": 171.76
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "EN_03",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_03.wav",
+      "ref_text": "Patient presents with high fever productive cough and severe chest discomfort.",
+      "hyp_text": "Patient presence with high fever productive cough and severe chest discomfort.",
+      "wer": 0.0909,
+      "cer": 0.0256,
+      "bn_ratio": 0.0,
+      "latency_ms": 111.78
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "EN_04",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_04.wav",
+      "ref_text": "Urgent referral required transfer patient to intensive care unit immediately.",
+      "hyp_text": "Urgent referral required transfer patient to intensive care unit immediately.",
+      "wer": 0.0,
+      "cer": 0.0,
+      "bn_ratio": 0.0,
+      "latency_ms": 114.94
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "EN_05",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_05.wav",
+      "ref_text": "Order fasting blood sugar serum creatinine lipid profile and 12-lead electrocardiogram.",
+      "hyp_text": "Order fasting blood sugar serum creatinine lipid profile and 12 lead electrocardiogram.",
+      "wer": 0.1818,
+      "cer": 0.0115,
+      "bn_ratio": 0.0,
+      "latency_ms": 153.76
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "EN_06",
+      "cohort": "Synthetic English Clinical (N=6)",
+      "audio_file": "en_clinical_06.wav",
+      "ref_text": "Pediatric patient has maculopapular rash on face and trunk suspected measles infection.",
+      "hyp_text": "Pediatric patient has maculopapular rash on face and trunk suspected measles infection.",
+      "wer": 0.0,
+      "cer": 0.0,
+      "bn_ratio": 0.0,
+      "latency_ms": 184.88
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "MIX_01",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_01.wav",
+      "ref_text": "Patient er blood pressure 130 over 80 and temperature 101 degrees Fahrenheit.",
+      "hyp_text": "Patient ER blood pressure 130 over 80 in temperature 101 degrees Fahrenheit.",
+      "wer": 0.1667,
+      "cer": 0.0519,
+      "bn_ratio": 0.0,
+      "latency_ms": 120.91
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "MIX_02",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_02.wav",
+      "ref_text": "Cap Moxacil 500 milligram dine tin bar after meal 7 din continue korben.",
+      "hyp_text": "CAP Moxasil 500mg Dynetin bar after meal 7 didn't continue Corbin",
+      "wer": 0.6154,
+      "cer": 0.2778,
+      "bn_ratio": 0.0,
+      "latency_ms": 180.83
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "MIX_03",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_03.wav",
+      "ref_text": "Patient complaining of acute chest pain emergency ward e admit korte hobe.",
+      "hyp_text": "Patient complaining of acute chest pain emergency warde admit corti-hold",
+      "wer": 0.3333,
+      "cer": 0.0946,
+      "bn_ratio": 0.0,
+      "latency_ms": 126.59
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "MIX_04",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_04.wav",
+      "ref_text": "Fasting blood sugar ebong ECG report shathe niye next week e follow up ashben.",
+      "hyp_text": "Fasting Blood Sugar Abung ECG Report Chathay 9 next week eFollow up Ashbin",
+      "wer": 0.6429,
+      "cer": 0.2179,
+      "bn_ratio": 0.0,
+      "latency_ms": 189.97
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "MIX_05",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_05.wav",
+      "ref_text": "Tab Napa Extra 500 milligram SOS basis e fever ashle khaben.",
+      "hyp_text": "Tabnappa extra 500 milligram SOS basis e-feaver asholcuban.",
+      "wer": 0.6364,
+      "cer": 0.2167,
+      "bn_ratio": 0.0,
+      "latency_ms": 160.93
+    },
+    {
+      "model": "Bilingual Auto-Routing (Whisper-BN + Whisper-Base)",
+      "sample_id": "MIX_06",
+      "cohort": "Synthetic Mixed Code-Switch (N=6)",
+      "audio_file": "mix_codeswitch_06.wav",
+      "ref_text": "Pediatric patient er viral exanthem rash dekha geche Koplik spots check koren.",
+      "hyp_text": "Pediatric patient ER viral Xantham rash deca-ca-cola spots check Koran.",
+      "wer": 0.5,
+      "cer": 0.2436,
+      "bn_ratio": 0.0,
+      "latency_ms": 172.52
+    }
+  ]
+}

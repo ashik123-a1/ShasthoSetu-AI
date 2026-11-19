@@ -1,0 +1,37 @@
+{
+  "name": "ShasthoSetu BMDC Doctor Verification Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bmdc-verify-trigger"
+      },
+      "name": "Doctor Application Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { bmdc_number: items[0].json.body.bmdc_number, valid_format: /^BMDC-[A-Z]-[0-9]{4,6}$/.test(items[0].json.body.bmdc_number) } }];"
+      },
+      "name": "Validate BMDC Format",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [480, 300]
+    }
+  ],
+  "connections": {
+    "Doctor Application Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate BMDC Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,231 @@
+{
+  "timestamp_utc": "2026-11-19T17:48:33Z",
+  "engine": "EasyOCR (Bengali + English)",
+  "evaluation_boundary": "Synthetic printed prescriptions (N=4, 7 expected medicines) separated from unannotated real smoke test (0052.jpg)",
+  "total_test_samples": 4,
+  "mean_cer": 0.1294,
+  "mean_wer": 0.4931,
+  "entity_metrics": {
+    "total_expected_medicines": 7,
+    "tp": 7,
+    "fp": 2,
+    "fn": 0,
+    "precision": 0.7778,
+    "recall": 1.0,
+    "f1": 0.875
+  },
+  "avg_latency_ms": 1587.48,
+  "samples": [
+    {
+      "id": "RX-BN-01",
+      "sample_type": "SYNTHETIC_PRINTED",
+      "script": "Bengali",
+      "condition": "Clean High Contrast",
+      "mean_confidence": 0.7176,
+      "wer": 0.5909,
+      "cer": 0.2143,
+      "latency_ms": 5752.78,
+      "expected_medicines": [
+        "মেটফরমিন",
+        "ওমেপ্রাজল"
+      ],
+      "detected_candidates": [
+        "টযাব মটেফরমনি ৫০০ মলিগিরাম",
+        "কযাপ ওমপেরাজল ২০ মলগিরাম"
+      ],
+      "entity_metrics": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "matched_pairs": [
+          {
+            "expected": "মেটফরমিন",
+            "matched_candidate": "টযাব মটেফরমনি ৫০০ মলিগিরাম",
+            "similarity": 0.9
+          },
+          {
+            "expected": "ওমেপ্রাজল",
+            "matched_candidate": "কযাপ ওমপেরাজল ২০ মলগিরাম",
+            "similarity": 0.9
+          }
+        ],
+        "false_positives": [],
+        "false_negatives": []
+      },
+      "detected_fields_count": {
+        "MEDICINE_NAME": 2,
+        "STRENGTH": 2,
+        "DOSE": 2,
+        "FREQUENCY": 2,
+        "DURATION": 0,
+        "ROUTE": 0
+      },
+      "raw_text": "রেগীর নাম: সালমা বগেম\nটযাব মটেফরমনি ৫০০ মলিগিরাম\nমাতরা: ১+০+১ খাওয়ার পর (৩০ দান\nকযাপ ওমপেরাজল ২০ মলগিরাম\nমাতরা: ১+০+১ খাওয়ার আগ (১৫ দনি)",
+      "raw_text_excerpt": "রেগীর নাম: সালমা বগেম\nটযাব মটেফরমনি ৫০০ মলিগিরাম\nমাতরা: ১+০+১ খাওয়ার পর (৩০ দান\nকযাপ ওমপেরাজল ২০ মলগিরাম\nমাতরা: ১+০+১ খাওয়ার আগ (১৫ দনি)"
+    },
+    {
+      "id": "RX-EN-01",
+      "sample_type": "SYNTHETIC_PRINTED",
+      "script": "English",
+      "condition": "Clean High Contrast",
+      "mean_confidence": 0.8538,
+      "wer": 0.28,
+      "cer": 0.0552,
+      "latency_ms": 244.06,
+      "expected_medicines": [
+        "Paracetamol",
+        "Azithromycin"
+      ],
+      "detected_candidates": [
+        "Tab Paracetamol 50omg",
+        "tablet TDS after meals (5 days)",
+        "Tab Azithromycin 50Omg",
+        "tablet daily before dinner 3 days)"
+      ],
+      "entity_metrics": {
+        "tp": 2,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 0.6667,
+        "matched_pairs": [
+          {
+            "expected": "Paracetamol",
+            "matched_candidate": "Tab Paracetamol 50omg",
+            "similarity": 1.0
+          },
+          {
+            "expected": "Azithromycin",
+            "matched_candidate": "Tab Azithromycin 50Omg",
+            "similarity": 1.0
+          }
+        ],
+        "false_positives": [
+          "tablet TDS after meals (5 days)",
+          "tablet daily before dinner 3 days)"
+        ],
+        "false_negatives": []
+      },
+      "detected_fields_count": {
+        "MEDICINE_NAME": 4,
+        "STRENGTH": 2,
+        "DOSE": 1,
+        "FREQUENCY": 1,
+        "DURATION": 2,
+        "ROUTE": 0
+      },
+      "raw_text": "Patient: John Doe, Age: 34\n1. Tab Paracetamol 50omg\nDose: tablet TDS after meals (5 days)\n2. Tab Azithromycin 50Omg\nDose: tablet daily before dinner 3 days)",
+      "raw_text_excerpt": "Patient: John Doe, Age: 34\n1. Tab Paracetamol 50omg\nDose: tablet TDS after meals (5 days)\n2. Tab Azithromycin 50Omg\nDose: tablet daily befor"
+    },
+    {
+      "id": "RX-MIX-01",
+      "sample_type": "SYNTHETIC_PRINTED",
+      "script": "Mixed (Bangla + English)",
+      "condition": "Codeswitching Clinical Style",
+      "mean_confidence": 0.7486,
+      "wer": 0.4091,
+      "cer": 0.0909,
+      "latency_ms": 225.04,
+      "expected_medicines": [
+        "Metformin",
+        "Rosuvastatin"
+      ],
+      "detected_candidates": [
+        "Tab Metformin 50Omg (১+০+১ খাওয়ার পর ৩০ দান",
+        "Tab Rosuvastatin 10mg (০+0+১ রাত - ১ মাস)"
+      ],
+      "entity_metrics": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "matched_pairs": [
+          {
+            "expected": "Metformin",
+            "matched_candidate": "Tab Metformin 50Omg (১+০+১ খাওয়ার পর ৩০ দান",
+            "similarity": 1.0
+          },
+          {
+            "expected": "Rosuvastatin",
+            "matched_candidate": "Tab Rosuvastatin 10mg (০+0+১ রাত - ১ মাস)",
+            "similarity": 1.0
+          }
+        ],
+        "false_positives": [],
+        "false_negatives": []
+      },
+      "detected_fields_count": {
+        "MEDICINE_NAME": 2,
+        "STRENGTH": 2,
+        "DOSE": 2,
+        "FREQUENCY": 2,
+        "DURATION": 1,
+        "ROUTE": 0
+      },
+      "raw_text": "Dr Tanvir Ahmed (MBBS, FCPS)\nRx:\n1. Tab Metformin 50Omg (১+০+১ খাওয়ার পর ৩০ দান\n2. Tab Rosuvastatin 10mg (০+0+১ রাত - ১ মাস)",
+      "raw_text_excerpt": "Dr Tanvir Ahmed (MBBS, FCPS)\nRx:\n1. Tab Metformin 50Omg (১+০+১ খাওয়ার পর ৩০ দান\n2. Tab Rosuvastatin 10mg (০+0+১ রাত - ১ মাস)"
+    },
+    {
+      "id": "RX-DEG-01",
+      "sample_type": "SYNTHETIC_PRINTED",
+      "script": "Mixed (Bangla + English)",
+      "condition": "Low Contrast & Slight Blur",
+      "mean_confidence": 0.7974,
+      "wer": 0.6923,
+      "cer": 0.1573,
+      "latency_ms": 128.02,
+      "expected_medicines": [
+        "Pantoprazole"
+      ],
+      "detected_candidates": [
+        "Tab Pantoprazole 40mg"
+      ],
+      "entity_metrics": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "matched_pairs": [
+          {
+            "expected": "Pantoprazole",
+            "matched_candidate": "Tab Pantoprazole 40mg",
+            "similarity": 1.0
+          }
+        ],
+        "false_positives": [],
+        "false_negatives": []
+      },
+      "detected_fields_count": {
+        "MEDICINE_NAME": 1,
+        "STRENGTH": 1,
+        "DOSE": 0,
+        "FREQUENCY": 0,
+        "DURATION": 0,
+        "ROUTE": 0
+      },
+      "raw_text": "Prescription Rx\nTab Pantoprazole 40mg\n১ট কর টযাবলটে দনি ২ বার (খাওয়ার ৩0 মনিটি আগ)",
+      "raw_text_excerpt": "Prescription Rx\nTab Pantoprazole 40mg\n১ট কর টযাবলটে দনি ২ বার (খাওয়ার ৩0 মনিটি আগ)"
+    }
+  ],
+  "read_only_smoke_0052": {
+    "filename": "0052.jpg",
+    "path": "04_Prescription_OCR\\data\\raw\\extracted\\images\\Prescription_ images.jpg\\0052.jpg",
+    "evaluation_type": "UNANNOTATED_READ_ONLY_SMOKE_TEST",
+    "ground_truth_available": false,
+    "mean_confidence": 0.5929,
+    "token_count": 44,
+    "uncertain_tokens_count": 28,
+    "candidates_count": 7,
+    "raw_text": "বাংলাদেশ ফরম নং ৭৬৯ বচিব 331\nটিকেট বহির্বিভাগীয় রোগীর টিকিট\nতারিখ চিকিৎসা\nCap Roxim 400\n_)0| ১+০+১ ৩990009399009 - সদ্ধ এদিন\nCap Maxpro 2Omng\n1+0+1..... চলবে\nTab. Rolac 1Omg\n1+1+1. দিন\nNasal Drop ভ৩৮৮\nAfrin -ফোঁটা বম্ধ হলে) Tab Tnabil 20mg\nউডয় লাকে >-3 0+0+১ প্রতিদিন রাতে\nদিনে ৪ বার Drops\nBeuflox-D <3 বান্ন Tab Trilock 10 nng\nফোটা [ প্রতিদিন রাতে ১টা করে খাবেন-\nস্স্থাণে\n3\nবাঃবাঃসসেঃ)]ডৈ্টিফ-৪১ ৮৯-৪ড়৪০",
+    "latency_ms": 884.17,
+    "note": "Unannotated real camera capture smoke test only; NO verbatim ground truth exists so real handwritten CER/WER is NOT validated."
+  }
+}

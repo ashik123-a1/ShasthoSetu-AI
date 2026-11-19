@@ -1,0 +1,116 @@
+{
+  "timestamp_utc": "2026-11-19T16:13:46Z",
+  "engine": "EasyOCR (Bengali + English)",
+  "total_test_samples": 4,
+  "mean_cer": 0.1294,
+  "mean_wer": 0.4931,
+  "medicine_candidate_recall": 1.2857,
+  "avg_latency_ms": 944.77,
+  "samples": [
+    {
+      "id": "RX-BN-01",
+      "script": "Bengali",
+      "condition": "Clean High Contrast",
+      "mean_confidence": 0.7176,
+      "wer": 0.5909,
+      "cer": 0.2143,
+      "latency_ms": 3217.23,
+      "expected_medicines": [
+        "মেটফরমিন",
+        "ওমেপ্রাজল"
+      ],
+      "detected_candidates": [
+        "মাতরা: ১+০+১ খাওয়ার পর (৩০ দান",
+        "মাতরা: ১+০+১ খাওয়ার আগ (১৫ দনি)"
+      ],
+      "detected_fields_count": {
+        "MEDICINE_NAME": 2,
+        "STRENGTH": 0,
+        "DOSE": 2,
+        "FREQUENCY": 2,
+        "DURATION": 0,
+        "ROUTE": 0
+      },
+      "raw_text_excerpt": "রেগীর নাম: সালমা বগেম\nটযাব মটেফরমনি ৫০০ মলিগিরাম\nমাতরা: ১+০+১ খাওয়ার পর (৩০ দান\nকযাপ ওমপেরাজল ২০ মলগিরাম\nমাতরা: ১+০+১ খাওয়ার আগ (১৫ দনি)"
+    },
+    {
+      "id": "RX-EN-01",
+      "script": "English",
+      "condition": "Clean High Contrast",
+      "mean_confidence": 0.8538,
+      "wer": 0.28,
+      "cer": 0.0552,
+      "latency_ms": 209.53,
+      "expected_medicines": [
+        "Paracetamol",
+        "Azithromycin"
+      ],
+      "detected_candidates": [
+        "Tab Paracetamol 50omg",
+        "tablet TDS after meals (5 days)",
+        "Tab Azithromycin 50Omg",
+        "tablet daily before dinner 3 days)"
+      ],
+      "detected_fields_count": {
+        "MEDICINE_NAME": 4,
+        "STRENGTH": 0,
+        "DOSE": 2,
+        "FREQUENCY": 2,
+        "DURATION": 4,
+        "ROUTE": 0
+      },
+      "raw_text_excerpt": "Patient: John Doe, Age: 34\n1. Tab Paracetamol 50omg\nDose: tablet TDS after meals (5 days)\n2. Tab Azithromycin 50Omg\nDose: tablet daily befor"
+    },
+    {
+      "id": "RX-MIX-01",
+      "script": "Mixed (Bangla + English)",
+      "condition": "Codeswitching Clinical Style",
+      "mean_confidence": 0.7486,
+      "wer": 0.4091,
+      "cer": 0.0909,
+      "latency_ms": 219.16,
+      "expected_medicines": [
+        "Metformin",
+        "Rosuvastatin"
+      ],
+      "detected_candidates": [
+        "Tab Metformin 50Omg (১+০+১ খাওয়ার পর ৩০ দান",
+        "Tab Rosuvastatin 10mg (০+0+১ রাত - ১ মাস)"
+      ],
+      "detected_fields_count": {
+        "MEDICINE_NAME": 2,
+        "STRENGTH": 1,
+        "DOSE": 2,
+        "FREQUENCY": 2,
+        "DURATION": 2,
+        "ROUTE": 0
+      },
+      "raw_text_excerpt": "Dr Tanvir Ahmed (MBBS, FCPS)\nRx:\n1. Tab Metformin 50Omg (১+০+১ খাওয়ার পর ৩০ দান\n2. Tab Rosuvastatin 10mg (০+0+১ রাত - ১ মাস)"
+    },
+    {
+      "id": "RX-DEG-01",
+      "script": "Mixed (Bangla + English)",
+      "condition": "Low Contrast & Slight Blur",
+      "mean_confidence": 0.7974,
+      "wer": 0.6923,
+      "cer": 0.1573,
+      "latency_ms": 133.16,
+      "expected_medicines": [
+        "Pantoprazole"
+      ],
+      "detected_candidates": [
+        "Tab Pantoprazole 40mg"
+      ],
+      "detected_fields_count": {
+        "MEDICINE_NAME": 1,
+        "STRENGTH": 1,
+        "DOSE": 0,
+        "FREQUENCY": 0,
+        "DURATION": 0,
+        "ROUTE": 0
+      },
+      "raw_text_excerpt": "Prescription Rx\nTab Pantoprazole 40mg\n১ট কর টযাবলটে দনি ২ বার (খাওয়ার ৩0 মনিটি আগ)"
+    }
+  ],
+  "read_only_smoke_0052": null
+}

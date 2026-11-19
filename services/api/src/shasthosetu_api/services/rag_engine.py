@@ -244,6 +244,28 @@ def retrieve_hybrid_chunks(
     }
 
 
+def retrieve_with_graph_rag(
+    query: str,
+    *,
+    role: str | None = "PATIENT",
+    top_k: int = 5,
+    mode: str = "hybrid",
+) -> dict[str, Any]:
+    """Retrieves hybrid chunks and enriches them with multi-hop Clinical Knowledge Graph traversal."""
+    from shasthosetu_api.services.graph_rag import clinical_kg
+    base = retrieve_hybrid_chunks(query, role=role, top_k=top_k, mode=mode)
+    kg_relations = clinical_kg.traverse_query(query)
+    base["knowledge_graph_relations"] = kg_relations
+    base["rag_bonus_features"] = {
+        "contextual_rag": True,
+        "semantic_chunking": True,
+        "combo_mode": True,
+        "graph_rag": True,
+        "active_relations_count": len(kg_relations),
+    }
+    return base
+
+
 def _resolve_target_language(language_mode: str, detected_script: str) -> str:
     if language_mode == "bn":
         return "bn"

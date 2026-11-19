@@ -354,9 +354,7 @@ export function FindCarePage() {
             </Link>
           </div>
 
-          <div className="ss-sapphire-card rounded-3xl p-4 sm:p-6">
-            <BangladeshCareMap facilities={facilities} doctors={doctors} />
-          </div>
+          <BangladeshCareMap facilities={facilities} doctors={doctors} />
         </section>
 
         {/* SECTION 03: HOSPITALS, CLINICS, DIAGNOSTICS & PHARMACIES DIRECTORY */}

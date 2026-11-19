@@ -192,7 +192,7 @@ export function SupportPortalPage({ section = "dashboard" }: { section?: string 
           {section === "faq" ? (
             <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 space-y-3 text-sm">
               <h2 className="font-bold text-base">Standard Zero-PHI Support Macros</h2>
-              <p className="text-[var(--color-text-muted)]">1. Demo payment checks: request booking_reference / DEMO-RCP number only — never request bKash PIN, OTP, or card CVV.</p>
+              <p className="text-[var(--color-text-muted)]">1. Demo payment checks: request booking_reference / DEMO-RCP number only — never request MFS wallet PIN, OTP, or card CVV.</p>
               <p className="text-[var(--color-text-muted)]">2. Clinical symptom requests: advise user to message or book their approved doctor; Support agents never interpret symptoms.</p>
             </div>
           ) : (

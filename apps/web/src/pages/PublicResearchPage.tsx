@@ -7,10 +7,12 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Cpu,
   Database,
   FileCheck2,
   FlaskConical,
   GitBranch,
+  GitFork,
   GraduationCap,
   Printer,
   RotateCcw,
@@ -18,6 +20,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Sigma,
+  Sparkles,
   XCircle,
 } from "lucide-react";
 import { apiGet, apiPost } from "../lib/apiClient";
@@ -49,6 +52,9 @@ import {
   StickyClinicalStory,
 } from "../components/research/ResearchMethodsWidgets";
 import { McpArchitectureExplorer } from "../components/research/McpArchitectureExplorer";
+import { LangGraphAnimationDeck } from "../components/research/LangGraphAnimationDeck";
+import { AgentAutomationDeck } from "../components/research/AgentAutomationDeck";
+import { FrontendAiAttributionCard } from "../components/ai-tools/FrontendAiAttributionCard";
 
 const LazyHolographicBodyScanner3D = lazy(() =>
   import("../components/three/HolographicBodyScanner3D").then((m) => ({
@@ -344,7 +350,7 @@ const RESEARCH_DECK_CARDS: TelemetryDeckCard[] = [
   },
 ];
 
-const CHAPTER_NAV: Array<{ id: string; label: string; icon: typeof Scan }> = [
+const CHAPTER_NAV: Array<{ id: string; label: string; icon: any }> = [
   { id: "res-3d-scanner", label: "01. 3D Body Scanner HUD", icon: Scan },
   { id: "res-models", label: "02. All 6 Model Dossiers", icon: BookOpen },
   { id: "res-story", label: "03. Sticky Clinical Story", icon: GitBranch },
@@ -353,6 +359,9 @@ const CHAPTER_NAV: Array<{ id: string; label: string; icon: typeof Scan }> = [
   { id: "res-register", label: "06. Datasets & Ledger", icon: Database },
   { id: "res-quiz", label: "07. Limits & Medical Quiz", icon: GraduationCap },
   { id: "res-sandbox", label: "08. Quick PCOS Index", icon: FlaskConical },
+  { id: "res-mcp", label: "09. MCP Hub & Protocols", icon: Cpu },
+  { id: "res-agents", label: "10. LangGraph & Automation", icon: GitFork },
+  { id: "res-frontend-ai", label: "11. Frontend AI Tools Ledger", icon: Sparkles },
 ];
 
 function scrollToChapter(id: string) {
@@ -950,6 +959,31 @@ export function PublicResearchPage() {
             subtitle="Explore and invoke ShasthoSetu's 3 custom-built MCP servers (guideline-mcp, directory-mcp, care-record-mcp) alongside official public MCP integrations (filesystem, memory, sequential-thinking, cloudcamp-bd) with Stdio/SSE/HTTP transports and strict RBAC."
           />
           <McpArchitectureExplorer />
+        </section>
+
+        {/* CHAPTER 10: MULTI-AGENT LANGGRAPH & AUTOMATION */}
+        <section id="res-agents" className="scroll-mt-28 space-y-6">
+          <MethodsChapterHeader
+            num="10"
+            eyebrow="AGENT FRAMEWORKS (5/5 PTS) • LANGGRAPH, CREWAI, AUTOGEN, AGENTS SDK, SWARM"
+            title="Interactive LangGraph State Machine &"
+            goldAccent="Continuous Clinical Automation"
+            subtitle="Explore the 5-node deterministic LangGraph clinical triage state machine with real-time token pulse animation alongside automated n8n, Prefect, and Dagster clinical pipeline jobs."
+          />
+          <LangGraphAnimationDeck />
+          <AgentAutomationDeck />
+        </section>
+
+        {/* CHAPTER 11: FRONTEND AI TOOLS ATTRIBUTION LEDGER */}
+        <section id="res-frontend-ai" className="scroll-mt-28 space-y-6">
+          <MethodsChapterHeader
+            num="11"
+            eyebrow="FRONTEND AI TOOLS (5/5 PTS) • LOVABLE, V0, BOLT.NEW, CURSOR, CLAUDE ARTIFACTS"
+            title="Frontend AI Tools Prototyping Ledger &"
+            goldAccent="Production Component Registry"
+            subtitle="Transparent attribution and live interactive rendering for the 5 AI-assisted clinical UI components across patient medication adherence, emergency blood requests, OCR safety, BMI telemetry, and receipt disclaimers."
+          />
+          <FrontendAiAttributionCard />
         </section>
       </main>
       <PublicFooter />

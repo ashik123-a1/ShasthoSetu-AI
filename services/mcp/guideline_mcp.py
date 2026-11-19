@@ -14,7 +14,10 @@ import unicodedata
 from pathlib import Path
 from typing import Any
 
-from mcp.server.mcpserver import MCPServer
+try:
+    from mcp.server import MCPServer
+except ImportError:
+    from mcp.server.mcpserver.server import MCPServer
 
 _PROJECT_ROOT = str(Path(__file__).resolve().parents[2])
 if _PROJECT_ROOT not in sys.path:

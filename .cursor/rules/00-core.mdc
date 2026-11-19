@@ -1,0 +1,21 @@
+---
+description: Core Architecture, Monorepo Invariants & Zero-PHI Rule
+globs: **/*
+---
+
+# ShasthoSetu Core Architectural Invariants
+
+1. **Monorepo Topology**:
+   - `apps/web`: React 18 + Vite + Tailwind CSS + Lucide Icons + Three.js.
+   - `services/api`: FastAPI + SQLite (WAL mode) + Ollama client (`qwen2.5:7b`, `bge-m3`).
+   - `services/mcp`: FastMCP/mcp servers (`guideline_mcp`, `directory_mcp`, `care_record_mcp`).
+   - `workflows/`: n8n, Prefect, and Dagster pipeline definitions.
+
+2. **Zero-PHI Guarantee**:
+   - No patient identifiable information (names, phone numbers, NID) may ever leave the local boundary unmasked.
+   - Presidio anonymizer and regex scrubs run before RAG prompt assembly or logging.
+   - Blood donor contacts are geo-masked (+880 17•• •••12) until mutual consent confirmation.
+
+3. **Production Stability**:
+   - Never remove or break existing verified endpoints.
+   - Public landing page sections `00..08` and `10+` remain locked and pristine.

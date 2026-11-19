@@ -1,0 +1,20 @@
+---
+description: MCP Protocol Integration, RAG Boundaries & Evidence Governance
+globs: services/mcp/**/*,services/api/src/shasthosetu_api/services/rag*
+---
+
+# ShasthoSetu MCP & RAG Governance Rules
+
+1. **MCP Transport Standard**:
+   - Every custom MCP server (`guideline_mcp`, `directory_mcp`, `care_record_mcp`) must support standard Stdio JSON-RPC 2.0 alongside SSE/Streamable HTTP endpoints.
+   - External clients (Claude Desktop, Cursor, Custom Agents) connect through `.mcp.json`.
+
+2. **Zero-PHI MCP Security Boundary**:
+   - `care_record_mcp` must reject queries from the `SUPPORT` role with `ERR_ZERO_PHI_FORBIDDEN`.
+   - Contact numbers returned by `directory_mcp` must have phone masking enabled by default.
+
+3. **RAG Retrieval Quality Thresholds**:
+   - Baseline MRR must remain `>= 0.9750`.
+   - Hit@3 must remain `1.0000`.
+   - Faithfulness score must remain `>= 0.90`.
+   - Source citations must reference verified local corpus (`guidelines_corpus.jsonl`).

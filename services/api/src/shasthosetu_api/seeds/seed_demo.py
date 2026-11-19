@@ -572,48 +572,78 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                             (f"slot-{doc_id}-d{day_offset}-{idx}", doc_id, s_utc, e_utc),
                         )
 
-            # Past slot for seeded historical completed appointment
+            # Past slots for seeded historical completed appointments
             past_start = "2026-11-17T04:00:00.000Z"
             past_end = "2026-11-17T04:20:00.000Z"
+            past_start2 = "2026-11-14T05:00:00.000Z"
+            past_end2 = "2026-11-14T05:20:00.000Z"
+            past_start3 = "2026-11-10T10:00:00.000Z"
+            past_end3 = "2026-11-10T10:20:00.000Z"
+
             conn.execute(
                 """
                 INSERT OR IGNORE INTO appointment_slots (id, doctor_id, start_utc, end_utc, modality, capacity, reserved_count, state)
-                VALUES ('slot-hist-9001', 'doc-farhana', ?, ?, 'ONLINE_DEMO', 1, 1, 'BOOKED')
+                VALUES
+                  ('slot-hist-9001', 'doc-farhana', ?, ?, 'ONLINE_DEMO', 1, 1, 'BOOKED'),
+                  ('slot-hist-9002', 'doc-tanvir', ?, ?, 'ONLINE_DEMO', 1, 1, 'BOOKED'),
+                  ('slot-hist-9003', 'doc-nusrat', ?, ?, 'ONLINE_DEMO', 1, 1, 'BOOKED')
                 """,
-                (past_start, past_end),
+                (past_start, past_end, past_start2, past_end2, past_start3, past_end3),
             )
 
-            # 6. Historical Appointment, Demo Payment, Receipt, Note, E-Prescription
+            # 6. Historical Appointments, Rebranded Demo Payments, Receipts, Notes, E-Prescriptions
             conn.execute(
                 """
                 INSERT OR IGNORE INTO appointments (
                     id, booking_reference, patient_profile_id, booked_by_user_id, doctor_id, slot_id,
                     consultation_mode, status, visit_reason_summary, prep_symptoms_text,
                     fee_minor_poisha, payment_requirement, idempotency_key, is_synthetic
-                ) VALUES (
+                ) VALUES
+                (
                     'apt-hist-9001', 'APT-DEMO-9001', 'pp-rahima-self', 'usr-pt-demo', 'doc-farhana', 'slot-hist-9001',
                     'ONLINE_DEMO', 'COMPLETED', 'PCOS cycle check & prescription follow-up (Synthetic)',
                     'Irregular 38-day cycles and mild fatigue over 2 months.',
                     50000, 'REQUIRED_DEMO', 'seed-idem-apt-9001', 1
+                ),
+                (
+                    'apt-hist-9002', 'APT-DEMO-9002', 'pp-ariyan-child', 'usr-pt-demo', 'doc-tanvir', 'slot-hist-9002',
+                    'ONLINE_DEMO', 'COMPLETED', 'Pediatric checkup for toddler mild fever & nasal congestion',
+                    'Low-grade fever (100.2 F) and runny nose for 2 days. Normal hydration.',
+                    60000, 'REQUIRED_DEMO', 'seed-idem-apt-9002', 1
+                ),
+                (
+                    'apt-hist-9003', 'APT-DEMO-9003', 'pp-rahima-self', 'usr-pt-demo', 'doc-nusrat', 'slot-hist-9003',
+                    'ONLINE_DEMO', 'COMPLETED', 'Dermatology consultation for seasonal skin allergy and forearm rash',
+                    'Erythematous itchy patch with mild peeling. No blister formation.',
+                    70000, 'REQUIRED_DEMO', 'seed-idem-apt-9003', 1
                 )
                 """
             )
             conn.execute(
                 """
                 INSERT OR IGNORE INTO appointment_events (id, appointment_id, actor_user_id, actor_role, from_status, to_status, reason)
-                VALUES ('ae-hist-1', 'apt-hist-9001', 'usr-dr-farhana', 'DOCTOR', 'IN_CONSULTATION', 'COMPLETED', 'Seeded historical consultation completed')
+                VALUES
+                  ('ae-hist-1', 'apt-hist-9001', 'usr-dr-farhana', 'DOCTOR', 'IN_CONSULTATION', 'COMPLETED', 'Seeded historical consultation completed'),
+                  ('ae-hist-2', 'apt-hist-9002', 'usr-dr-tanvir', 'DOCTOR', 'IN_CONSULTATION', 'COMPLETED', 'Pediatric consultation completed successfully'),
+                  ('ae-hist-3', 'apt-hist-9003', 'usr-dr-nusrat', 'DOCTOR', 'IN_CONSULTATION', 'COMPLETED', 'Dermatology consultation completed successfully')
                 """
             )
             conn.execute(
                 """
                 INSERT OR IGNORE INTO demo_payments (id, demo_ref, appointment_id, payer_user_id, method, amount_minor_poisha, status, is_simulated, idempotency_key)
-                VALUES ('pay-hist-9001', 'DEMO-BKASH-9001', 'apt-hist-9001', 'usr-pt-demo', 'DEMO_BKASH', 50000, 'DEMO_PAID', 1, 'seed-idem-pay-9001')
+                VALUES
+                  ('pay-hist-9001', 'DEMO-SPAY-9001', 'apt-hist-9001', 'usr-pt-demo', 'DEMO_BKASH', 50000, 'DEMO_PAID', 1, 'seed-idem-pay-9001'),
+                  ('pay-hist-9002', 'DEMO-DPAY-9002', 'apt-hist-9002', 'usr-pt-demo', 'DEMO_NAGAD', 60000, 'DEMO_PAID', 1, 'seed-idem-pay-9002'),
+                  ('pay-hist-9003', 'DEMO-CARD-9003', 'apt-hist-9003', 'usr-pt-demo', 'DEMO_CARD', 70000, 'DEMO_PAID', 1, 'seed-idem-pay-9003')
                 """
             )
             conn.execute(
                 """
                 INSERT OR IGNORE INTO demo_receipts (id, payment_id, receipt_number)
-                VALUES ('rcp-hist-9001', 'pay-hist-9001', 'DEMO-RCP-9001')
+                VALUES
+                  ('rcp-hist-9001', 'pay-hist-9001', 'DEMO-RCP-9001'),
+                  ('rcp-hist-9002', 'pay-hist-9002', 'DEMO-RCP-9002'),
+                  ('rcp-hist-9003', 'pay-hist-9003', 'DEMO-RCP-9003')
                 """
             )
             conn.execute(
@@ -621,19 +651,43 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                 INSERT OR IGNORE INTO consultation_notes (
                     id, appointment_id, author_doctor_id, subjective_notes, assessment_summary,
                     advice_summary, followup_instruction, followup_date, state, signed_at_utc
-                ) VALUES (
+                ) VALUES
+                (
                     'cn-hist-9001', 'apt-hist-9001', 'doc-farhana',
                     'Patient logged two irregular cycles (38 days, 41 days). Reviewed cycle chart.',
                     'Clinician review ongoing — recommended structured diet, sleep log & fasting glucose review.',
                     'Maintain cycle log; verify prescribed supplement schedule manually.',
                     'Follow up after 14 days with fasting lipid & glucose panel.', '2026-12-02', 'SIGNED', ?
+                ),
+                (
+                    'cn-hist-9002', 'apt-hist-9002', 'doc-tanvir',
+                    'Mother reports 2-day low-grade fever (100.2 F) and runny nose in toddler Ariyan. Eating well, alert.',
+                    'Mild acute viral rhinitis / common cold. No chest retractions or red flags observed.',
+                    'Keep child well-hydrated, continue home meals, use paracetamol syrup only if temperature > 100°F.',
+                    'Follow up in 5 days if fever persists or child becomes lethargic.', '2026-11-20', 'SIGNED', ?
+                ),
+                (
+                    'cn-hist-9003', 'apt-hist-9003', 'doc-nusrat',
+                    'Erythematous pruritic maculopapular rash on left forearm for 4 days. Contact with detergent suspected.',
+                    'Mild localized contact dermatitis. No systemic rash or mucosal involvement.',
+                    'Avoid harsh detergents; apply topical hydrocortisone sparingly; take oral antihistamine at bedtime.',
+                    'Follow up in 7 days if itching or lesion does not resolve.', '2026-11-18', 'SIGNED', ?
                 )
                 """,
-                (now,),
+                (now, now, now),
             )
-            meds_demo = json.dumps([
+            meds_demo_farhana = json.dumps([
                 {"name": "Tab. Metformin 500mg (Demo)", "dose": "1 tablet", "frequency": "0+0+1 After Dinner", "duration": "14 days"},
                 {"name": "Tab. Myo-Inositol + Folate (Demo)", "dose": "1 sachet", "frequency": "1+0+0 After Breakfast", "duration": "30 days"},
+                {"name": "Cap. Seclo 20mg (Omeprazole)", "dose": "1 capsule", "frequency": "1+0+0 Before Breakfast", "duration": "14 days"},
+            ])
+            meds_demo_tanvir = json.dumps([
+                {"name": "Syr. Paracetamol 120mg/5ml (Demo)", "dose": "1 teaspoonful (5ml)", "frequency": "3 times daily if fever > 100°F", "duration": "3 days"},
+                {"name": "Normal Saline 0.9% Nasal Drops", "dose": "2 drops each nostril", "frequency": "Before nap & sleep", "duration": "5 days"},
+            ])
+            meds_demo_nusrat = json.dumps([
+                {"name": "Tab. Fexofenadine 120mg (Demo)", "dose": "1 tablet", "frequency": "0+0+1 At Bedtime", "duration": "7 days"},
+                {"name": "Hydrocortisone 1% Topical Cream", "dose": "Thin layer on affected skin", "frequency": "Twice daily after wash", "duration": "5 days"},
             ])
             conn.execute(
                 """
@@ -641,14 +695,27 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                     id, rx_reference, appointment_id, doctor_id, patient_profile_id,
                     diagnosis_summary, medications_json, advice_notes, followup_date,
                     status, signed_by_user_id, signed_at_utc, is_simulated
-                ) VALUES (
+                ) VALUES
+                (
                     'rx-hist-9001', 'DEMO-RX-9001', 'apt-hist-9001', 'doc-farhana', 'pp-rahima-self',
-                    'Cycle irregularity monitoring (Clinician Reviewed Demo)', ?,
-                    'Always confirm dose labels carefully; not a valid legal pharmacy slip.', '2026-12-02',
+                    'PCOS cycle irregularity & insulin resistance monitoring (Clinician Reviewed Demo)', ?,
+                    'Regular 30-min walking, reduce refined carbohydrates, drink 2.5L water daily.', '2026-12-02',
                     'SIGNED', 'usr-dr-farhana', ?, 1
+                ),
+                (
+                    'rx-hist-9002', 'DEMO-RX-9002', 'apt-hist-9002', 'doc-tanvir', 'pp-ariyan-child',
+                    'Acute Viral Rhinitis & Toddler Fever (Clinician Reviewed Demo)', ?,
+                    'Ensure frequent fluids, tepid sponging if warm, monitor for fast breathing or lethargy.', '2026-11-20',
+                    'SIGNED', 'usr-dr-tanvir', ?, 1
+                ),
+                (
+                    'rx-hist-9003', 'DEMO-RX-9003', 'apt-hist-9003', 'doc-nusrat', 'pp-rahima-self',
+                    'Localized Contact Dermatitis & Allergic Skin Rash (Clinician Reviewed Demo)', ?,
+                    'Wear loose cotton clothing, avoid harsh soaps, do not scratch or apply hot compresses.', '2026-11-18',
+                    'SIGNED', 'usr-dr-nusrat', ?, 1
                 )
                 """,
-                (meds_demo, now),
+                (meds_demo_farhana, now, meds_demo_tanvir, now, meds_demo_nusrat, now),
             )
 
             # 7. Seed Safe OCR Draft (Unverified — blocked from medication schedule until user verifies!)
@@ -681,19 +748,29 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                     (fid, jid, gidx, ftype, raw_txt, conf, crit, ver),
                 )
 
-            # Verified medication plan & events for Rahima
+            # Verified medication plans & events for Rahima & Ariyan
             conn.execute(
                 """
                 INSERT OR IGNORE INTO medication_plans (id, patient_profile_id, source_document_id, medicine_name, strength_text, dose_text, frequency_rule, status, verified_by_user_id)
-                VALUES ('medp-1', 'pp-rahima-self', 'doc-ocr-0052', 'Vitamin D3 (Cholecalciferol)', '2000 IU', '1 capsule', '1+0+0 After Breakfast', 'ACTIVE', 'usr-pt-demo')
+                VALUES
+                  ('medp-1', 'pp-rahima-self', 'doc-ocr-0052', 'Vitamin D3 (Cholecalciferol)', '2000 IU', '1 capsule', '1+0+0 After Breakfast', 'ACTIVE', 'usr-pt-demo'),
+                  ('medp-2', 'pp-rahima-self', 'doc-ocr-0052', 'Tab. Metformin 500mg (Demo)', '500 mg', '1 tablet', '0+0+1 After Dinner', 'ACTIVE', 'usr-pt-demo'),
+                  ('medp-3', 'pp-rahima-self', 'doc-ocr-0052', 'Tab. Myo-Inositol + Folate (Demo)', '2000 mg', '1 sachet', '1+0+0 After Breakfast', 'ACTIVE', 'usr-pt-demo'),
+                  ('medp-4', 'pp-rahima-self', 'doc-ocr-0052', 'Cap. Seclo 20mg (Omeprazole)', '20 mg', '1 capsule', '1+0+0 30 mins Before Breakfast', 'ACTIVE', 'usr-pt-demo'),
+                  ('medp-5', 'pp-rahima-self', 'doc-ocr-0052', 'Tab. Fexofenadine 120mg (Demo)', '120 mg', '1 tablet', '0+0+1 At Bedtime', 'COMPLETED', 'usr-pt-demo'),
+                  ('medp-6', 'pp-ariyan-child', 'doc-ocr-0052', 'Syr. Paracetamol 120mg/5ml (Demo)', '120mg/5ml', '1 teaspoonful', '3 times daily if fever > 100°F', 'COMPLETED', 'usr-pt-demo')
                 """
             )
             conn.execute(
                 """
                 INSERT OR IGNORE INTO medication_events (id, plan_id, due_utc, notification_status, action_status)
-                VALUES ('mede-1', 'medp-1', ?, 'DELIVERED', 'UNACKNOWLEDGED')
+                VALUES
+                  ('mede-1', 'medp-1', ?, 'DELIVERED', 'UNACKNOWLEDGED'),
+                  ('mede-2', 'medp-2', ?, 'DELIVERED', 'ACKNOWLEDGED'),
+                  ('mede-3', 'medp-3', ?, 'DELIVERED', 'ACKNOWLEDGED'),
+                  ('mede-4', 'medp-4', ?, 'DELIVERED', 'UNACKNOWLEDGED')
                 """,
-                (_slot_iso(0, 3, 0),),
+                (_slot_iso(0, 3, 0), _slot_iso(0, 13, 0), _slot_iso(0, 2, 30), _slot_iso(0, 1, 30)),
             )
 
             # 8. PCOS Cycles & Pediatric Vaccines
@@ -758,20 +835,29 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                     frow,
                 )
 
-            # 10. Support Ticket Fixture (Zero-PHI)
+            # 10. Multi-Role Support Ticket Fixtures (Zero-PHI)
             conn.execute(
                 """
                 INSERT OR IGNORE INTO support_tickets (id, ticket_number, requester_user_id, category, priority, status, assignee_support_user_id, related_appointment_id, related_demo_payment_id, subject)
-                VALUES ('tkt-401', 'TKT-DEMO-401', 'usr-pt-demo', 'DEMO_PAYMENT', 'NORMAL', 'IN_PROGRESS', 'usr-sup-demo', 'apt-hist-9001', 'pay-hist-9001', 'Need confirmation receipt PDF link for APT-DEMO-9001')
+                VALUES
+                  ('tkt-401', 'TKT-DEMO-401', 'usr-pt-demo', 'DEMO_PAYMENT', 'NORMAL', 'RESOLVED', 'usr-sup-demo', 'apt-hist-9001', 'pay-hist-9001', 'Need confirmation receipt PDF link for APT-DEMO-9001'),
+                  ('tkt-402', 'TKT-DEMO-402', 'usr-dr-farhana', 'DOCTOR_APPOINTMENT', 'NORMAL', 'IN_PROGRESS', 'usr-sup-demo', NULL, NULL, 'Update evening telemedicine consultation slot schedule'),
+                  ('tkt-403', 'TKT-DEMO-403', 'usr-pt-demo', 'GENERAL', 'NORMAL', 'IN_PROGRESS', 'usr-sup-demo', NULL, NULL, 'Ariyan child vaccination reminder schedule inquiry'),
+                  ('tkt-404', 'TKT-DEMO-404', 'usr-dr-tanvir', 'DOCUMENT_TECHNICAL', 'LOW', 'OPEN', 'usr-sup-demo', NULL, NULL, 'Inquiry regarding pediatric weight-based dosing chart reference')
                 """
             )
             conn.execute(
                 """
                 INSERT OR IGNORE INTO support_messages (id, ticket_id, sender_user_id, sender_role, visibility, body_text)
                 VALUES
-                  ('sm-1', 'tkt-401', 'usr-pt-demo', 'PATIENT', 'PUBLIC', 'Hello Support, where can I download my DEMO-BKASH-9001 receipt?'),
-                  ('sm-2', 'tkt-401', 'usr-sup-demo', 'SUPPORT', 'PUBLIC', 'আপনি পেমেন্ট ও রিসিপ্ট ট্যাব থেকে DEMO-RCP-9001 প্রিন্ট/ডাউনলোড করতে পারবেন।'),
-                  ('sm-3', 'tkt-401', 'usr-sup-demo', 'SUPPORT', 'INTERNAL', 'Verified payment status DEMO_PAID without accessing patient clinical records.')
+                  ('sm-1', 'tkt-401', 'usr-pt-demo', 'PATIENT', 'PUBLIC', 'Hello Support, where can I download my DEMO-SPAY-9001 receipt PDF?'),
+                  ('sm-2', 'tkt-401', 'usr-sup-demo', 'SUPPORT', 'PUBLIC', 'আপনি পেমেন্ট ও রিসিপ্ট ট্যাব থেকে DEMO-RCP-9001 প্রিন্ট/মেডিকেল PDF ডাউনলোড করতে পারবেন।'),
+                  ('sm-3', 'tkt-401', 'usr-sup-demo', 'SUPPORT', 'INTERNAL', 'Verified payment status DEMO_PAID without accessing patient clinical records.'),
+                  ('sm-4', 'tkt-402', 'usr-dr-farhana', 'DOCTOR', 'PUBLIC', 'Hello Support, I need to open 2 additional slots on Sunday evenings for maternal follow-up.'),
+                  ('sm-5', 'tkt-402', 'usr-sup-demo', 'SUPPORT', 'PUBLIC', 'ধন্যবাদ ডাঃ ফারহানা। আপনার আবেদন অ্যাডমিন ডেস্কে পাঠানো হয়েছে এবং অনুমোদিত হয়েছে।'),
+                  ('sm-6', 'tkt-403', 'usr-pt-demo', 'PATIENT', 'PUBLIC', 'আরিয়ানের পরবর্তী বুস্টার টিকার নোটিফিকেশন কখন আসবে জানতে চাই।'),
+                  ('sm-7', 'tkt-403', 'usr-sup-demo', 'SUPPORT', 'PUBLIC', 'আরিয়ানের এমআর বুস্টার টিকা আগামী ডিসেম্বরে নির্ধারিত। নির্ধারিত তারিখের ৩ দিন আগে এসএমএস পাঠানো হবে।'),
+                  ('sm-8', 'tkt-404', 'usr-dr-tanvir', 'DOCTOR', 'PUBLIC', 'Can we confirm the pediatric weight-based dosing table sync in the latest update?')
                 """
             )
 
@@ -834,6 +920,12 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
         except Exception:
             conn.execute("ROLLBACK;")
             raise
+
+    try:
+        from shasthosetu_api.services.rag_ingestion import seed_curated_corpus
+        seed_curated_corpus(force_reindex=False)
+    except Exception:
+        pass
 
     return {"seeded": True}
 

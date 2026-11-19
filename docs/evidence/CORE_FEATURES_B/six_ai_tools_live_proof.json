@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-11-20T03:24:00+06:00",
+  "category_coverage": "All 6 Clinical AI Tools (M01..M06) + Blood Connect + Doctors + ePharma",
+  "all_passed": true,
+  "results": {
+    "M01_pcos_clinical": {
+      "status": 200,
+      "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
+      "latency_ms": 883.7
+    },
+    "M02_pcos_ultrasound": {
+      "status": 200,
+      "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
+      "latency_ms": 670.2
+    },
+    "M03_viral_rash": {
+      "status": 200,
+      "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
+      "latency_ms": 117.0
+    },
+    "M04_dermoped": {
+      "status": 200,
+      "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
+      "latency_ms": 102.3
+    },
+    "M05_prescription_ocr": {
+      "status": 200,
+      "model_id": "M04-EASYOCR-PIPELINE-01",
+      "tokens": 44
+    },
+    "M06_voice_tts": {
+      "status": 200,
+      "data": {
+        "english": {
+          "available": true,
+          "engine": "Windows SAPI5 (Microsoft Zira/Hazel Desktop)"
+        },
+        "bengali": {
+          "available": true,
+          "engine": "facebook/mms-tts-ben (Local VITS)",
+          "unavailable_message": null
+        }
+      }
+    },
+    "blood_connect": {
+      "status": 200,
+      "available_donors": 12
+    },
+    "doctor_lounge": {
+      "status": 200,
+      "doctor_count": 43
+    },
+    "epharma_services": {
+      "status": 200,
+      "online": true
+    }
+  }
+}

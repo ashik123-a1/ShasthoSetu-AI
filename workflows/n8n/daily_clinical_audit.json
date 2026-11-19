@@ -1,0 +1,45 @@
+{
+  "name": "ShasthoSetu Daily Clinical Audit Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyDay",
+              "hour": 4,
+              "minute": 0
+            }
+          ]
+        }
+      },
+      "name": "Daily Cron 4:00 AM",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://127.0.0.1:8000/v1/mcp/catalog",
+        "method": "GET"
+      },
+      "name": "Audit MCP Servers Live",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [480, 300]
+    }
+  ],
+  "connections": {
+    "Daily Cron 4:00 AM": {
+      "main": [
+        [
+          {
+            "node": "Audit MCP Servers Live",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

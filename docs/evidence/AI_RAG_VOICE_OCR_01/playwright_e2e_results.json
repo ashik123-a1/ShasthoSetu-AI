@@ -1,0 +1,29 @@
+{
+  "timestamp_utc": "2026-11-19T16:53:33.274Z",
+  "test_suite": "AI-RAG-VOICE-OCR-01 Consolidated Playwright E2E",
+  "browser": "chromium",
+  "screenshots_saved": [
+    "01_public_ai_assistant_bilingual.png",
+    "02_citation_drawer_native_dialog.png",
+    "03_voice_input_editable_transcript.png",
+    "04_prescription_ocr_studio_bboxes.png",
+    "05_ocr_to_rag_explanation_blocks.png",
+    "06_patient_ai_workspace.png",
+    "07_doctor_ai_workspace.png",
+    "08_admin_rag_governance_panel.png",
+    "09_support_zero_phi_faq.png",
+    "10_mobile_390_responsive_clean.png"
+  ],
+  "checks_passed": {
+    "bilingual_rag_chat": true,
+    "citation_drawer_modal": true,
+    "voice_editable_transcript_gate": true,
+    "prescription_ocr_bounding_boxes": true,
+    "ocr_to_rag_4_block_explanation": true,
+    "patient_ai_workspace": true,
+    "doctor_ai_workspace": true,
+    "admin_rag_governance": true,
+    "support_zero_phi_faq": true,
+    "zero_horizontal_overflow_390_1280": true
+  }
+}
