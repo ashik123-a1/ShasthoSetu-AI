@@ -233,7 +233,23 @@ export function SupportPortalPage({ section = "dashboard" }: { section?: string 
                           Requester: {String(detail.ticket.requester_name)} • Booking: {String(detail.ticket.appointment_ref || "None")} • Payment: {String(detail.ticket.payment_ref || "None")} ({String(detail.ticket.payment_status || "N/A")})
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void (async () => {
+                              await apiPost(`/v1/support/tickets/${selectedId}/reply`, {
+                                body_text: "🟢 সাপোর্ট অফিসার চ্যাটে যুক্ত হয়েছেন। আসসালামু আলাইকুম, আমি কিভাবে সাহায্য করতে পারি?",
+                                visibility: "PUBLIC",
+                              });
+                              await apiPatch(`/v1/support/tickets/${selectedId}/status`, { status: "IN_PROGRESS" });
+                              await loadTickets();
+                            })();
+                          }}
+                          className="min-h-10 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1"
+                        >
+                          🟢 Join Live Chat
+                        </button>
                         <button type="button" onClick={() => void escalateTicket()} data-testid="support-escalate-btn" className="min-h-10 px-3 rounded-xl bg-rose-600 text-white text-xs font-semibold cursor-pointer">
                           Escalate to Admin
                         </button>

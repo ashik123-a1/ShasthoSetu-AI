@@ -1041,7 +1041,14 @@ def get_patient_ticket_detail(ticket_id: str, user: dict = Depends(require_role(
         # Strictly exclude INTERNAL staff notes from patient view!
         msgs = rows_to_dicts(
             conn.execute(
-                "SELECT id, sender_role, body_text, created_at_utc FROM support_messages WHERE ticket_id = ? AND visibility = 'PUBLIC' ORDER BY created_at_utc ASC",
+                """
+                SELECT sm.id, sm.sender_role, sm.body_text, sm.created_at_utc,
+                       COALESCE(u.full_name, CASE WHEN sm.sender_role = 'SUPPORT' THEN 'সাপোর্ট অফিসার ফারহান (Support Desk)' ELSE 'রোগী (Patient)' END) AS sender_name
+                  FROM support_messages sm
+                  LEFT JOIN users u ON u.id = sm.sender_user_id
+                 WHERE sm.ticket_id = ? AND sm.visibility = 'PUBLIC'
+                 ORDER BY sm.created_at_utc ASC
+                """,
                 (ticket_id,),
             ).fetchall()
         )

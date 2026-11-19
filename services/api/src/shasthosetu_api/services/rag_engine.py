@@ -148,14 +148,15 @@ def retrieve_hybrid_chunks(
     # Also cross-check current SQLite approval state so newly deprecated sources are excluded immediately
     with get_db_conn() as conn:
         approved_rows = conn.execute(
-            "SELECT id, audience_scope FROM rag_sources WHERE review_status = 'APPROVED'"
+            "SELECT id, slug, audience_scope FROM rag_sources WHERE review_status = 'APPROVED'"
         ).fetchall()
     approved_map = {r["id"]: r["audience_scope"] for r in approved_rows}
+    approved_slugs = {r["slug"]: r["audience_scope"] for r in approved_rows}
 
     eligible_indices = [
         i
         for i, item in enumerate(chunk_map)
-        if approved_map.get(item["source_id"]) in allowed_scopes
+        if (approved_map.get(item["source_id"]) or approved_slugs.get(item.get("slug"))) in allowed_scopes
     ]
     if not eligible_indices:
         return {"chunks": [], "index_version": meta.get("index_version", "empty"), "mode_used": "none", "max_dense": 0.0, "max_bm25": 0.0}

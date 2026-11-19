@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, Minus, Pill, Plus, Search, ShoppingCart, Trash2 } from "lucide-react";
+import { CheckCircle2, FileText, History, Minus, PackageCheck, Pill, Plus, Search, ShoppingBag, ShoppingCart, Trash2 } from "lucide-react";
 import { apiGet } from "../../lib/apiClient";
 import { formatBdtFromPoisha } from "../../lib/formatters";
 import { useI18n } from "../../lib/i18n";
 import { Skeleton } from "../ui";
+import {
+  SimulatedPaymentCheckoutModal,
+  type SimulatedPaymentSuccessPayload,
+} from "../billing/SimulatedPaymentCheckoutModal";
+import { MedicalReceiptDocument } from "../billing/MedicalReceiptDocument";
 
 export interface EpharmaMedicineItem {
   id: string;
@@ -36,6 +41,42 @@ export function EpharmaStoreWidget({
   const [medSearch, setMedSearch] = useState<string>("");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [orderNotice, setOrderNotice] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"CATALOG" | "HISTORY">("CATALOG");
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [inspectingReceipt, setInspectingReceipt] = useState<any | null>(null);
+
+  const [pharmacyOrders, setPharmacyOrders] = useState<
+    Array<{
+      id: string;
+      orderNumber: string;
+      receiptNumber: string;
+      items: Array<{ name: string; qty: number; pricePoisha: number }>;
+      totalPoisha: number;
+      methodLabel: string;
+      orderedAt: string;
+    }>
+  >(() => {
+    try {
+      const stored = localStorage.getItem("ss_pharmacy_orders");
+      if (stored) return JSON.parse(stored);
+    } catch {
+      // fallback
+    }
+    return [
+      {
+        id: "phm-hist-1",
+        orderNumber: "#PHM-72019",
+        receiptNumber: "DEMO-RCP-PHM-72019",
+        items: [
+          { name: "Tab. Napa Extra (500+65mg)", qty: 2, pricePoisha: 5400 },
+          { name: "Cap. Seclo 20mg (Omeprazole)", qty: 1, pricePoisha: 7000 },
+        ],
+        totalPoisha: 12400,
+        methodLabel: "ShasthoPay MFS (Simulated)",
+        orderedAt: "2026-11-18T10:30:00Z",
+      },
+    ];
+  });
 
   useEffect(() => {
     if (!autoFetch || propMedicines) return;
@@ -96,22 +137,130 @@ export function EpharmaStoreWidget({
             {locale === "bn" ? "শাস্ত্রসেতু ই-ফার্মা মেডিসিন শপ ও কার্ট" : "ShasthoSetu ePharma Store & Demo Cart"}
           </h3>
         </div>
-
-        <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 min-h-11 w-full md:w-72">
-          <Search className="w-4 h-4 text-cyan-400 shrink-0" />
-          <input
-            type="search"
-            value={medSearch}
-            onChange={(e) => setMedSearch(e.target.value)}
-            placeholder="Search Napa, Seclo, Glucometer..."
-            className="w-full bg-transparent text-xs text-white placeholder:text-slate-500 focus:outline-none"
-          />
-        </div>
       </div>
 
-      {/* Category Filter Pills */}
-      <div className="flex flex-wrap gap-2">
-        {medCats.map((cat) => (
+      {/* Store Navigation Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("CATALOG")}
+            className={`min-h-10 px-4 rounded-xl text-xs font-bold inline-flex items-center gap-2 cursor-pointer transition ${
+              activeTab === "CATALOG"
+                ? "bg-amber-400 text-slate-950 font-black"
+                : "bg-slate-900 border border-slate-700 text-slate-300 hover:border-slate-500"
+            }`}
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span>{locale === "bn" ? "ওষুধ তালিকা ও অর্ডার" : "Medicines & Store"}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("HISTORY")}
+            className={`min-h-10 px-4 rounded-xl text-xs font-bold inline-flex items-center gap-2 cursor-pointer transition ${
+              activeTab === "HISTORY"
+                ? "bg-emerald-400 text-slate-950 font-black"
+                : "bg-slate-900 border border-slate-700 text-slate-300 hover:border-slate-500"
+            }`}
+          >
+            <History className="w-4 h-4" />
+            <span>
+              {locale === "bn" ? "শপিং ও অর্ডার হিস্ট্রি" : "Shopping & Order History"} ({pharmacyOrders.length})
+            </span>
+          </button>
+        </div>
+
+        {activeTab === "CATALOG" && (
+          <div className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 min-h-10 w-full md:w-72">
+            <Search className="w-4 h-4 text-cyan-400 shrink-0" />
+            <input
+              type="search"
+              value={medSearch}
+              onChange={(e) => setMedSearch(e.target.value)}
+              placeholder="Search Napa, Seclo, Glucometer..."
+              className="w-full bg-transparent text-xs text-white placeholder:text-slate-500 focus:outline-none"
+            />
+          </div>
+        )}
+      </div>
+
+      {activeTab === "HISTORY" ? (
+        /* SHOPPING & ORDER HISTORY VIEW */
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-base font-bold text-white flex items-center gap-2">
+              <PackageCheck className="w-5 h-5 text-emerald-400" />
+              {locale === "bn" ? "আপনার পূর্বের ফার্মেসি অর্ডারসমূহ" : "My Pharmacy Order History"}
+            </h4>
+            <span className="text-xs font-mono text-slate-400">
+              {pharmacyOrders.length} Completed Orders
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {pharmacyOrders.map((ord) => (
+              <div
+                key={ord.id}
+                className="rounded-2xl border border-slate-800 bg-slate-900/90 p-5 space-y-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                  <div>
+                    <span className="font-mono font-bold text-sm text-cyan-400">{ord.orderNumber}</span>
+                    <span className="text-slate-400 text-xs ml-2">
+                      • {new Date(ord.orderedAt).toLocaleString("en-GB", { timeZone: "Asia/Dhaka" })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-mono text-[10px] font-bold">
+                      DEMO DISPATCHED
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setInspectingReceipt({
+                          receiptNumber: ord.receiptNumber,
+                          transactionId: `TXN-${ord.orderNumber.replace("#", "")}`,
+                          methodLabel: ord.methodLabel,
+                          amountPoisha: ord.totalPoisha,
+                          paidAtUtc: ord.orderedAt,
+                        })
+                      }
+                      className="px-3 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/35 border border-cyan-400/40 text-cyan-300 text-xs font-bold inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      {locale === "bn" ? "রসিদ / PDF" : "Medical Receipt"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-300">
+                  {ord.items.map((it, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span>
+                        {it.name} <span className="text-slate-500">× {it.qty}</span>
+                      </span>
+                      <span className="font-mono text-slate-300">
+                        {formatBdtFromPoisha(it.pricePoisha, locale)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-between items-center pt-2 border-t border-slate-800 font-mono text-xs">
+                  <span className="text-slate-400">Method: {ord.methodLabel}</span>
+                  <div className="text-sm font-bold text-amber-300">
+                    Paid: {formatBdtFromPoisha(ord.totalPoisha, locale)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap gap-2">
+            {medCats.map((cat) => (
           <button
             key={cat}
             type="button"
@@ -281,21 +430,84 @@ export function EpharmaStoreWidget({
 
               <button
                 type="button"
-                onClick={() => {
-                  const totalCount = cartEntries.reduce((a, b) => a + b.qty, 0);
-                  setOrderNotice(
-                    `SIMULATED DEMO ORDER PLACED (#PHM-${Date.now().toString().slice(-5)}): ${totalCount} item(s) totaling ${formatBdtFromPoisha(cartSubtotalPoisha, locale)}. Rx-required items require pharmacist verification before dispatch.`
-                  );
-                  setCart({});
-                }}
-                className="w-full min-h-11 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 text-slate-950 font-extrabold text-xs cursor-pointer"
+                onClick={() => setShowCheckoutModal(true)}
+                className="w-full min-h-11 rounded-xl bg-gradient-to-r from-amber-400 to-emerald-400 text-slate-950 font-extrabold text-xs cursor-pointer shadow-lg hover:brightness-105 transition flex items-center justify-center gap-1.5"
               >
-                Place Simulated Pharmacy Order →
+                <span>Proceed to Simulated Payment ({formatBdtFromPoisha(cartSubtotalPoisha, locale)}) →</span>
               </button>
             </>
           )}
         </div>
       </div>
+      </>
+      )}
+
+      {/* Simulated Checkout Modal */}
+      <SimulatedPaymentCheckoutModal
+        isOpen={showCheckoutModal}
+        category="PHARMACY"
+        title={locale === "bn" ? "ই-ফার্মা প্রেসক্রিপশন ও ওষুধ অর্ডার" : "ePharma Medicine Order Checkout"}
+        itemDescription={`${cartEntries.reduce((a, b) => a + b.qty, 0)} item(s) • ${cartEntries.map((c) => c.med.name_en).slice(0, 2).join(", ")}${cartEntries.length > 2 ? "..." : ""}`}
+        amountPoisha={cartSubtotalPoisha}
+        onSuccess={(payload: SimulatedPaymentSuccessPayload) => {
+          const newOrderNumber = `#PHM-${Date.now().toString().slice(-5)}`;
+          const newOrder = {
+            id: `phm-${Date.now()}`,
+            orderNumber: newOrderNumber,
+            receiptNumber: payload.receiptNumber,
+            items: cartEntries.map((c) => ({
+              name: c.med.name_en,
+              qty: c.qty,
+              pricePoisha: c.med.price_minor_poisha * c.qty,
+            })),
+            totalPoisha: cartSubtotalPoisha,
+            methodLabel: payload.methodLabel,
+            orderedAt: payload.paidAtUtc,
+          };
+          const updated = [newOrder, ...pharmacyOrders];
+          setPharmacyOrders(updated);
+          try {
+            localStorage.setItem("ss_pharmacy_orders", JSON.stringify(updated));
+          } catch {}
+          setCart({});
+          setOrderNotice(
+            `SIMULATED ORDER ${newOrderNumber} CONFIRMED! Receipt: ${payload.receiptNumber}. Paid via ${payload.methodLabel}.`
+          );
+          setActiveTab("HISTORY");
+        }}
+        onClose={() => setShowCheckoutModal(false)}
+      />
+
+      {/* Inspect Medical Receipt Modal */}
+      {inspectingReceipt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl bg-slate-950 rounded-3xl p-4 max-h-[90vh] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setInspectingReceipt(null)}
+              className="absolute top-4 right-4 z-10 px-3 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-bold hover:bg-slate-700"
+            >
+              ✕ Close
+            </button>
+            <MedicalReceiptDocument
+              receipt={{
+                id: inspectingReceipt.transactionId,
+                receipt_number: inspectingReceipt.receiptNumber,
+                amount_minor_poisha: inspectingReceipt.amountPoisha,
+                payment_method: inspectingReceipt.methodLabel,
+                issued_at_utc: inspectingReceipt.paidAtUtc,
+                doctor_name: "ePharma Verified Pharmacist (Demo)",
+                doctor_specialty: "Certified Model Pharmacy & Telehealth Dispatch",
+                chamber_location: "Central Dhaka Care Hub",
+                status: "PAID",
+                disclaimer_label: "Simulated ePharma Dispense & Cash Memo",
+              }}
+              locale={locale}
+              onClose={() => setInspectingReceipt(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

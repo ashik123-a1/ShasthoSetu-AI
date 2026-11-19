@@ -48,6 +48,7 @@ export const FOUR_ROLE_NAV_CONFIG: Record<AppRole, RoleNavItem[]> = {
     { id: "pt-epharma", labelKey: "nav.patient.epharma", previewPath: "/patient/epharma", icon: ShoppingCart },
     { id: "pt-pcos", labelKey: "nav.patient.pcos", previewPath: "/patient/pcos", icon: Activity },
     { id: "pt-ped", labelKey: "nav.patient.pediatric", previewPath: "/patient/pediatric", icon: Baby },
+    { id: "pt-dermoped", labelKey: "nav.patient.dermoped", previewPath: "/patient/dermoped", icon: Sparkles },
     { id: "pt-sup", labelKey: "nav.patient.support", previewPath: "/patient/support", icon: LifeBuoy },
   ],
   DOCTOR: [

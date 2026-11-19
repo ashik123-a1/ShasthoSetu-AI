@@ -37,10 +37,12 @@ import {
 } from "../components/prescriptions/MedicalPrescriptionDocument";
 import { PrescriptionArchiveView } from "../components/prescriptions/PrescriptionArchiveView";
 import { EpharmaStoreWidget } from "../components/pharmacy/EpharmaStoreWidget";
+import { SimulatedPaymentCheckoutModal } from "../components/billing/SimulatedPaymentCheckoutModal";
 import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { AiHealthAssistant } from "../components/ai/AiHealthAssistant";
 import { PrescriptionOcrStudio } from "../components/ai/PrescriptionOcrStudio";
+import { LiveSupportChatWidget } from "../components/support/LiveSupportChatWidget";
 
 interface PatientDashboardData {
   profiles: Array<{ id: string; display_name: string; relationship_type: string; date_of_birth?: string; blood_group?: string; district?: string }>;
@@ -165,9 +167,7 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
   const [pedTemp, setPedTemp] = useState(101.8);
   const [pedBreathing, setPedBreathing] = useState(false);
   const [pedFeverDays, setPedFeverDays] = useState(2);
-  const [ticketSubject, setTicketSubject] = useState("");
-  const [ticketMsg, setTicketMsg] = useState("");
-  const [activeTicketMsgs, setActiveTicketMsgs] = useState<{ id: string; messages: Array<{ id: string; sender_name: string; sender_role: string; body_text: string; created_at_utc: string }> } | null>(null);
+  const [payingApt, setPayingApt] = useState<any | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -260,13 +260,14 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
     }
   };
 
-  const runDemoCheckout = async (appointmentId: string) => {
+  const runDemoCheckout = async (appointmentId: string, customMethod?: string) => {
+    const finalMethod = customMethod || checkoutMethod;
     try {
       const res = await apiPost<{ payment: { id: string; receipt_number?: string } }>("/v1/payments/checkout", {
         appointment_id: appointmentId,
-        method: checkoutMethod,
+        method: finalMethod,
         outcome: "SUCCESS",
-        idempotency_key: `ui-pay-${appointmentId}-${checkoutMethod}`,
+        idempotency_key: `ui-pay-${appointmentId}-${finalMethod}-${Date.now()}`,
       });
       pushToast({ title: "Simulated Payment Complete", description: `Receipt ${res.payment.receipt_number}`, tone: "success" });
       await loadAll();
@@ -317,6 +318,7 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
     epharma: locale === "bn" ? "ই-ফার্মা মেডিসিন শপ ও কার্ট" : "ShasthoSetu ePharma Store & Demo Cart",
     pcos: locale === "bn" ? "PCOS সাইকেল ও উপসর্গ জার্নাল" : "Women's Health & PCOS Tracker",
     pediatric: locale === "bn" ? "শিশু স্বাস্থ্য ও জরুরি সতর্কতা" : "Pediatric Care, Vaccines & Triage",
+    dermoped: locale === "bn" ? "ডার্মোপেড শিশু চর্মরোগ এআই" : "DermoPed AI Pediatric Skin & Rash Studio",
     diagnostics: locale === "bn" ? "ডায়াগনস্টিক টেস্ট অর্ডার (ডেমো)" : "Diagnostic Lab Demo Orders",
     support: locale === "bn" ? "সাপোর্ট টিকেট ও সহায়তা" : "Patient Support Tickets",
   };
@@ -358,139 +360,7 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
 
             return (
               <div className="space-y-6">
-                {/* 1. TOP OPERATIONAL WORKSPACE: Recent Consultations & EHR Snapshot (Making Part First) */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Recent Consultations & Video Room */}
-                  <div className="bento-card rounded-2xl p-5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h2 className="font-bold text-base text-white">
-                        {locale === "bn" ? "সাম্প্রতিক অ্যাপয়েন্টমেন্ট ও লাইভ কল" : "Recent Consultations & Video Room"}
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => navigate("/patient/doctors")}
-                        className="text-xs font-semibold text-cyan-400 hover:underline cursor-pointer"
-                      >
-                        + {locale === "bn" ? "নতুন বুকিং" : "Book New"}
-                      </button>
-                    </div>
-                    {dash.appointments.slice(0, 4).map((a) => (
-                      <div
-                        key={a.id}
-                        className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs"
-                      >
-                        <div>
-                          <p className="font-bold text-white">
-                            {locale === "bn" && a.doctor_name_bn ? a.doctor_name_bn : a.doctor_name}
-                          </p>
-                          <p className="text-slate-400">
-                            {a.booking_reference} • {formatDhakaDateTime(a.slot_start_utc, locale)}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <StatusBadge status={a.status} />
-                          <button
-                            type="button"
-                            onClick={() => navigate("/patient/consultations")}
-                            className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 font-semibold cursor-pointer inline-flex items-center gap-1"
-                          >
-                            <Video className="w-3 h-3" /> Call Room
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Personal Health Record & Latest e-Rx Snapshot */}
-                  <div className="bento-card rounded-2xl p-5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h2 className="font-bold text-base text-white flex items-center gap-2">
-                        <HeartPulse className="w-4 h-4 text-rose-400" />
-                        {locale === "bn" ? "পার্সোনাল হেলথ রেকর্ড (EHR)" : "Personal Health Record & Latest e-Rx"}
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => navigate("/patient/medicines")}
-                        className="text-xs font-semibold text-cyan-400 hover:underline cursor-pointer"
-                      >
-                        {locale === "bn" ? "প্রেসক্রিপশন আর্কাইভ →" : "Rx Archive →"}
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2.5 text-center text-xs">
-                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-                        <div className="text-[10px] font-mono text-slate-400">BLOOD GROUP</div>
-                        <div className="text-base font-extrabold text-rose-400 mt-0.5">
-                          {activeProfile?.blood_group || "O+"}
-                        </div>
-                      </div>
-                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-                        <div className="text-[10px] font-mono text-slate-400">BP (LAST LOG)</div>
-                        <div className="text-base font-extrabold text-cyan-300 mt-0.5">118/78</div>
-                      </div>
-                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
-                        <div className="text-[10px] font-mono text-slate-400">BMI INDEX</div>
-                        <div className="text-base font-extrabold text-emerald-400 mt-0.5">22.4</div>
-                      </div>
-                    </div>
-
-                    {latestRx ? (
-                      <div className="p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 text-xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-emerald-300">
-                            Latest Rx: {latestRx.rx_reference}
-                          </span>
-                          <span className="text-slate-400">{latestRx.doctor_name}</span>
-                        </div>
-                        <p className="text-slate-200">{latestRx.diagnosis_summary}</p>
-                        {latestRx.advice_notes && <p className="text-slate-400">{latestRx.advice_notes}</p>}
-                        <div className="pt-1 flex items-center justify-end">
-                          <button
-                            type="button"
-                            onClick={() => setInspectingRx(latestRx as any)}
-                            className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            {locale === "bn" ? "প্রেসক্রিপশন প্রিন্ট / PDF" : "View & Print Medical Rx"}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400">
-                        No signed e-prescription yet — open Consultation Room or Prescription OCR Review.
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* 2. DocTime-Inspired 6 Visual Care Quick Tiles */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {[
-                    { icon: Video, label: locale === "bn" ? "ভিডিও কনসাল্ট" : "Video & Audio Call", to: "/patient/consultations", accent: "text-emerald-400", border: "hover:border-emerald-400/60" },
-                    { icon: FolderHeart, label: locale === "bn" ? "হেলথ রেকর্ড (EHR)" : "Medical Records", to: "/patient/records", accent: "text-cyan-400", border: "hover:border-cyan-400/60" },
-                    { icon: Pill, label: locale === "bn" ? "ই-ফার্মা মেডিসিন শপ" : "ePharma Medicine Store", to: "/patient/epharma", accent: "text-amber-300", border: "hover:border-amber-400/60" },
-                    { icon: FlaskConical, label: locale === "bn" ? "ডায়াগনস্টিক ল্যাব" : "Diagnostic Tests", to: "/patient/diagnostics", accent: "text-indigo-300", border: "hover:border-indigo-400/60" },
-                    { icon: Sparkles, label: locale === "bn" ? "পিসিওএস ও শিশু এআই" : "PCOS & Child AI", to: "/patient/pcos", accent: "text-pink-400", border: "hover:border-pink-400/60" },
-                    { icon: LifeBuoy, label: locale === "bn" ? "২৪/৭ সাপোর্ট" : "Support & Bills", to: "/patient/support", accent: "text-sky-300", border: "hover:border-sky-400/60" },
-                  ].map((tile) => {
-                    const Icon = tile.icon;
-                    return (
-                      <button
-                        key={tile.to}
-                        type="button"
-                        onClick={() => navigate(tile.to)}
-                        className={`bento-card p-3.5 rounded-2xl text-left flex flex-col gap-2 cursor-pointer ${tile.border}`}
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center">
-                          <Icon className={`w-4 h-4 ${tile.accent}`} />
-                        </div>
-                        <span className="text-xs font-bold text-white leading-snug">{tile.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* 3. LOWER SECTION (Niche): 3D Flippable Smart Health ID + Quick Counters + Search & Family Switcher */}
+                {/* 1. TOP SECTION: 3D Flippable Smart Health ID + Quick Counters + Search & Family Switcher */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                   <div className="lg:col-span-5 flex flex-col justify-center">
                     <SmartHealthIdCard
@@ -598,6 +468,138 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* 2. OPERATIONAL WORKSPACE (Niche/Below): Recent Consultations & EHR Snapshot */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Recent Consultations & Video Room */}
+                  <div className="bento-card rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-bold text-base text-white">
+                        {locale === "bn" ? "সাম্প্রতিক অ্যাপয়েন্টমেন্ট ও লাইভ কল" : "Recent Consultations & Video Room"}
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/patient/doctors")}
+                        className="text-xs font-semibold text-cyan-400 hover:underline cursor-pointer"
+                      >
+                        + {locale === "bn" ? "নতুন বুকিং" : "Book New"}
+                      </button>
+                    </div>
+                    {dash.appointments.slice(0, 4).map((a) => (
+                      <div
+                        key={a.id}
+                        className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs"
+                      >
+                        <div>
+                          <p className="font-bold text-white">
+                            {locale === "bn" && a.doctor_name_bn ? a.doctor_name_bn : a.doctor_name}
+                          </p>
+                          <p className="text-slate-400">
+                            {a.booking_reference} • {formatDhakaDateTime(a.slot_start_utc, locale)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={a.status} />
+                          <button
+                            type="button"
+                            onClick={() => navigate("/patient/consultations")}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 font-semibold cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Video className="w-3 h-3" /> Call Room
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Personal Health Record & Latest e-Rx Snapshot */}
+                  <div className="bento-card rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-bold text-base text-white flex items-center gap-2">
+                        <HeartPulse className="w-4 h-4 text-rose-400" />
+                        {locale === "bn" ? "পার্সোনাল হেলথ রেকর্ড (EHR)" : "Personal Health Record & Latest e-Rx"}
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/patient/medicines")}
+                        className="text-xs font-semibold text-cyan-400 hover:underline cursor-pointer"
+                      >
+                        {locale === "bn" ? "প্রেসক্রিপশন আর্কাইভ →" : "Rx Archive →"}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2.5 text-center text-xs">
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400">BLOOD GROUP</div>
+                        <div className="text-base font-extrabold text-rose-400 mt-0.5">
+                          {activeProfile?.blood_group || "O+"}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400">BP (LAST LOG)</div>
+                        <div className="text-base font-extrabold text-cyan-300 mt-0.5">118/78</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400">BMI INDEX</div>
+                        <div className="text-base font-extrabold text-emerald-400 mt-0.5">22.4</div>
+                      </div>
+                    </div>
+
+                    {latestRx ? (
+                      <div className="p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-emerald-300">
+                            Latest Rx: {latestRx.rx_reference}
+                          </span>
+                          <span className="text-slate-400">{latestRx.doctor_name}</span>
+                        </div>
+                        <p className="text-slate-200">{latestRx.diagnosis_summary}</p>
+                        {latestRx.advice_notes && <p className="text-slate-400">{latestRx.advice_notes}</p>}
+                        <div className="pt-1 flex items-center justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setInspectingRx(latestRx as any)}
+                            className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            {locale === "bn" ? "প্রেসক্রিপশন প্রিন্ট / PDF" : "View & Print Medical Rx"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400">
+                        No signed e-prescription yet — open Consultation Room or Prescription OCR Review.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. DocTime-Inspired 6 Visual Care Quick Tiles */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {[
+                    { icon: Video, label: locale === "bn" ? "ভিডিও কনসাল্ট" : "Video & Audio Call", to: "/patient/consultations", accent: "text-emerald-400", border: "hover:border-emerald-400/60" },
+                    { icon: FolderHeart, label: locale === "bn" ? "হেলথ রেকর্ড (EHR)" : "Medical Records", to: "/patient/records", accent: "text-cyan-400", border: "hover:border-cyan-400/60" },
+                    { icon: Pill, label: locale === "bn" ? "ই-ফার্মা মেডিসিন শপ" : "ePharma Medicine Store", to: "/patient/epharma", accent: "text-amber-300", border: "hover:border-amber-400/60" },
+                    { icon: FlaskConical, label: locale === "bn" ? "ডায়াগনস্টিক ল্যাব" : "Diagnostic Tests", to: "/patient/diagnostics", accent: "text-indigo-300", border: "hover:border-indigo-400/60" },
+                    { icon: Sparkles, label: locale === "bn" ? "পিসিওএস ও শিশু এআই" : "PCOS & Child AI", to: "/patient/pcos", accent: "text-pink-400", border: "hover:border-pink-400/60" },
+                    { icon: LifeBuoy, label: locale === "bn" ? "২৪/৭ সাপোর্ট" : "Support & Bills", to: "/patient/support", accent: "text-sky-300", border: "hover:border-sky-400/60" },
+                  ].map((tile) => {
+                    const Icon = tile.icon;
+                    return (
+                      <button
+                        key={tile.to}
+                        type="button"
+                        onClick={() => navigate(tile.to)}
+                        className={`bento-card p-3.5 rounded-2xl text-left flex flex-col gap-2 cursor-pointer ${tile.border}`}
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center">
+                          <Icon className={`w-4 h-4 ${tile.accent}`} />
+                        </div>
+                        <span className="text-xs font-bold text-white leading-snug">{tile.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* 4. Land-Guard Interactive Patient Bento Analytics Deck */}
@@ -913,10 +915,10 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                       <button
                         type="button"
                         data-testid={`pay-demo-btn-${apt.id}`}
-                        onClick={() => void runDemoCheckout(apt.id)}
-                        className="min-h-11 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                        onClick={() => setPayingApt(apt)}
+                        className="min-h-11 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-lg hover:brightness-105 transition"
                       >
-                        <CreditCard className="w-4 h-4" /> Complete {checkoutMethod === "DEMO_BKASH" ? "ShasthoPay" : checkoutMethod === "DEMO_NAGAD" ? "Digital Direct" : "Card"} Demo Pay
+                        <CreditCard className="w-4 h-4" /> Pay {formatBdtFromPoisha(apt.fee_minor_poisha, locale)} (Simulated)
                       </button>
                     )}
                     {["AWAITING_DEMO_PAYMENT", "CONFIRMED"].includes(apt.status) && (
@@ -1328,6 +1330,74 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
             </div>
           )}
 
+          {/* DERMOPED AI SKIN & RASH STUDIO */}
+          {section === "dermoped" && dash && (
+            <div className="space-y-6">
+              <div className="rounded-3xl border border-emerald-500/30 bg-[#061224] p-5 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="font-mono text-xs text-emerald-400 font-bold uppercase tracking-wider">
+                      M06 DERMOPED PEDIATRIC SKIN &amp; LESION AI (EXP_B / EXP_D)
+                    </div>
+                    <h2 className="text-xl font-bold text-white mt-1">
+                      {locale === "bn"
+                        ? "ডার্মোপেড শিশু চর্মরোগ ও র‍্যাশ বিশ্লেষণ স্টুডিও"
+                        : "DermoPed AI Pediatric Skin & Rash Analysis Studio"}
+                    </h2>
+                    <p className="text-xs text-slate-300 mt-1">
+                      {locale === "bn"
+                        ? "চিকেনপক্স, পেডিকুলোসিস ও ভাইরাল র‍্যাশ স্কিন লেশন ক্রপ বিশ্লেষণ করুন (গবেষণা ও ক্লিনিক্যাল স্ক্রিনিং প্রোটোটাইপ)।"
+                        : "Analyze pediatric skin lesion crops with MobileNetV3 (EXP_B/EXP_D) research models — strictly non-diagnostic assistive screening."}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPedAiMode("dermoped")}
+                      className={`min-h-10 px-4 rounded-xl text-xs font-bold cursor-pointer transition ${
+                        pedAiMode === "dermoped"
+                          ? "bg-emerald-400 text-slate-950 font-black shadow-md"
+                          : "border border-white/20 text-slate-300 hover:border-emerald-400/50"
+                      }`}
+                    >
+                      DermoPed (M06 MobileNetV3)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPedAiMode("viral-rash")}
+                      className={`min-h-10 px-4 rounded-xl text-xs font-bold cursor-pointer transition ${
+                        pedAiMode === "viral-rash"
+                          ? "bg-[#818cf8] text-slate-950 font-black shadow-md"
+                          : "border border-white/20 text-slate-300 hover:border-indigo-400/50"
+                      }`}
+                    >
+                      Viral Rash (M03 Grouped)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <CyberScanWorkbench activeModule={pedAiMode} compact onDraftSaved={() => void loadAll()} />
+
+              {aiDrafts.filter((d) => ["dermoped", "viral-rash"].includes(d.module_key)).length > 0 && (
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2.5">
+                  <h3 className="font-bold text-sm">Saved Skin Lesion Research Drafts &amp; Doctor Reviews</h3>
+                  {aiDrafts
+                    .filter((d) => ["dermoped", "viral-rash"].includes(d.module_key))
+                    .map((d) => (
+                      <div key={d.id} className="p-3.5 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] text-xs flex flex-wrap justify-between gap-2">
+                        <div>
+                          <strong>{d.module_key}</strong> ({d.model_id}) — {d.input_summary}
+                          {d.doctor_notes && <div className="text-emerald-400 mt-1 font-semibold">Clinician Note: {d.doctor_notes}</div>}
+                        </div>
+                        <StatusBadge status={d.doctor_review_status} />
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* DIAGNOSTIC DEMO ORDERS */}
           {section === "diagnostics" && dash && (
             <div className="space-y-6">
@@ -1366,63 +1436,12 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
             </div>
           )}
 
-          {/* PATIENT SUPPORT TICKETS */}
+          {/* PATIENT SUPPORT TICKETS & INTERACTIVE LIVE CHAT */}
           {section === "support" && dash && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void (async () => {
-                    await apiPost("/v1/patient/tickets", { category: "DEMO_PAYMENT", subject: ticketSubject, message: ticketMsg });
-                    setTicketSubject("");
-                    setTicketMsg("");
-                    pushToast({ title: "Support Ticket Created", tone: "success" });
-                    await loadAll();
-                  })();
-                }}
-                className="lg:col-span-5 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3"
-              >
-                <h2 className="font-bold text-base flex items-center gap-2"><LifeBuoy className="w-4 h-4" /> Create Support Ticket</h2>
-                <input type="text" required value={ticketSubject} onChange={(e) => setTicketSubject(e.target.value)} placeholder="Subject" className="w-full min-h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] px-3 text-sm" />
-                <textarea required rows={3} value={ticketMsg} onChange={(e) => setTicketMsg(e.target.value)} placeholder="Describe issue (avoid sensitive clinical notes)" className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] p-3 text-sm" />
-                <button type="submit" className="min-h-11 px-4 rounded-xl bg-[var(--color-primary)] text-[var(--color-primary-contrast)] font-semibold text-xs cursor-pointer">
-                  Submit Ticket
-                </button>
-              </form>
-
-              <div className="lg:col-span-7 space-y-3">
-                {dash.tickets.map((tkt) => (
-                  <div key={tkt.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <strong className="text-sm">{tkt.ticket_number}: {tkt.subject}</strong>
-                      <StatusBadge status={tkt.status} />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void (async () => {
-                          const d = await apiGet<{ messages: Array<{ id: string; sender_name: string; sender_role: string; body_text: string; created_at_utc: string }> }>(`/v1/patient/tickets/${tkt.id}`);
-                          setActiveTicketMsgs({ id: tkt.id, messages: d.messages });
-                        })()
-                      }
-                      className="text-xs font-semibold text-[var(--color-primary)] hover:underline cursor-pointer"
-                    >
-                      Inspect Public Replies
-                    </button>
-                    {activeTicketMsgs && activeTicketMsgs.id === tkt.id && (
-                      <div className="space-y-1.5 pt-2 border-t border-[var(--color-border)]">
-                        {activeTicketMsgs.messages.map((m) => (
-                          <div key={m.id} className="p-2.5 rounded-xl bg-[var(--color-canvas)] text-xs">
-                            <span className="font-bold">{m.sender_name} ({m.sender_role}): </span>
-                            <span>{m.body_text}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <LiveSupportChatWidget
+              tickets={dash.tickets}
+              onRefresh={loadAll}
+            />
           )}
         </div>
       )}
@@ -1437,6 +1456,27 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
             setInspectingDoctor(null);
             navigate(`/patient/appointments?doctorId=${docId}`);
           }}
+        />
+      )}
+
+      {payingApt && (
+        <SimulatedPaymentCheckoutModal
+          isOpen={Boolean(payingApt)}
+          category="DOCTOR_CONSULTATION"
+          title={locale === "bn" ? "ডাক্তার কনসালটেশন ফি পরিশোধ" : "Doctor Consultation Fee Payment"}
+          itemDescription={`${payingApt.doctor_name || "Specialist Doctor"} (${payingApt.specialty || "General Physician"}) • Slot: ${formatDhakaDateTime(payingApt.slot_start_utc, locale)}`}
+          amountPoisha={payingApt.fee_minor_poisha || 50000}
+          onSuccess={async (payload) => {
+            const mappedMethod =
+              payload.method === "SHASTHOPAY_MFS"
+                ? "DEMO_BKASH"
+                : payload.method === "DIGITAL_DIRECT_PAY"
+                ? "DEMO_NAGAD"
+                : "DEMO_CARD";
+            await runDemoCheckout(payingApt.id, mappedMethod);
+            setPayingApt(null);
+          }}
+          onClose={() => setPayingApt(null)}
         />
       )}
     </PortalLayout>

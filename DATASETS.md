@@ -4,6 +4,21 @@ This document inventories the clinical datasets, guidelines, and synthetic cohor
 
 ---
 
+## 🌐 Official Hugging Face Dataset Repository
+All audited clinical datasets and research reconciliation manifests are publicly hosted on Hugging Face:
+- **Repository URL**: [https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets](https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets)
+- **Total Files Uploaded**: 35,641 files across 7 audited directories
+- **Included Modules**:
+  1. `01_pcos_clinical`: 88 clinical patient records with 44 metabolic & hormonal biomarkers (`pcos_clinical_cleaned.csv`).
+  2. `02_pcos_ultrasound`: 299 ovarian ultrasound B-mode scans with strict perceptual hash (pHash) deduplication.
+  3. `03_viral_rash_grouped`: MCVSLD clean grouped split across 6 viral conditions, strictly partitioned by 755 source-photo families (0% leakage).
+  4. `04_prescription_ocr`: Gazipur 1,000-prescription accounting (992 admissible, 8 quarantined with HTTP 422 gate).
+  5. `05_bangla_voice_benchmark`: Google FLEURS Bengali benchmark provenance (26 human audio clips, 22 sentences, 22 speakers).
+  6. `06_dermoped_pediatric_crops`: 656 cropped lesions across 22 verified pediatric patients (19 Chickenpox, 3 Pediculosis).
+  7. `final_audit_lock`: Cryptographic SHA-256 verification scripts, reconciliation CSVs, and audit sign-off reports.
+
+---
+
 ## 1. Primary Clinical Datasets
 
 | Dataset ID | Name | Source / Authority | Format | Records / Chunks | Integrity Checksum (SHA-256) |

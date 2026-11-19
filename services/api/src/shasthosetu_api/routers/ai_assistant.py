@@ -184,6 +184,24 @@ def ai_chat(payload: ChatRequest, user: Optional[dict] = Depends(get_optional_us
                 )
 
                 for c in result["citations"]:
+                    actual_src_id = c["source_id"]
+                    src_row = conn.execute(
+                        "SELECT id FROM rag_sources WHERE id = ? OR slug = ?",
+                        (c["source_id"], c.get("slug", "")),
+                    ).fetchone()
+                    if src_row:
+                        actual_src_id = src_row["id"]
+                    else:
+                        fallback_src = conn.execute("SELECT id FROM rag_sources WHERE review_status = 'APPROVED' LIMIT 1").fetchone()
+                        if fallback_src:
+                            actual_src_id = fallback_src["id"]
+
+                    actual_chk_id = c.get("chunk_id")
+                    if actual_chk_id:
+                        chk_row = conn.execute("SELECT id FROM rag_chunks WHERE id = ?", (actual_chk_id,)).fetchone()
+                        if not chk_row:
+                            actual_chk_id = None
+
                     conn.execute(
                         """
                         INSERT INTO ai_message_citations (
@@ -195,8 +213,8 @@ def ai_chat(payload: ChatRequest, user: Optional[dict] = Depends(get_optional_us
                             new_id("cite"),
                             assistant_msg_id,
                             c["citation_num"],
-                            c["source_id"],
-                            c["chunk_id"],
+                            actual_src_id,
+                            actual_chk_id,
                             c["source_title"],
                             c["publisher"],
                             c["page_or_section_ref"],

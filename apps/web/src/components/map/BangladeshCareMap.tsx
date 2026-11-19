@@ -70,11 +70,11 @@ interface DivisionHub {
   districts: string[];
 }
 
-const BD_CENTER: [number, number] = [23.82, 90.30];
-const BD_INITIAL_ZOOM = 7.25;
+const BD_CENTER: [number, number] = [23.62, 90.35];
+const BD_INITIAL_ZOOM = 7.3;
 const BD_BOUNDS: L.LatLngBoundsExpression = [
-  [21.45, 88.10],
-  [26.45, 92.55],
+  [20.55, 87.98],
+  [26.68, 92.72],
 ];
 
 const DIVISION_HUBS: DivisionHub[] = [
@@ -372,13 +372,7 @@ export function BangladeshCareMap({
       map.closePopup();
       const size = map.getSize();
       if (size.x > 64 && size.y > 64) {
-        map.fitBounds(BD_BOUNDS, { padding: [8, 8], maxZoom: 7.8, animate: !motionPaused });
-        const currentZoom = map.getZoom();
-        if (currentZoom < 7.1 && size.y >= 500) {
-          map.setView(BD_CENTER, 7.25, { animate: !motionPaused });
-        } else if (currentZoom < 6.7 && size.y >= 400) {
-          map.setView(BD_CENTER, 6.85, { animate: !motionPaused });
-        }
+        map.fitBounds(BD_BOUNDS, { padding: [4, 4], animate: !motionPaused });
       } else {
         map.setView(BD_CENTER, BD_INITIAL_ZOOM, { animate: !motionPaused });
       }
@@ -436,8 +430,8 @@ export function BangladeshCareMap({
       zoom: BD_INITIAL_ZOOM,
       minZoom: 6,
       maxZoom: 16,
-      zoomSnap: 0.25,
-      zoomDelta: 0.5,
+      zoomSnap: 0.1,
+      zoomDelta: 0.25,
       scrollWheelZoom: true,
       doubleClickZoom: true,
       touchZoom: true,
@@ -451,13 +445,7 @@ export function BangladeshCareMap({
     const fitBangladesh = () => {
       const size = map.getSize();
       if (size.x > 64 && size.y > 64) {
-        map.fitBounds(BD_BOUNDS, { padding: [8, 8], maxZoom: 7.8, animate: false });
-        const currentZoom = map.getZoom();
-        if (currentZoom < 7.1 && size.y >= 500) {
-          map.setView(BD_CENTER, 7.25, { animate: false });
-        } else if (currentZoom < 6.7 && size.y >= 400) {
-          map.setView(BD_CENTER, 6.85, { animate: false });
-        }
+        map.fitBounds(BD_BOUNDS, { padding: [4, 4], animate: false });
       } else {
         map.setView(BD_CENTER, BD_INITIAL_ZOOM, { animate: false });
       }
@@ -761,8 +749,8 @@ export function BangladeshCareMap({
           <div
             className={`relative w-full flex-1 ${
               compact
-                ? "h-[500px] sm:h-[560px] lg:h-[620px]"
-                : "h-[580px] sm:h-[650px] lg:h-[720px]"
+                ? "h-[430px] sm:h-[480px] lg:h-[520px]"
+                : "h-[460px] sm:h-[520px] lg:h-[580px]"
             }`}
           >
             <div className="absolute inset-0">

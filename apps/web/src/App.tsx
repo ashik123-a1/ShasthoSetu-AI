@@ -133,6 +133,7 @@ function AppRoutes() {
         <Route path="/patient/epharma" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="epharma" /></RequireRole>} />
         <Route path="/patient/pcos" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="pcos" /></RequireRole>} />
         <Route path="/patient/pediatric" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="pediatric" /></RequireRole>} />
+        <Route path="/patient/dermoped" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="dermoped" /></RequireRole>} />
         <Route path="/patient/diagnostics" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="diagnostics" /></RequireRole>} />
         <Route path="/patient/support" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="support" /></RequireRole>} />
 

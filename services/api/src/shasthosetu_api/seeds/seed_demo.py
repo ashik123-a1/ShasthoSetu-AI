@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from ..config import settings
 from ..core.audit import notify_user, record_audit
 from ..core.security import hash_password, new_id, utc_now_iso
 from ..db.sqlite import SCHEMA_SQL_PATH, apply_schema, get_db_conn
@@ -747,6 +748,29 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                     """,
                     (fid, jid, gidx, ftype, raw_txt, conf, crit, ver),
                 )
+
+            # Insert Artifact with stored file preview for ocr-job-0052
+            demo_img_path = str(settings.ocr_vault_dir / "sample_bilingual_0052.png")
+            demo_bboxes = [
+                {"text": "1. Tab. Napa Extra (500+65mg)", "confidence": 0.91, "x_pct": 5, "y_pct": 26, "w_pct": 90, "h_pct": 9, "page": 1},
+                {"text": "2. Cap. Seclo 20mg", "confidence": 0.88, "x_pct": 5, "y_pct": 38, "w_pct": 90, "h_pct": 9, "page": 1},
+            ]
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO ocr_job_artifacts (
+                    id, ocr_job_id, stored_file_path, source_mime_type, page_count, raw_full_text,
+                    corrected_full_text, bounding_boxes_json, page_previews_json, uncertain_fields_count,
+                    review_action, updated_at_utc
+                ) VALUES ('ocra-0052', 'ocr-job-0052', ?, 'image/png', 1, ?, NULL, ?, ?, 2, 'DRAFT', ?)
+                """,
+                (
+                    demo_img_path,
+                    "Tab. Napa Extra (500+65mg)\n1+0+1 (খাওয়ার পর)\nCap. Seclo 20mg\n1+0+0 (Before breakfast)",
+                    json.dumps(demo_bboxes, ensure_ascii=False),
+                    json.dumps([demo_img_path], ensure_ascii=False),
+                    now,
+                ),
+            )
 
             # Verified medication plans & events for Rahima & Ariyan
             conn.execute(
