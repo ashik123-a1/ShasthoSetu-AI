@@ -189,10 +189,14 @@ export function AiModuleScene3D({
   moduleKey,
   scanning = false,
   confidence = null,
+  customBadge,
+  className = "w-full h-full min-h-[210px]",
 }: {
   moduleKey: AiModuleKey;
   scanning?: boolean;
   confidence?: number | null;
+  customBadge?: string;
+  className?: string;
 }) {
   const { motionPaused } = usePreferences();
   const hostRef = useRef<HTMLDivElement>(null);
@@ -227,7 +231,7 @@ export function AiModuleScene3D({
   );
 
   return (
-    <div ref={hostRef} className="w-full h-full min-h-[210px] rounded-2xl overflow-hidden bg-[#040a18]/90 border border-sky-400/25 relative">
+    <div ref={hostRef} className={`${className} rounded-2xl overflow-hidden bg-[#040a18]/90 border border-sky-400/25 relative`}>
       {mounted && !motionPaused ? (
         <Module3DErrorBoundary fallback={fallback}>
           <Canvas dpr={[1, 1.5]} camera={{ position: [0, 0, 5.2], fov: 42 }}>
@@ -238,8 +242,8 @@ export function AiModuleScene3D({
         fallback
       )}
       <div className="pointer-events-none absolute bottom-2 left-3 right-3 flex items-center justify-between text-[10px] font-mono text-slate-300">
-        <span className="px-2 py-0.5 rounded bg-black/60 border border-white/10">
-          WEBGL NEURAL STAGE • {moduleKey.toUpperCase()}
+        <span className="px-2 py-0.5 rounded bg-black/60 border border-white/10 truncate">
+          {customBadge || `WEBGL NEURAL STAGE • ${moduleKey.toUpperCase()}`}
         </span>
         {confidence !== null && (
           <span className="px-2 py-0.5 rounded bg-sky-500/20 border border-sky-400/40 text-sky-200">

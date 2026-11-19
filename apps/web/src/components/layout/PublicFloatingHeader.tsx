@@ -49,9 +49,9 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
   const navItems = useMemo(
     () => [
       { to: "/", label: t("publicSite.nav.home"), matchPrefixes: ["/features/"] },
+      { to: "/services", label: t("publicSite.nav.services"), matchPrefixes: ["/services", "/consultations"] },
       { to: "/blood-connect", label: t("publicSite.nav.bloodConnect"), matchPrefixes: ["/blood-connect"] },
       { to: "/find-care", label: t("publicSite.nav.findCare"), matchPrefixes: ["/find-care", "/doctors", "/care-map"] },
-      { to: "/services", label: t("publicSite.nav.services"), matchPrefixes: ["/services", "/consultations"] },
       { to: "/research", label: t("publicSite.nav.research"), matchPrefixes: ["/research"] },
       { to: "/journal", label: t("publicSite.nav.journal"), matchPrefixes: ["/journal"] },
     ],

@@ -31,9 +31,9 @@ import { PublicFooter } from "../components/layout/PublicFooter";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { Skeleton } from "../components/ui";
 
-const LazyBeatingHeart3D = lazy(() =>
-  import("../components/three/HolographicBodyScanner3D").then((m) => ({
-    default: m.BeatingHeart3D,
+const LazyAiModuleScene3D = lazy(() =>
+  import("../components/three/AiModuleScene3D").then((m) => ({
+    default: m.AiModuleScene3D,
   }))
 );
 
@@ -530,8 +530,12 @@ export function BloodConnectPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
-              <Suspense fallback={<div className="w-full sm:w-52 h-40 rounded-2xl bg-[#030916]/80 border border-rose-400/25" />}>
-                <LazyBeatingHeart3D compact bpm={76} className="w-full sm:w-52 shrink-0" />
+              <Suspense fallback={<div className="w-full sm:w-56 h-40 rounded-2xl bg-[#030916]/80 border border-sky-400/25" />}>
+                <LazyAiModuleScene3D
+                  moduleKey="pcos-clinical"
+                  customBadge="WEBGL NEURAL STAGE • BLOOD CONNECT"
+                  className="w-full sm:w-56 h-40 shrink-0"
+                />
               </Suspense>
 
               {overview && (

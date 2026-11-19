@@ -34,9 +34,9 @@ export function PublicFooter() {
             {locale === "bn" ? "মূল প্ল্যাটফর্ম" : "Platform Pillars"}
           </h3>
           <ul className="space-y-1.5">
+            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/services">{t("publicSite.nav.services")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1 text-rose-400 font-semibold" to="/blood-connect">{t("publicSite.nav.bloodConnect")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/find-care">{t("publicSite.nav.findCare")}</Link></li>
-            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/services">{t("publicSite.nav.services")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/research">{t("publicSite.nav.research")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/journal">{t("publicSite.nav.journal")}</Link></li>
           </ul>
