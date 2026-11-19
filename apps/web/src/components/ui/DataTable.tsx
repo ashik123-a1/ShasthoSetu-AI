@@ -110,7 +110,7 @@ export function DataTable<T extends { id: string }>({
   }
 
   return (
-    <section data-testid="ui-data-table" className="ss-card overflow-hidden">
+    <section data-testid="ui-data-table" data-no-tilt="true" className="ss-card overflow-hidden">
       <div
         className="flex flex-wrap items-center justify-between gap-3 border-b p-5"
         style={{ borderColor: "var(--color-border)" }}

@@ -66,7 +66,7 @@ export function PublicServicesPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(data?.diagnostic_tests || []).map((test) => (
-                  <div key={test.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2">
+                  <div key={test.id} className="ss-card rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2">
                     <span className="text-xs font-mono text-[var(--color-secondary)]">{test.code} • {test.turnaround_hours}h</span>
                     <h3 className="font-bold text-base">{locale === "bn" ? test.name_bn : test.name_en}</h3>
                     <p className="text-xs text-[var(--color-text-muted)]">{test.category} • {test.sample_type}</p>
@@ -85,7 +85,7 @@ export function PublicServicesPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(data?.healthcare_plans || []).map((plan) => (
-                  <div key={plan.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 space-y-2">
+                  <div key={plan.id} className="ss-card rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-lg">{locale === "bn" ? plan.name_bn : plan.name_en}</h3>
                       <span className="font-mono font-bold text-lg text-[var(--color-primary)]">
@@ -108,7 +108,7 @@ export function PublicServicesPage() {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {(data?.facilities || []).map((fac) => (
-                  <div key={fac.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 flex items-center justify-between gap-3">
+                  <div key={fac.id} className="ss-card rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 flex items-center justify-between gap-3">
                     <div>
                       <h3 className="font-bold text-base">{fac.name}</h3>
                       <p className="text-xs text-[var(--color-text-muted)]">{fac.address}, {fac.district}</p>

@@ -86,6 +86,7 @@ export function ConfirmModal({
         aria-modal="true"
         aria-labelledby="ss-confirm-modal-title"
         data-testid="confirm-modal"
+        data-no-tilt="true"
         className="ss-card w-full max-w-md p-6"
       >
         <div className="flex items-start justify-between gap-3">

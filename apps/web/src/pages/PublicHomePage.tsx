@@ -395,19 +395,19 @@ export function PublicHomePage() {
 
             {/* Trust Badges Strip */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px]">
-              <div className="rounded-xl bg-white/8 border border-sky-400/20 px-3 py-2 flex items-center gap-1.5 text-sky-200">
+              <div className="ss-glow-card rounded-xl bg-white/8 border border-sky-400/20 px-3 py-2 flex items-center gap-1.5 text-sky-200">
                 <ScanText className="w-3.5 h-3.5 shrink-0" />
                 <span>{t("publicSite.badges.humanOcr")}</span>
               </div>
-              <div className="rounded-xl bg-white/8 border border-teal-400/20 px-3 py-2 flex items-center gap-1.5 text-teal-200">
+              <div className="ss-glow-card rounded-xl bg-white/8 border border-teal-400/20 px-3 py-2 flex items-center gap-1.5 text-teal-200">
                 <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                 <span>{t("publicSite.badges.zeroPhi")}</span>
               </div>
-              <div className="rounded-xl bg-white/8 border border-amber-400/25 px-3 py-2 flex items-center gap-1.5 text-amber-200">
+              <div className="ss-glow-card rounded-xl bg-white/8 border border-amber-400/25 px-3 py-2 flex items-center gap-1.5 text-amber-200">
                 <BadgeCheck className="w-3.5 h-3.5 shrink-0" />
                 <span>{t("publicSite.badges.demoPay")}</span>
               </div>
-              <div className="rounded-xl bg-white/8 border border-indigo-400/25 px-3 py-2 flex items-center gap-1.5 text-indigo-200">
+              <div className="ss-glow-card rounded-xl bg-white/8 border border-indigo-400/25 px-3 py-2 flex items-center gap-1.5 text-indigo-200">
                 <FlaskConical className="w-3.5 h-3.5 shrink-0" />
                 <span>{t("publicSite.badges.nonDiagAi")}</span>
               </div>
@@ -492,7 +492,7 @@ export function PublicHomePage() {
             {/* Bottom-Right Frosted Live Clinical Telemetry Card */}
             <div
               data-testid="hero-telemetry-card"
-              className="mt-4 rounded-2xl border border-sky-400/25 bg-[#071022]/80 backdrop-blur-xl p-4 shadow-2xl space-y-2.5"
+              className="ss-glow-card mt-4 rounded-2xl border border-sky-400/25 bg-[#071022]/80 backdrop-blur-xl p-4 shadow-2xl space-y-2.5"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-sky-300 inline-flex items-center gap-1.5">

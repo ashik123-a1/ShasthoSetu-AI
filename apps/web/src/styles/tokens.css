@@ -10,6 +10,12 @@
   --radius-pill: 9999px;
 }
 
+@property --ss-card-glow {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
 :root,
 [data-theme="light"] {
   /* Sapphire Mist & Cerulean (Cool Sapphire-Harmonized Light Theme) */
@@ -145,13 +151,6 @@
   backdrop-filter: blur(16px) saturate(160%);
 }
 
-.ss-card {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-}
-
 .ss-card-muted {
   background-color: var(--color-surface-alt);
   border: 1px solid var(--color-border);
@@ -244,11 +243,45 @@
 }
 
 .ss-sapphire-card {
+  position: relative;
+  isolation: isolate;
+  --ss-card-glow: 0;
   background: var(--sapphire-card-bg);
   border: 1px solid var(--sapphire-card-border);
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
   box-shadow: 0 18px 42px -12px rgba(2, 10, 28, 0.42);
+  transition:
+    --ss-card-glow 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.28s ease,
+    box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ss-card {
+  position: relative;
+  isolation: isolate;
+  --ss-card-glow: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition:
+    --ss-card-glow 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.28s ease,
+    box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ss-glow-card {
+  position: relative;
+  isolation: isolate;
+  --ss-card-glow: 0;
+  transition:
+    --ss-card-glow 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.28s ease,
+    box-shadow 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ss-sapphire-always .ss-sapphire-card {
@@ -257,6 +290,200 @@
   backdrop-filter: blur(18px) saturate(165%);
   -webkit-backdrop-filter: blur(18px) saturate(165%);
   box-shadow: 0 18px 42px -12px rgba(2, 8, 24, 0.65);
+}
+
+/* Mouse-Tracked Specular Border Highlight (::before) */
+.ss-sapphire-card::before,
+.ss-card::before,
+.ss-glow-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  background: radial-gradient(
+    380px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(56, 189, 248, 0.85),
+    rgba(45, 212, 191, 0.48) 34%,
+    rgba(242, 200, 121, 0.22) 55%,
+    transparent 72%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: var(--ss-card-glow, 0);
+  transition: opacity 0.32s ease;
+  z-index: 2;
+}
+
+/* Mouse-Tracked Inner Radial Spotlight Illumination (::after) */
+.ss-sapphire-card::after,
+.ss-card::after,
+.ss-glow-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    460px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(56, 189, 248, 0.18),
+    rgba(45, 212, 191, 0.08) 38%,
+    transparent 70%
+  );
+  opacity: var(--ss-card-glow, 0);
+  transition: opacity 0.32s ease;
+  z-index: 1;
+}
+
+html[data-theme="light"] .ss-card::before {
+  background: radial-gradient(
+    360px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(2, 132, 199, 0.65),
+    rgba(13, 148, 136, 0.35) 38%,
+    transparent 72%
+  );
+}
+
+html[data-theme="light"] .ss-card::after {
+  background: radial-gradient(
+    420px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(2, 132, 199, 0.09),
+    rgba(13, 148, 136, 0.04) 40%,
+    transparent 70%
+  );
+}
+
+.ss-sapphire-always .ss-card::before {
+  background: radial-gradient(
+    380px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(56, 189, 248, 0.85),
+    rgba(45, 212, 191, 0.48) 34%,
+    rgba(242, 200, 121, 0.22) 55%,
+    transparent 72%
+  );
+}
+
+.ss-sapphire-always .ss-card::after {
+  background: radial-gradient(
+    460px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(56, 189, 248, 0.18),
+    rgba(45, 212, 191, 0.08) 38%,
+    transparent 70%
+  );
+}
+
+@media (hover: hover) {
+  html:not(.is-scrolling) .ss-sapphire-card:hover,
+  html:not(.is-scrolling) .ss-card:hover,
+  html:not(.is-scrolling) .ss-glow-card:hover {
+    --ss-card-glow: 1;
+    border-color: rgba(56, 189, 248, 0.52);
+    box-shadow:
+      0 22px 48px -12px rgba(2, 10, 28, 0.72),
+      0 0 34px -6px rgba(56, 189, 248, 0.24),
+      inset 0 1px 0 rgba(186, 230, 253, 0.16);
+  }
+
+  html[data-theme="light"]:not(.is-scrolling) .ss-card:hover {
+    border-color: var(--color-border-strong);
+    box-shadow:
+      0 18px 38px -12px rgba(7, 19, 39, 0.16),
+      0 0 24px -6px rgba(2, 132, 199, 0.18);
+  }
+
+  html[data-theme="light"]:not(.is-scrolling) .ss-sapphire-always .ss-card:hover,
+  html[data-theme="light"]:not(.is-scrolling) .ss-sapphire-always .ss-sapphire-card:hover {
+    border-color: rgba(56, 189, 248, 0.52);
+    box-shadow:
+      0 22px 48px -12px rgba(2, 10, 28, 0.72),
+      0 0 34px -6px rgba(56, 189, 248, 0.24),
+      inset 0 1px 0 rgba(186, 230, 253, 0.16);
+  }
+
+  /* Fallback opacity trigger when @property interpolation is unavailable */
+  html:not(.is-scrolling) .ss-sapphire-card:hover::before,
+  html:not(.is-scrolling) .ss-sapphire-card:hover::after,
+  html:not(.is-scrolling) .ss-card:hover::before,
+  html:not(.is-scrolling) .ss-card:hover::after,
+  html:not(.is-scrolling) .ss-glow-card:hover::before,
+  html:not(.is-scrolling) .ss-glow-card:hover::after {
+    opacity: 1;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  html:not(.reduce-motion):not(.is-scrolling) .ss-sapphire-card:not([data-no-tilt]):hover,
+  html:not(.reduce-motion):not(.is-scrolling) .ss-card:not([data-no-tilt]):not([role="dialog"]):not([role="alert"]):hover,
+  html:not(.reduce-motion):not(.is-scrolling) .ss-glow-card:not([data-no-tilt]):hover {
+    transform: perspective(1000px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px);
+  }
+}
+
+/* Global Mouse-Follow Ambient Aurora Light & Core Specular Halo */
+.ss-cursor-aurora {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 540px;
+  height: 540px;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 35;
+  will-change: transform, opacity;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    circle,
+    rgba(2, 132, 199, 0.14) 0%,
+    rgba(13, 148, 136, 0.07) 36%,
+    transparent 70%
+  );
+  mix-blend-mode: normal;
+}
+
+.ss-cursor-aurora.ss-cursor-on-dark {
+  background: radial-gradient(
+    circle,
+    rgba(56, 189, 248, 0.22) 0%,
+    rgba(45, 212, 191, 0.11) 32%,
+    rgba(242, 200, 121, 0.045) 54%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+}
+
+.ss-cursor-core {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 150px;
+  height: 150px;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 35;
+  will-change: transform, opacity;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(
+    circle,
+    rgba(2, 132, 199, 0.16) 0%,
+    rgba(13, 148, 136, 0.06) 44%,
+    transparent 72%
+  );
+}
+
+.ss-cursor-core.ss-cursor-on-dark {
+  background: radial-gradient(
+    circle,
+    rgba(125, 211, 252, 0.28) 0%,
+    rgba(45, 212, 191, 0.10) 42%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
 }
 
 @keyframes ss-map-pulse {
@@ -356,6 +583,11 @@ html.reduce-motion .ss-bbox-active {
   animation: none !important;
 }
 
+html.reduce-motion .ss-cursor-aurora,
+html.reduce-motion .ss-cursor-core {
+  display: none !important;
+}
+
 html.reduce-motion *,
 html.reduce-motion *::before,
 html.reduce-motion *::after {
@@ -366,6 +598,20 @@ html.reduce-motion *::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ss-cursor-aurora,
+  .ss-cursor-core {
+    display: none !important;
+  }
+
+  .ss-sapphire-card::before,
+  .ss-sapphire-card::after,
+  .ss-card::before,
+  .ss-card::after,
+  .ss-glow-card::before,
+  .ss-glow-card::after {
+    transition: none !important;
+  }
+
   *,
   *::before,
   *::after {

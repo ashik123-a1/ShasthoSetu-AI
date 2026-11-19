@@ -117,7 +117,7 @@ export function PublicDoctorsPage() {
                 ← {locale === "bn" ? "সব চিকিৎসক তালিকায় ফিরুন" : "Back to All Doctors"}
               </Link>
 
-              <div className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-card)] space-y-4">
+              <div className="ss-card rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 shadow-[var(--shadow-card)] space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -256,7 +256,7 @@ export function PublicDoctorsPage() {
                   <article
                     key={doc.id}
                     data-testid={`doctor-card-${doc.id}`}
-                    className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-card)] flex flex-col justify-between gap-4"
+                    className="ss-card rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 shadow-[var(--shadow-card)] flex flex-col justify-between gap-4"
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">

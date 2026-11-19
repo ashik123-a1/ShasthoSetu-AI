@@ -361,6 +361,7 @@ export function BangladeshCareMap({
   return (
     <div
       data-testid="bangladesh-care-map"
+      data-no-tilt="true"
       className="ss-sapphire-card rounded-3xl p-4 sm:p-6 space-y-5 text-white"
     >
       {/* Top Toolbar */}

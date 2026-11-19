@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { MotionConfig } from "motion/react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { AppShell, ToastProvider, useToast, type PillTabItem } from "./components/ui";
+import { AppShell, GlobalCursorGlow, ToastProvider, useToast, type PillTabItem } from "./components/ui";
 import { AuthProvider } from "./lib/authContext";
 import { I18nProvider, useI18n } from "./lib/i18n";
 import { PreferencesProvider, usePreferences } from "./lib/preferences";
@@ -76,6 +76,7 @@ function AppRoutes() {
 
   return (
     <MotionConfig reducedMotion={motionPaused ? "always" : "user"}>
+      <GlobalCursorGlow />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<PublicHomePage />} />

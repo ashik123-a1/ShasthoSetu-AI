@@ -50,6 +50,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               key={item.id}
               role="status"
               data-testid="ui-toast"
+              data-no-tilt="true"
               className="ss-card pointer-events-auto flex items-start gap-3 p-3.5"
               style={{
                 borderColor: isSuccess ? "var(--color-primary)" : "var(--color-secondary)",
