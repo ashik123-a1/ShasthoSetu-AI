@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Clock,
@@ -9,7 +10,6 @@ import {
   Lock,
   ScanText,
   ShieldAlert,
-  ShieldCheck,
   Unlock,
 } from "lucide-react";
 import { apiGet } from "../lib/apiClient";
@@ -17,13 +17,8 @@ import { useI18n } from "../lib/i18n";
 import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
-import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
-import {
-  DigitalObservatoryDeck,
-  InteractiveBarGraph,
-  type TelemetryDeckCard,
-} from "../components/charts/AgriStyleTelemetry";
+import { AnimatedClinicalPipeline } from "../components/charts/VariedClinicalVisuals";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { TrustBadge } from "../components/ui";
 
@@ -101,119 +96,23 @@ export function PrescriptionOcrFeaturePage() {
     setGateStatus("ACTIVATED");
   };
 
-  const telemetryCards: TelemetryDeckCard[] = [
-    {
-      id: "ocr-rows",
-      tag: "AUDITED CORPUS",
-      value: "1,000 Rx",
-      sub: "992 Admissible • 8 Quarantined",
-      accent: "#f2c879",
-      icon: ScanText,
-      pieCenter: "99.2%",
-      pieSub: "ADMIT",
-      pieSegments: [
-        { label: "Admissible (992)", pct: 99.2, color: "#f2c879" },
-        { label: "Quarantined (8)", pct: 0.8, color: "#fb7185" },
-      ],
-      barSegments: [
-        { label: "Train (697)", pct: 69.7, color: "#f2c879" },
-        { label: "Val (150)", pct: 15.0, color: "#38bdf8" },
-        { label: "Test (152)", pct: 15.3, color: "#2dd4bf" },
-      ],
-      barFootnote: "split_manifest.csv + QUARANTINE_MANIFEST_VERIFIED.json",
-    },
-    {
-      id: "ocr-gate",
-      tag: "HTTP 422 HUMAN GATE",
-      value: "100%",
-      sub: "Auto-Reminders Locked",
-      accent: "#2dd4bf",
-      icon: Lock,
-      pieCenter: "422",
-      pieSub: "LOCK",
-      pieSegments: [{ label: "Enforced DB CHECK + API Gate", pct: 100, color: "#2dd4bf" }],
-      barSegments: [{ label: "Verified Only Schedules", pct: 100, color: "#2dd4bf" }],
-      barFootnote: "CHECK(status NOT IN ('VERIFIED','ACTIVE') OR verified_by_user_id IS NOT NULL)",
-    },
-    {
-      id: "smoke-0052",
-      tag: "0052.JPG SMOKE PROOF",
-      value: "44 Tokens",
-      sub: "EasyOCR Bengali + English",
-      accent: "#38bdf8",
-      icon: FileCheck2,
-      pieCenter: "44",
-      pieSub: "TOK",
-      pieSegments: [
-        { label: "High-Conf Lines", pct: 68, color: "#38bdf8" },
-        { label: "Needs Review", pct: 32, color: "#fbbf24" },
-      ],
-      barSegments: [
-        { label: "Mean Token Conf", pct: 68, color: "#38bdf8" },
-        { label: "Flagged Dose Review", pct: 32, color: "#f2c879" },
-      ],
-      barFootnote: "CER/WER honestly marked NOT_VALIDATED on raw narrative distance",
-    },
-    {
-      id: "runtime-status",
-      tag: "REVIEW GOVERNANCE",
-      value: "REVIEW",
-      sub: "SIMULATED_REVIEW_ONLY",
-      accent: "#818cf8",
-      icon: ShieldCheck,
-      pieCenter: "SAFE",
-      pieSub: "MODE",
-      pieSegments: [{ label: "Clinician/Patient Sign-Off", pct: 100, color: "#818cf8" }],
-      barSegments: [{ label: "Live EasyOCR + pypdf Ready", pct: 100, color: "#818cf8" }],
-      barFootnote: "Real image & PDF extraction via POST /v1/ai/infer/prescription-ocr",
-    },
-  ];
-
-  const auditGraphItems = [
-    {
-      label: "Admissible Prescription Manifest Rows (992 / 1,000)",
-      value: 99.2,
-      displayValue: "99.20% (992 rows)",
-      sublabel: "QUARANTINE_MANIFEST_VERIFIED",
-      color: "#f2c879",
-    },
-    {
-      label: "Training Partition Share (697 / 1,000)",
-      value: 69.7,
-      displayValue: "69.70% (697 rows)",
-      sublabel: "split_manifest.csv",
-      color: "#38bdf8",
-    },
-    {
-      label: "Validation Partition Share (150 / 1,000)",
-      value: 15.0,
-      displayValue: "15.00% (150 rows)",
-      sublabel: "split_manifest.csv",
-      color: "#2dd4bf",
-    },
-    {
-      label: "Held-Out Test Partition Share (152 / 1,000 + 1 Unannotated 0747)",
-      value: 15.2,
-      displayValue: "15.20% (152 + 1 unannotated)",
-      sublabel: "Test 3 Verified",
-      color: "#818cf8",
-    },
-    {
-      label: "HTTP 422 Server Safety Lock Compliance",
-      value: 100,
-      displayValue: "100% Blocked Until Verified",
-      sublabel: "DB CHECK + API Gate",
-      color: "#34d399",
-    },
-  ];
-
   return (
     <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-20 overflow-x-clip" data-testid="ocr-feature-page">
       <PageBackdropLayer imageSrc="/images/backgrounds/bg-prescription-ocr.jpg" />
       <PublicFloatingHeader transparentHero />
 
       <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
-        <HomeSubTabBar />
+        <div className="flex items-center justify-between">
+          <Link
+            to="/#ocr-chapter"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-[#f2c879] hover:text-white transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> {locale === "bn" ? "হোম অধ্যায়ে ফিরুন" : "Back to Home Chapters"}
+          </Link>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+            03 / 05 • SAFE OCR VAULT
+          </span>
+        </div>
 
         {/* Header Hero + 3D Neural Scene */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 space-y-5">
@@ -297,29 +196,9 @@ export function PrescriptionOcrFeaturePage() {
           />
         </section>
 
-        {/* AgriSense Telemetry Deck + 1,000-Row Audit Graph */}
+        {/* Safe-OCR Signature Animated 4-Stage Bezier Clinical Pipeline */}
         <section className="space-y-5">
-          <DigitalObservatoryDeck
-            badgeLabel="M04 PRESCRIPTION OCR • 1,000-ROW QUARANTINE & HUMAN GATE"
-            cards={telemetryCards}
-            breakdownTitle="Dataset Partition & Safety Gate Breakdown"
-            breakdownBars={[
-              { name: "Admissible Rows", pct: 99.2, valueLabel: "992 / 1,000", color: "#f2c879", note: "Verified manifest" },
-              { name: "Train Partition", pct: 69.7, valueLabel: "697 Rx", color: "#38bdf8", note: "Grouped split" },
-              { name: "Val + Test Rows", pct: 30.2, valueLabel: "302 Rx", color: "#2dd4bf", note: "150 val + 152 test" },
-              { name: "HTTP 422 Gate", pct: 100, valueLabel: "ACTIVE", color: "#34d399", note: "Mandatory review" },
-            ]}
-            pauseMotion={motionPaused}
-          />
-
-          <InteractiveBarGraph
-            title="Prescription OCR Corpus Audit & Safety Gate Metrics"
-            subtitle="Verified by Test 3 (verify_final_lock.py). Note: raw string distance CER/WER remain marked NOT_VALIDATED."
-            items={auditGraphItems}
-            thresholdValue={99.2}
-            thresholdLabel="99.2% Admissible"
-            pauseMotion={motionPaused}
-          />
+          <AnimatedClinicalPipeline pauseMotion={motionPaused} />
         </section>
 
         {/* Interactive Safe-OCR Workbench Simulation (Preserved with TestIDs) */}

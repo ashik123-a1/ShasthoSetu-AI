@@ -127,7 +127,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
       <header
         data-testid="public-floating-header"
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 pointer-events-none ${
-          isHeroGlass ? "pt-3 pb-2" : "py-2.5 bg-[var(--glass-bg)]/80 backdrop-blur-xl border-b border-[var(--glass-border)] shadow-sm"
+          isHeroGlass ? "pt-2.5 pb-1.5" : "py-2 bg-[var(--glass-bg)]/80 backdrop-blur-xl border-b border-[var(--glass-border)] shadow-sm"
         }`}
       >
         <div className="max-w-[1540px] mx-auto px-4 sm:px-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
@@ -135,22 +135,22 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
           <Link
             to="/"
             data-testid="header-brand-link"
-            className="pointer-events-auto justify-self-start inline-flex items-center gap-2.5 min-h-11 pr-1 shrink-0"
+            className="pointer-events-auto justify-self-start inline-flex items-center gap-2 min-h-9 pr-1 shrink-0"
           >
             <img
               src="/shasthosetu-logo.png"
               alt="ShasthoSetu AI Logo"
-              className="w-10 h-10 rounded-full object-cover ring-2 ring-sky-400/50 shadow-[0_4px_16px_rgba(56,189,248,0.32)]"
+              className="w-9 h-9 rounded-full object-cover ring-2 ring-sky-400/50 shadow-[0_4px_16px_rgba(56,189,248,0.32)]"
             />
             <span className="hidden sm:inline-flex items-baseline gap-1.5 whitespace-nowrap">
               <span
-                className={`text-[13px] font-bold tracking-[0.16em] ${
+                className={`text-[12px] font-bold tracking-[0.16em] ${
                   darkSurface ? "text-slate-100" : "text-[var(--color-text)]"
                 }`}
               >
                 SHASTHOSETU
               </span>
-              <span className="text-[12px] font-bold tracking-[0.16em] text-sky-400">
+              <span className="text-[11px] font-bold tracking-[0.16em] text-sky-400">
                 AI
               </span>
             </span>
@@ -158,7 +158,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
 
           {/* CENTER ZONE: Floating Glass 7-Tab Pill Bar with GSAP Dual-Edge Slide Fill */}
           <div
-            className={`pointer-events-auto hidden xl:flex items-center justify-center rounded-full p-1.5 transition-all ${
+            className={`pointer-events-auto hidden xl:flex items-center justify-center rounded-full p-1 transition-all ${
               darkSurface ? "ss-glass-capsule" : "ss-glass-capsule-scrolled"
             }`}
           >
@@ -167,7 +167,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
               aria-label="Primary Public Navigation"
               data-testid="floating-pill-navbar"
               onMouseLeave={() => setHoveredPath(null)}
-              className="relative inline-flex items-center gap-1 rounded-full"
+              className="relative inline-flex items-center gap-0.5 rounded-full"
             >
               {navItems.map((item) => (
                 <NavLink
@@ -180,7 +180,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                   onMouseEnter={() => setHoveredPath(item.to)}
                   onFocus={() => setHoveredPath(item.to)}
                   onBlur={() => setHoveredPath(null)}
-                  className={`relative z-[1] min-h-11 px-4 rounded-full text-[13px] font-semibold inline-flex items-center whitespace-nowrap transition-colors ${
+                  className={`relative z-[1] h-8 px-3 rounded-full text-[12px] font-semibold inline-flex items-center whitespace-nowrap transition-colors ${
                     darkSurface ? "text-slate-200 hover:text-white" : "text-[var(--color-text)]"
                   }`}
                 >
@@ -192,7 +192,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
               <div
                 ref={fillLayerRef}
                 aria-hidden="true"
-                className="absolute inset-0 z-[2] inline-flex items-center gap-1 pointer-events-none rounded-full transition-opacity duration-200"
+                className="absolute inset-0 z-[2] inline-flex items-center gap-0.5 pointer-events-none rounded-full transition-opacity duration-200"
                 style={{
                   background: "var(--nav-pill-bg)",
                   color: "var(--nav-pill-fg)",
@@ -204,7 +204,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                 {navItems.map((item) => (
                   <span
                     key={item.to}
-                    className="min-h-11 px-4 rounded-full text-[13px] font-bold inline-flex items-center whitespace-nowrap"
+                    className="h-8 px-3 rounded-full text-[12px] font-bold inline-flex items-center whitespace-nowrap"
                     style={{ color: "var(--nav-pill-fg)" }}
                   >
                     {item.label}
@@ -227,19 +227,19 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                 onClick={toggleTheme}
                 aria-label={theme === "dark" ? t("controls.themeLight") : t("controls.themeDark")}
                 data-testid="public-theme-switch"
-                className="min-h-11 min-w-11 rounded-full flex items-center justify-center transition cursor-pointer hover:bg-white/10"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition cursor-pointer hover:bg-white/10"
               >
                 {theme === "dark" ? (
-                  <Sun className="w-4 h-4 text-teal-300" />
+                  <Sun className="w-3.5 h-3.5 text-teal-300" />
                 ) : (
-                  <Moon className="w-4 h-4 text-sky-400" />
+                  <Moon className="w-3.5 h-3.5 text-sky-400" />
                 )}
               </button>
             </div>
 
             {/* 2. Grouped Frosted Utility Capsule: [ Search Ctrl K | Bell | Settings/Profile ] */}
             <div
-              className={`hidden sm:inline-flex items-center gap-1.5 rounded-full p-1.5 transition-all ${
+              className={`hidden sm:inline-flex items-center gap-1 rounded-full p-1 transition-all ${
                 darkSurface ? "ss-glass-capsule" : "ss-glass-capsule-scrolled"
               }`}
             >
@@ -248,7 +248,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                 onClick={() => setSearchOpen(true)}
                 aria-label={t("publicSite.nav.searchHint")}
                 data-testid="header-search-btn"
-                className={`min-h-11 px-3.5 rounded-full inline-flex items-center gap-2 text-xs font-medium transition cursor-pointer ${
+                className={`h-8 px-2.5 rounded-full inline-flex items-center gap-1.5 text-[11px] font-medium transition cursor-pointer ${
                   darkSurface
                     ? "bg-white/5 hover:bg-white/15 border border-white/15 text-slate-100"
                     : "bg-[var(--color-surface-alt)] hover:bg-[var(--color-border)] border border-[var(--color-border)] text-[var(--color-text)]"
@@ -267,13 +267,13 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                   onClick={() => setSettingsOpen((v) => !v)}
                   aria-label="Account, Language & Motion Settings"
                   data-testid="public-settings-btn"
-                  className={`min-h-11 min-w-11 px-2.5 rounded-full inline-flex items-center justify-center gap-1.5 text-xs font-semibold transition cursor-pointer ${
+                  className={`h-8 min-w-8 px-2 rounded-full inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold transition cursor-pointer ${
                     darkSurface
                       ? "bg-white/5 hover:bg-white/15 border border-white/15 text-slate-100"
                       : "bg-[var(--color-surface-alt)] hover:bg-[var(--color-border)] border border-[var(--color-border)] text-[var(--color-text)]"
                   }`}
                 >
-                  <Settings className={`w-4 h-4 ${authenticated ? "text-teal-400" : ""}`} />
+                  <Settings className={`w-3.5 h-3.5 ${authenticated ? "text-teal-400" : ""}`} />
                   {authenticated && user && (
                     <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-full bg-sky-400/20 text-sky-300">
                       {user.primary_role}

@@ -10,15 +10,18 @@ export interface RailSectionItem {
 }
 
 const HOME_SECTIONS: RailSectionItem[] = [
-  { id: "hero", num: "01", labelEn: "Care Twin Hero", labelBn: "হিরো টুইন" },
-  { id: "core-modules", num: "02", labelEn: "Core Features", labelBn: "মূল ফিচার" },
-  { id: "care-map", num: "03", labelEn: "Care Map", labelBn: "কেয়ার ম্যাপ" },
-  { id: "journey", num: "04", labelEn: "Doctors", labelBn: "চিকিৎসক" },
-  { id: "care-twin", num: "05", labelEn: "4-Layer Care", labelBn: "৪-স্তর সেবা" },
-  { id: "challenge", num: "06", labelEn: "Safety & Science", labelBn: "নিরাপত্তা ও এআই" },
-  { id: "impact", num: "07", labelEn: "Metrics", labelBn: "পরিসংখ্যান" },
-  { id: "preview", num: "08", labelEn: "Services & FAQ", labelBn: "সেবা ও প্রশ্ন" },
-  { id: "final-cta", num: "09", labelEn: "Launch", labelBn: "শুরু করুন" },
+  { id: "hero", num: "01", labelEn: "Hero Twin", labelBn: "হিরো টুইন" },
+  { id: "pcos-chapter", num: "02", labelEn: "PCOS AI", labelBn: "পিসিওএস এআই" },
+  { id: "viral-rash-chapter", num: "03", labelEn: "Viral Rash", labelBn: "ভাইরাল র‍্যাশ" },
+  { id: "ocr-chapter", num: "04", labelEn: "Safe OCR", labelBn: "সেফ ওসিআর" },
+  { id: "voice-chapter", num: "05", labelEn: "Bangla Voice", labelBn: "বাংলা ভয়েস" },
+  { id: "dermoped-chapter", num: "06", labelEn: "DermoPed", labelBn: "ডার্মোপেড" },
+  { id: "care-map", num: "07", labelEn: "Care Map", labelBn: "কেয়ার ম্যাপ" },
+  { id: "journey", num: "08", labelEn: "Doctors", labelBn: "চিকিৎসক" },
+  { id: "care-twin", num: "09", labelEn: "4-Layer Care", labelBn: "৪-স্তর সেবা" },
+  { id: "impact", num: "10", labelEn: "Observatory", labelBn: "পরিসংখ্যান" },
+  { id: "preview", num: "11", labelEn: "Services & FAQ", labelBn: "সেবা ও প্রশ্ন" },
+  { id: "final-cta", num: "12", labelEn: "Launch", labelBn: "শুরু করুন" },
 ];
 
 /** Fixed top-edge scroll progress & chapter jump bar modeled cleanly after AgriSense Fusion HomeSectionRail. */

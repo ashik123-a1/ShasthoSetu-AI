@@ -3,12 +3,12 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   CalendarHeart,
   CheckSquare,
   ClipboardCopy,
   FlaskConical,
-  ScanText,
   ShieldCheck,
   Sparkles,
   Stethoscope,
@@ -18,13 +18,13 @@ import { useI18n } from "../lib/i18n";
 import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
-import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import {
-  DigitalObservatoryDeck,
-  InteractiveBarGraph,
-  type TelemetryDeckCard,
-} from "../components/charts/AgriStyleTelemetry";
+  PCOS_DIAL_PRESETS,
+  PCOS_SPARKLINE_ITEMS,
+  SemiCircleRiskDial,
+  SparklineKpiStrip,
+} from "../components/charts/VariedClinicalVisuals";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { TrustBadge } from "../components/ui";
 
@@ -142,134 +142,23 @@ export function PcosFeaturePage() {
     }
   };
 
-  const telemetryCards: TelemetryDeckCard[] = [
-    {
-      id: "m01-bal",
-      tag: "M01 HELD-OUT BAL ACC",
-      value: "94.44%",
-      sub: "17 / 18 Clinical Holdout",
-      accent: "#38bdf8",
-      icon: Activity,
-      pieCenter: "94.4%",
-      pieSub: "BAL",
-      pieSegments: [
-        { label: "Held-Out Bal Acc", pct: 94.44, color: "#38bdf8" },
-        { label: "Error Rate", pct: 5.56, color: "#0e1d38" },
-      ],
-      barSegments: [
-        { label: "5-Fold CV (88.57%)", pct: 88.57, color: "#38bdf8" },
-        { label: "Holdout Margin", pct: 5.87, color: "#2dd4bf" },
-      ],
-      barFootnote: "N=88 Mendeley PCOS cleaned profiles • model_best.joblib",
-    },
-    {
-      id: "m02-usg",
-      tag: "M02 ULTRASOUND RESNET18",
-      value: "86.67%",
-      sub: "39 / 45 Unique Scans",
-      accent: "#2dd4bf",
-      icon: ScanText,
-      pieCenter: "86.7%",
-      pieSub: "TEST",
-      pieSegments: [
-        { label: "Correct Morphology", pct: 86.67, color: "#2dd4bf" },
-        { label: "Residual", pct: 13.33, color: "#0e1d38" },
-      ],
-      barSegments: [
-        { label: "Dominant (142)", pct: 47.5, color: "#2dd4bf" },
-        { label: "PCO (116)", pct: 38.8, color: "#38bdf8" },
-        { label: "Normal (41)", pct: 13.7, color: "#818cf8" },
-      ],
-      barFootnote: "299 deduplicated pelvic ultrasound frames (pHash clustered)",
-    },
-    {
-      id: "cohort-n",
-      tag: "CLINICAL FEATURES",
-      value: "20 Vars",
-      sub: "SimpleImputer + XGBoost",
-      accent: "#818cf8",
-      icon: FlaskConical,
-      pieCenter: "88",
-      pieSub: "ROWS",
-      pieSegments: [
-        { label: "Train Split (70)", pct: 79.5, color: "#818cf8" },
-        { label: "Test Split (18)", pct: 20.5, color: "#f2c879" },
-      ],
-      barSegments: [
-        { label: "Anthropometric + Hormonal", pct: 65, color: "#818cf8" },
-        { label: "Metabolic Lipids", pct: 35, color: "#38bdf8" },
-      ],
-      barFootnote: "Rotterdam criteria notice: ultrasound & lab tracks stay separate",
-    },
-    {
-      id: "safety-boundary",
-      tag: "DIAGNOSTIC GUARD",
-      value: "100%",
-      sub: "Research-Only Disclosure",
-      accent: "#f2c879",
-      icon: ShieldCheck,
-      pieCenter: "SAFE",
-      pieSub: "GATE",
-      pieSegments: [{ label: "Non-Diagnostic Isolation", pct: 100, color: "#f2c879" }],
-      barSegments: [
-        { label: "Clinician Review Required", pct: 100, color: "#f2c879" },
-      ],
-      barFootnote: "PCOM morphology alone != clinical PCOS diagnosis",
-    },
-  ];
-
-  const morphologyGraphItems = [
-    {
-      label: "M01 • Held-Out Balanced Accuracy (XGBoost)",
-      value: 94.44,
-      displayValue: "94.44% (17/18)",
-      sublabel: "N=88 Cleaned Cohort",
-      color: "#38bdf8",
-    },
-    {
-      label: "M01 • Stratified 5-Fold Cross Validation",
-      value: 88.57,
-      displayValue: "88.57% ± CV",
-      sublabel: "20 Structured Clinical Features",
-      color: "#818cf8",
-    },
-    {
-      label: "M02 • Ovarian Ultrasound Test Accuracy (ResNet18)",
-      value: 86.67,
-      displayValue: "86.67% (39/45)",
-      sublabel: "Normal / Dominant / PCO",
-      color: "#2dd4bf",
-    },
-    {
-      label: "M02 • Deduplicated Class Share: Dominant Follicle",
-      value: 47.49,
-      displayValue: "142 / 299 Scans (47.5%)",
-      sublabel: "pHash Grouped",
-      color: "#f2c879",
-    },
-    {
-      label: "M02 • Deduplicated Class Share: PCO Morphology",
-      value: 38.8,
-      displayValue: "116 / 299 Scans (38.8%)",
-      sublabel: "Sonographic Pattern",
-      color: "#34d399",
-    },
-    {
-      label: "M02 • Deduplicated Class Share: Normal",
-      value: 13.71,
-      displayValue: "41 / 299 Scans (13.7%)",
-      sublabel: "Baseline Control",
-      color: "#c084fc",
-    },
-  ];
-
   return (
     <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-20 overflow-x-clip" data-testid="pcos-feature-page">
       <PageBackdropLayer imageSrc="/images/backgrounds/bg-pcos-lab.jpg" />
       <PublicFloatingHeader transparentHero />
 
       <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
-        <HomeSubTabBar />
+        <div className="flex items-center justify-between">
+          <Link
+            to="/#pcos-chapter"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-sky-300 hover:text-white transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> {locale === "bn" ? "হোম অধ্যায়ে ফিরুন" : "Back to Home Chapters"}
+          </Link>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+            01 / 05 • PCOS WORKBENCH
+          </span>
+        </div>
 
         {/* Hero Banner + 3D Neural Scene */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 space-y-5">
@@ -382,29 +271,10 @@ export function PcosFeaturePage() {
           />
         </section>
 
-        {/* AgriSense Digital Observatory + Benchmark Graphs */}
+        {/* PCOS Signature Risk Dial Gauge & Sparkline Telemetry */}
         <section className="space-y-5">
-          <DigitalObservatoryDeck
-            badgeLabel="M01 CLINICAL XGBOOST & M02 ULTRASOUND TELEMETRY"
-            cards={telemetryCards}
-            breakdownTitle="PCOS Clinical vs Ultrasound Cohort Split & Feature Composition"
-            breakdownBars={[
-              { name: "M01 Held-Out Acc", pct: 94.44, valueLabel: "94.44%", color: "#38bdf8", note: "17 / 18 profiles" },
-              { name: "M01 5-Fold CV Acc", pct: 88.57, valueLabel: "88.57%", color: "#818cf8", note: "N=88 cohort" },
-              { name: "M02 Ultrasound Acc", pct: 86.67, valueLabel: "86.67%", color: "#2dd4bf", note: "39 / 45 scans" },
-              { name: "Deduplicated Unique", pct: 100, valueLabel: "299 Scans", color: "#f2c879", note: "pHash clustered" },
-            ]}
-            pauseMotion={motionPaused}
-          />
-
-          <InteractiveBarGraph
-            title="PCOS Clinical & Ovarian Ultrasound Quantitative Graph (Audited FINAL_LOCK)"
-            subtitle="Separates metabolic/clinical classification from ultrasound PCOM morphology per Rotterdam criteria boundaries."
-            items={morphologyGraphItems}
-            thresholdValue={85}
-            thresholdLabel="85% Validation Threshold"
-            pauseMotion={motionPaused}
-          />
+          <SemiCircleRiskDial presets={PCOS_DIAL_PRESETS} pauseMotion={motionPaused} />
+          <SparklineKpiStrip items={PCOS_SPARKLINE_ITEMS} pauseMotion={motionPaused} />
         </section>
 
         {/* Interactive Non-Diagnostic Calculator + Clinical Prep Builder */}

@@ -4,18 +4,20 @@ import {
   Activity,
   ArrowRight,
   Baby,
-  BadgeCheck,
   CalendarClock,
   CalendarHeart,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   FileLock2,
   FlaskConical,
   HeartPulse,
   Lock,
+  Pause,
+  Play,
   Radio,
   ScanText,
   Search,
-  ShieldCheck,
   Sparkles,
   Stethoscope,
   Video,
@@ -25,15 +27,24 @@ import { formatBdtFromPoisha } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { usePreferences } from "../lib/preferences";
 import { HomeSectionRail } from "../components/layout/HomeSectionRail";
-import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
-import { HERO_DOCTOR_SLIDES, HeroDoctorShowcase } from "../components/home/HeroDoctorShowcase";
+import { HERO_DOCTOR_SLIDES } from "../components/home/HeroDoctorShowcase";
 import {
   DigitalObservatoryDeck,
   InteractiveBarGraph,
   type TelemetryDeckCard,
 } from "../components/charts/AgriStyleTelemetry";
+import {
+  AnimatedClinicalPipeline,
+  CohortWaffleMatrixChart,
+  HexRadarTaxonomyChart,
+  PCOS_DIAL_PRESETS,
+  PCOS_SPARKLINE_ITEMS,
+  SemiCircleRiskDial,
+  SparklineKpiStrip,
+  UncertaintyTrendCurveChart,
+} from "../components/charts/VariedClinicalVisuals";
 import { BangladeshCareMap, type MapDoctor, type MapFacility } from "../components/map/BangladeshCareMap";
 import { StaticCareLatticeFallback } from "../components/three/StaticCareLatticeFallback";
 import { TrustBadge } from "../components/ui";
@@ -97,6 +108,27 @@ const SOURCE_MARQUEE_ITEMS = [
   "WATERMARKED DEMO RECEIPTS",
 ];
 
+/** Full-bleed dark sapphire photographic backdrop with smooth edge blends for vertical scroll chapters. */
+function ChapterBackdrop({ src }: { src: string }) {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        className="w-full h-full object-cover object-center opacity-28 scale-[1.02]"
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(180deg, #040914 0%, rgba(4,9,20,0.68) 26%, rgba(4,9,20,0.64) 74%, #040914 100%), linear-gradient(90deg, rgba(4,9,20,0.92) 0%, rgba(4,9,20,0.68) 55%, rgba(4,9,20,0.82) 100%)",
+        }}
+      />
+    </div>
+  );
+}
+
 export function PublicHomePage() {
   const { locale, t } = useI18n();
   const { motionPaused } = usePreferences();
@@ -104,8 +136,8 @@ export function PublicHomePage() {
 
   const [activeLayer, setActiveLayer] = useState(0);
   const [heroMode, setHeroMode] = useState<"SQLite" | "HTTP 422" | "Zero-PHI" | "Audit">("SQLite");
-  const [heroVisualMode, setHeroVisualMode] = useState<"doctors" | "lattice">("doctors");
   const [heroSlideIdx, setHeroSlideIdx] = useState(0);
+  const [heroSlidePaused, setHeroSlidePaused] = useState(false);
   const [autoRotate, setAutoRotate] = useState(true);
   const [heroSearch, setHeroSearch] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -140,6 +172,14 @@ export function PublicHomePage() {
     const id = window.setInterval(() => setWordIdx((i) => i + 1), 2800);
     return () => clearInterval(id);
   }, [motionPaused]);
+
+  useEffect(() => {
+    if (motionPaused || heroSlidePaused) return;
+    const id = window.setInterval(() => {
+      setHeroSlideIdx((prev) => (prev + 1) % HERO_DOCTOR_SLIDES.length);
+    }, 5500);
+    return () => clearInterval(id);
+  }, [motionPaused, heroSlidePaused]);
 
   useEffect(() => {
     let active = true;
@@ -425,48 +465,51 @@ export function PublicHomePage() {
       <PublicFloatingHeader transparentHero />
 
       {/* =================================================================
-          SECTION 01 · FULL-VIEWPORT MIDNIGHT SAPPHIRE 3D HERO STAGE
+          SECTION 01 · FULL-VIEWPORT AGRISENSE-PROPORTION 3D HERO OVER FULL-BLEED DOCTOR SLIDES
           ================================================================= */}
       <section
         id="hero"
         data-testid="public-hero-section"
-        className="relative min-h-screen pt-20 pb-10 px-4 sm:px-6 flex flex-col justify-center gap-6 overflow-hidden text-white border-b border-sky-400/20"
+        className="relative min-h-screen pt-20 pb-8 px-4 sm:px-6 flex flex-col justify-center overflow-hidden text-white border-b border-sky-400/20"
       >
-        {/* Synced Atmospheric Crossfading Clinical Hero Backdrop */}
+        {/* Full-Bleed Animated Clinical Doctor Photography Background (Back-to-Back Doctors Slide 1) */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-          {HERO_DOCTOR_SLIDES.map((s, idx) => (
-            <img
-              key={s.id}
-              src={s.src}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000"
-              style={{ opacity: idx === heroSlideIdx ? 0.16 : 0 }}
-            />
-          ))}
+          {HERO_DOCTOR_SLIDES.map((s, idx) => {
+            const isActive = idx === heroSlideIdx;
+            return (
+              <img
+                key={s.id}
+                src={s.src}
+                alt={locale === "bn" ? s.titleBn : s.titleEn}
+                className="absolute inset-0 w-full h-full object-cover object-[center_22%] transition-all duration-[1400ms] ease-out"
+                style={{
+                  opacity: isActive ? 0.72 : 0,
+                  transform: isActive && !motionPaused ? "scale(1.04)" : "scale(1)",
+                }}
+              />
+            );
+          })}
+          {/* AgriSense Left-to-Right Directional Vignette keeping left typography & doctors crisp */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(90deg, rgba(4,9,20,0.92) 0%, rgba(4,9,20,0.74) 48%, rgba(4,9,20,0.62) 100%), linear-gradient(180deg, rgba(4,9,20,0.75) 0%, transparent 25%, rgba(4,9,20,0.95) 100%)",
+                "linear-gradient(90deg, rgba(4,9,20,0.94) 0%, rgba(4,9,20,0.72) 44%, rgba(4,9,20,0.28) 76%, rgba(4,9,20,0.52) 100%), linear-gradient(180deg, rgba(4,9,20,0.68) 0%, transparent 24%, rgba(4,9,20,0.92) 100%)",
             }}
           />
         </div>
 
-        {/* Home Tab Internal Sub-Navigation for All 5 Dedicated AI Feature Pages */}
-        <div className="relative z-10 max-w-[1440px] mx-auto w-full">
-          <HomeSubTabBar />
-        </div>
-
-        <div className="relative z-10 max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* LEFT EDITORIAL COLUMN */}
-          <div className="lg:col-span-6 min-w-0 space-y-5">
-            <div className="flex items-center gap-3 text-[11px] font-mono tracking-[0.16em] uppercase text-slate-300">
-              <span className="w-7 h-px bg-sky-400/60 shrink-0" />
+        <div className="relative z-10 max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-center py-6">
+          {/* LEFT EDITORIAL COLUMN — Strict AgriSense Typography & 2-Pill CTA Cadence */}
+          <div className="lg:col-span-6 min-w-0 max-w-[540px] space-y-5">
+            <div className="flex items-center gap-3 text-[11px] font-mono tracking-[0.18em] uppercase text-slate-300">
+              <span className="w-[26px] h-px bg-sky-400/75 shrink-0" />
               <span>{t("publicSite.hero.credibilityPill")}</span>
             </div>
 
             <h1
-              className="text-4xl sm:text-5xl xl:text-6xl font-bold tracking-tight leading-[1.09]"
+              className="font-bold tracking-[-0.025em]"
+              style={{ fontSize: "clamp(2.3rem, 3.6vw, 3.55rem)", lineHeight: 1.07 }}
               data-testid="public-hero-heading"
             >
               <span className="block bg-gradient-to-b from-white via-sky-200 to-sky-400 bg-clip-text text-transparent">
@@ -475,140 +518,122 @@ export function PublicHomePage() {
               <span className="block bg-gradient-to-b from-teal-100 via-teal-300 to-teal-500 bg-clip-text text-transparent">
                 {t("publicSite.hero.headlineMid")}
               </span>
-              <span className="block text-[#f2c879] mt-0.5">
+              <span
+                className="block text-[#f2c879] mt-0.5"
+                style={{
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                }}
+              >
                 {t("publicSite.hero.headlineBottom")}
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-200/90 max-w-xl leading-relaxed">
+            <p className="text-[15px] text-slate-200/90 max-w-[450px] leading-relaxed">
               {t("publicSite.hero.subtitle")}{" "}
               <strong className="text-sky-300 font-semibold">{activePhrase}</strong>
             </p>
 
-            {/* Quick Doctor/Symptom Search Bar */}
-            <form onSubmit={handleQuickSearch} className="flex flex-col sm:flex-row gap-2.5 max-w-xl">
-              <div className="flex-1 flex items-center gap-2 rounded-full bg-white/10 border border-sky-400/30 backdrop-blur-md px-4 min-h-12">
-                <Search className="w-4 h-4 text-sky-300 shrink-0" />
-                <input
-                  type="text"
-                  value={heroSearch}
-                  onChange={(e) => setHeroSearch(e.target.value)}
-                  placeholder={
-                    locale === "bn"
-                      ? "উপসর্গ, বিশেষজ্ঞ বা ডাক্তারের নাম লিখুন..."
-                      : "Search specialty, symptom (PCOS, fever, rash), or doctor..."
-                  }
-                  className="w-full bg-transparent text-white placeholder:text-slate-300/80 text-sm focus:outline-none"
-                  data-testid="hero-search-input"
-                />
-              </div>
-              <button
-                type="submit"
-                className="min-h-12 px-6 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 hover:from-sky-300 hover:to-teal-300 text-slate-950 font-bold text-sm inline-flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(56,189,248,0.35)] transition cursor-pointer shrink-0"
+            {/* Clean AgriSense 2-Pill Primary CTA Row + Quick Portal Sign In */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link
+                to="/doctors"
+                className="h-10 px-5 rounded-full bg-white text-slate-950 hover:bg-sky-50 font-semibold text-[13px] inline-flex items-center gap-2 shadow-[0_8px_24px_rgba(255,255,255,0.16)] transition"
               >
                 {t("publicSite.hero.ctaPrimary")} <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-
-            {/* Crisp Editorial Pill CTAs matching AgriSense */}
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                to="/services"
-                className="min-h-11 px-5 rounded-full bg-white text-slate-950 hover:bg-sky-50 font-semibold text-sm inline-flex items-center gap-2 shadow-lg transition"
-              >
-                {t("publicSite.hero.ctaSecondary")} <ArrowRight className="w-4 h-4" />
               </Link>
+              <a
+                href="#pcos-chapter"
+                className="h-10 px-5 rounded-full bg-[#040a18]/75 hover:bg-white/15 border border-white/25 text-white text-[13px] font-medium inline-flex items-center gap-2 backdrop-blur-md transition"
+              >
+                {locale === "bn" ? "৫টি এআই অধ্যায় দেখুন" : "Explore AI Chapters"}
+              </a>
               <Link
                 to="/login"
                 data-testid="hero-portal-login-btn"
-                className="min-h-11 px-5 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 text-white text-sm font-medium inline-flex items-center gap-2 backdrop-blur-md transition"
+                className="h-10 px-4 rounded-full border border-sky-400/30 bg-sky-400/10 hover:bg-sky-400/20 text-sky-200 text-xs font-semibold inline-flex items-center gap-1.5 backdrop-blur-md transition"
               >
-                <Lock className="w-4 h-4 text-sky-300" /> {t("publicSite.hero.ctaPortal")}
+                <Lock className="w-3.5 h-3.5" /> {t("publicSite.hero.ctaPortal")}
               </Link>
             </div>
 
-            {/* Trust Badges Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px]">
-              <div className="ss-glow-card rounded-xl bg-white/8 border border-sky-400/20 px-3 py-2 flex items-center gap-1.5 text-sky-200">
-                <ScanText className="w-3.5 h-3.5 shrink-0" />
-                <span>{t("publicSite.badges.humanOcr")}</span>
+            {/* Subtle Unobtrusive Background Photo Carousel Controls */}
+            <div className="pt-3 flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#040a18]/75 border border-white/15 backdrop-blur-md px-3 py-1.5 text-[11px] font-mono text-slate-200">
+                <button
+                  type="button"
+                  aria-label="Previous clinician background"
+                  onClick={() =>
+                    setHeroSlideIdx((prev) => (prev - 1 + HERO_DOCTOR_SLIDES.length) % HERO_DOCTOR_SLIDES.length)
+                  }
+                  className="p-0.5 text-slate-300 hover:text-white cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={heroSlidePaused ? "Resume hero slideshow" : "Pause hero slideshow"}
+                  onClick={() => setHeroSlidePaused((p) => !p)}
+                  className="p-0.5 text-sky-300 hover:text-white cursor-pointer"
+                >
+                  {heroSlidePaused || motionPaused ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next clinician background"
+                  onClick={() => setHeroSlideIdx((prev) => (prev + 1) % HERO_DOCTOR_SLIDES.length)}
+                  className="p-0.5 text-slate-300 hover:text-white cursor-pointer"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+                <span className="h-3 w-px bg-white/15" />
+                <span className="text-sky-300 font-bold">
+                  0{heroSlideIdx + 1}/0{HERO_DOCTOR_SLIDES.length}
+                </span>
+                <span className="hidden sm:inline text-slate-300 truncate max-w-[210px]">
+                  {(HERO_DOCTOR_SLIDES[heroSlideIdx] ?? HERO_DOCTOR_SLIDES[0]).tag}
+                </span>
               </div>
-              <div className="ss-glow-card rounded-xl bg-white/8 border border-teal-400/20 px-3 py-2 flex items-center gap-1.5 text-teal-200">
-                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                <span>{t("publicSite.badges.zeroPhi")}</span>
-              </div>
-              <div className="ss-glow-card rounded-xl bg-white/8 border border-amber-400/25 px-3 py-2 flex items-center gap-1.5 text-amber-200">
-                <BadgeCheck className="w-3.5 h-3.5 shrink-0" />
-                <span>{t("publicSite.badges.demoPay")}</span>
-              </div>
-              <div className="ss-glow-card rounded-xl bg-white/8 border border-indigo-400/25 px-3 py-2 flex items-center gap-1.5 text-indigo-200">
-                <FlaskConical className="w-3.5 h-3.5 shrink-0" />
-                <span>{t("publicSite.badges.nonDiagAi")}</span>
+
+              <div className="flex items-center gap-1.5">
+                {HERO_DOCTOR_SLIDES.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-label={`Hero slide ${idx + 1}`}
+                    onClick={() => setHeroSlideIdx(idx)}
+                    className="h-1.5 rounded-full transition-all cursor-pointer"
+                    style={{
+                      width: idx === heroSlideIdx ? "22px" : "7px",
+                      background: idx === heroSlideIdx ? s.accent : "rgba(255,255,255,0.28)",
+                    }}
+                  />
+                ))}
               </div>
             </div>
           </div>
 
-          {/* RIGHT: ANIMATED BACK-TO-BACK DOCTOR SHOWCASE / 3D LATTICE + CONTROL RAIL + TELEMETRY HUD */}
-          <div className="lg:col-span-6 min-w-0 relative flex flex-col justify-between min-h-[380px] lg:min-h-[540px]">
-            {/* Visual Stage Mode Switcher */}
-            <div className="flex items-center justify-between gap-2 mb-2.5">
-              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-sky-300">
-                {locale === "bn" ? "জীবন্ত ক্লিনিকাল প্রদর্শনী" : "LIVE CLINICAL SHOWCASE"}
-              </span>
-              <div className="inline-flex rounded-full bg-[#040a18]/85 border border-sky-400/30 p-1">
-                <button
-                  type="button"
-                  onClick={() => setHeroVisualMode("doctors")}
-                  className={`px-3 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
-                    heroVisualMode === "doctors"
-                      ? "bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950"
-                      : "text-slate-300 hover:text-white"
-                  }`}
-                >
-                  {locale === "bn" ? "চিকিৎসক স্লাইডশো" : "Doctors Showcase"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHeroVisualMode("lattice")}
-                  className={`px-3 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
-                    heroVisualMode === "lattice"
-                      ? "bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950"
-                      : "text-slate-300 hover:text-white"
-                  }`}
-                >
-                  {locale === "bn" ? "৩ডি কেয়ার ল্যাটিস" : "3D Care Lattice"}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 flex items-center gap-3 min-w-0">
-              <div className="flex-1 min-w-0 relative">
-                {heroVisualMode === "doctors" ? (
-                  <HeroDoctorShowcase
-                    motionPaused={motionPaused}
-                    locale={locale}
-                    activeIndex={heroSlideIdx}
-                    onChangeIndex={setHeroSlideIdx}
-                  />
+          {/* RIGHT FOREGROUND STAGE — Restored Transparent 3D Care Lattice + Slim 88px AgriSense Rail + Compact HUD */}
+          <div className="lg:col-span-6 min-w-0 relative flex flex-col justify-between min-h-[380px] lg:min-h-[530px]">
+            <div className="flex-1 flex items-center gap-2.5 min-w-0">
+              {/* Transparent Foreground 3D Care Lattice floating cleanly over Rotating Doctor Photography */}
+              <div className="flex-1 min-w-0 relative h-[340px] sm:h-[430px]">
+                {mount3d ? (
+                  <Suspense fallback={<StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />}>
+                    <LazyHeroCareLattice activeLayer={activeLayer} autoRotate={autoRotate} />
+                  </Suspense>
                 ) : (
-                  <div className="w-full overflow-hidden h-[350px] sm:h-[420px] relative rounded-3xl border border-sky-400/25 bg-[#040a18]/75">
-                    {mount3d ? (
-                      <Suspense fallback={<StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />}>
-                        <LazyHeroCareLattice activeLayer={activeLayer} autoRotate={autoRotate} />
-                      </Suspense>
-                    ) : (
-                      <StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />
-                    )}
-                  </div>
+                  <StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />
                 )}
               </div>
 
-              {/* AgriSense-style Far-Right Vertical Control Rail */}
+              {/* AgriSense Slim Far-Right Vertical Control Rail */}
               <aside
                 aria-label="Hero Architecture Layer & Safety Mode Rail"
-                className="hidden sm:flex flex-col gap-1.5 w-[142px] shrink-0 rounded-2xl bg-[#071022]/85 border border-sky-400/25 backdrop-blur-xl p-2.5 shadow-2xl"
+                className="hidden sm:flex flex-col gap-1 w-[92px] sm:w-[98px] shrink-0 rounded-2xl bg-[#071022]/85 border border-sky-400/25 backdrop-blur-xl p-2 shadow-2xl"
               >
-                <span className="font-mono text-[9px] font-bold tracking-[0.14em] uppercase text-slate-400 text-center">
+                <span className="font-mono text-[8.5px] font-bold tracking-[0.14em] uppercase text-slate-400 text-center">
                   Layers
                 </span>
                 <div className="flex flex-col gap-1" role="tablist" data-testid="hero-layer-switcher">
@@ -620,7 +645,7 @@ export function PublicHomePage() {
                       aria-selected={activeLayer === layer.id}
                       onClick={() => setActiveLayer(layer.id)}
                       data-testid={`hero-layer-btn-${layer.id}`}
-                      className={`min-h-11 px-2.5 py-1.5 rounded-lg text-left text-[11px] font-semibold transition cursor-pointer ${
+                      className={`py-1.5 px-1.5 rounded-lg text-left text-[10px] font-semibold leading-tight transition cursor-pointer ${
                         activeLayer === layer.id
                           ? "bg-gradient-to-r from-sky-400 to-teal-400 text-slate-950 font-bold shadow"
                           : "text-slate-300 hover:bg-white/10"
@@ -632,16 +657,16 @@ export function PublicHomePage() {
                 </div>
 
                 <div className="h-px bg-white/10 my-0.5" />
-                <span className="font-mono text-[9px] font-bold tracking-[0.14em] uppercase text-slate-400 text-center">
+                <span className="font-mono text-[8.5px] font-bold tracking-[0.14em] uppercase text-slate-400 text-center">
                   Guard
                 </span>
-                <div className="grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 gap-1">
                   {(["SQLite", "HTTP 422", "Zero-PHI", "Audit"] as const).map((m) => (
                     <button
                       key={m}
                       type="button"
                       onClick={() => setHeroMode(m)}
-                      className={`py-1 px-1 rounded text-[9.5px] font-mono font-bold transition cursor-pointer whitespace-nowrap ${
+                      className={`py-1 px-1 rounded text-[9px] font-mono font-bold transition cursor-pointer whitespace-nowrap ${
                         heroMode === m ? "bg-[#f2c879] text-slate-950" : "text-slate-300 hover:bg-white/10"
                       }`}
                     >
@@ -654,7 +679,7 @@ export function PublicHomePage() {
                 <button
                   type="button"
                   onClick={() => setAutoRotate((r) => !r)}
-                  className={`py-1 rounded text-[10px] font-mono font-bold border transition cursor-pointer ${
+                  className={`py-1 rounded text-[9px] font-mono font-bold border transition cursor-pointer ${
                     autoRotate
                       ? "bg-sky-400/20 border-sky-400/40 text-sky-300"
                       : "border-white/15 text-slate-400"
@@ -665,37 +690,37 @@ export function PublicHomePage() {
               </aside>
             </div>
 
-            {/* Bottom-Right Frosted Live Clinical Telemetry Card */}
+            {/* Compact AgriSense-Sized Bottom-Right Telemetry HUD Card */}
             <div
               data-testid="hero-telemetry-card"
-              className="ss-glow-card mt-4 rounded-2xl border border-sky-400/25 bg-[#071022]/80 backdrop-blur-xl p-4 shadow-2xl space-y-2.5"
+              className="ss-glow-card mt-2 max-w-[390px] w-full ml-auto rounded-2xl border border-sky-400/25 bg-[#071022]/82 backdrop-blur-xl p-3.5 shadow-2xl space-y-2"
             >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-sky-300 inline-flex items-center gap-1.5">
-                  <Radio className="w-3.5 h-3.5" />
-                  {t("publicSite.hero.telemetryTitle")}
+              <div className="flex items-center justify-between gap-2 text-[10px] font-mono">
+                <span className="font-bold uppercase tracking-wider text-sky-300 inline-flex items-center gap-1.5 truncate">
+                  <Radio className="w-3 h-3 shrink-0" />
+                  Live 3D Care Twin • SQLite 37 Tables
                 </span>
-                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-teal-400/15 text-teal-300 border border-teal-400/30">
-                  {overview.audit_lock_verdict}
+                <span className="px-2 py-0.5 rounded bg-teal-400/15 text-teal-300 border border-teal-400/30 font-bold shrink-0">
+                  60 FPS
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2.5 text-center">
-                <div className="rounded-xl bg-black/30 p-2.5 border border-white/5">
-                  <div className="text-lg sm:text-xl font-bold font-mono text-white">{overview.approved_doctors}</div>
-                  <div className="text-[11px] text-slate-300">{t("publicSite.hero.telemetryDoctors")}</div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-black/35 px-2 py-1.5 border border-white/5">
+                  <div className="text-sm font-bold font-mono text-white">{overview.approved_doctors}</div>
+                  <div className="text-[10px] text-slate-300 truncate">{t("publicSite.hero.telemetryDoctors")}</div>
                 </div>
-                <div className="rounded-xl bg-black/30 p-2.5 border border-white/5">
-                  <div className="text-lg sm:text-xl font-bold font-mono text-sky-300">{overview.open_slots}</div>
-                  <div className="text-[11px] text-slate-300">{t("publicSite.hero.telemetrySlots")}</div>
+                <div className="rounded-lg bg-black/35 px-2 py-1.5 border border-white/5">
+                  <div className="text-sm font-bold font-mono text-sky-300">{overview.open_slots}</div>
+                  <div className="text-[10px] text-slate-300 truncate">{t("publicSite.hero.telemetrySlots")}</div>
                 </div>
-                <div className="rounded-xl bg-black/30 p-2.5 border border-white/5">
-                  <div className="text-sm sm:text-base font-bold font-mono text-[#f2c879] pt-1">{currentLayer.metricValue}</div>
-                  <div className="text-[11px] text-slate-300">{currentLayer.metricLabel}</div>
+                <div className="rounded-lg bg-black/35 px-2 py-1.5 border border-white/5">
+                  <div className="text-[11px] font-bold font-mono text-[#f2c879] pt-0.5 truncate">{currentLayer.metricValue}</div>
+                  <div className="text-[10px] text-slate-300 truncate">{currentLayer.metricLabel}</div>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-200/90 leading-relaxed">
+              <p className="text-[11px] text-slate-200/90 leading-snug">
                 {locale === "bn" ? currentLayer.noteBn : currentLayer.noteEn}
               </p>
 
@@ -706,7 +731,7 @@ export function PublicHomePage() {
                     key={layer.id}
                     type="button"
                     onClick={() => setActiveLayer(layer.id)}
-                    className={`min-h-11 px-3 rounded-full text-xs whitespace-nowrap cursor-pointer ${
+                    className={`min-h-9 px-3 rounded-full text-xs whitespace-nowrap cursor-pointer ${
                       activeLayer === layer.id ? "bg-sky-400 text-slate-950 font-semibold" : "bg-white/10 text-white"
                     }`}
                   >
@@ -734,234 +759,317 @@ export function PublicHomePage() {
       </div>
 
       {/* =================================================================
-          SECTION 02 · CORE SPECIALIZED MODULES HUB (SEPARATE FEATURE PAGES)
+          CHAPTER 01 (#pcos-chapter) · PCOS CLINICAL & ULTRASOUND AI
           ================================================================= */}
-      <section id="core-modules" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-                02 • CORE HEALTHCARE &amp; AI FEATURE WORKBENCHES
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                {locale === "bn"
-                  ? "পৃথক ডেডিকেটেড মডিউল: পিসিওএস, নিরাপদ OCR ও শিশু র‍্যাশ"
-                  : "Dedicated Core Feature Pages: PCOS, Safe OCR & Pediatric Triage"}
-              </h2>
+      <section
+        id="pcos-chapter"
+        className="relative min-h-[76vh] py-20 px-4 sm:px-6 flex items-center overflow-hidden border-b border-sky-400/20"
+      >
+        <ChapterBackdrop src="/images/backgrounds/bg-pcos-lab.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-5 space-y-5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8]">
+                <CalendarHeart className="w-4 h-4" /> CHAPTER 01 • PCOS AI (M01 + M02)
+              </span>
+              <TrustBadge kind="RESEARCH_ONLY" />
             </div>
-            <Link
-              to="/research"
-              className="min-h-11 px-4 rounded-full border border-sky-400/35 bg-sky-400/10 hover:bg-sky-400/20 text-sky-200 text-xs font-semibold inline-flex items-center gap-1.5"
-            >
-              {locale === "bn" ? "সব ৬টি গবেষণা ট্র্যাক" : "View All 6 Research Tracks"}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+              {locale === "bn" ? (
+                <>
+                  পিসিওএস ক্লিনিকাল ও{" "}
+                  <span className="bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] bg-clip-text text-transparent">
+                    আল্ট্রাসাউন্ড গবেষণা অধ্যায়
+                  </span>
+                </>
+              ) : (
+                <>
+                  PCOS Clinical &amp;{" "}
+                  <span className="bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] bg-clip-text text-transparent">
+                    Ovarian Ultrasound Studio
+                  </span>
+                </>
+              )}
+            </h2>
+            <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed">
+              {locale === "bn"
+                ? "রটারডাম মানদণ্ড অনুযায়ী ২০-ফিচার হরমোন প্রোফাইল (M01 XGBoost: ৯৪.৪৪% হেল্ড-আউট) এবং ২৯৯টি ডুপ্লিকেটমুক্ত আল্ট্রাসাউন্ড স্ক্যান (M02 ResNet18: ৮৬.৬৭%) সম্পূর্ণ পৃথকভাবে বিশ্লেষণ করা হয়েছে।"
+                : "Keeps 20-feature clinical classification (M01 XGBoost • 94.44% balanced holdout, 88.57% CV) strictly separated from ovarian PCOM morphology ultrasound (M02 ResNet18 • 86.67% on 299 pHash-clustered scans)."}
+            </p>
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Link
+                to="/features/pcos?tab=clinical"
+                data-testid="home-goto-pcos"
+                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 shadow-lg"
+              >
+                Open PCOS Clinical Workbench <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/features/pcos?tab=ultrasound"
+                className="min-h-11 px-4 rounded-full border border-sky-400/35 bg-[#040a18]/75 hover:bg-white/10 text-sky-200 font-semibold text-xs inline-flex items-center gap-1.5"
+              >
+                Upload Ultrasound Scan
+              </Link>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {/* 1. PCOS Clinical AI */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-sky-400/60 transition">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-sky-400/15 border border-sky-400/35 flex items-center justify-center text-sky-300">
-                    <CalendarHeart className="w-5 h-5" />
-                  </div>
-                  <TrustBadge kind="RESEARCH_ONLY" />
-                </div>
-                <div className="font-mono text-[11px] text-sky-300">M01 XGBoost • Age, BMI &amp; Hormone Form</div>
-                <h3 className="text-lg font-bold text-white">1. PCOS Clinical AI</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Structured 20-feature clinical profile input with SimpleImputer running the real `model_best.joblib` probability pipeline (88.57% CV bal acc).
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/features/pcos?tab=clinical"
-                  data-testid="home-goto-pcos"
-                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
-                >
-                  Open PCOS Page <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <Link
-                  to="/research?module=pcos-clinical"
-                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
-                >
-                  Lab
-                </Link>
-              </div>
-            </article>
-
-            {/* 2. PCOS Ultrasound AI */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-teal-400/60 transition">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-teal-400/15 border border-teal-400/35 flex items-center justify-center text-teal-300">
-                    <FlaskConical className="w-5 h-5" />
-                  </div>
-                  <TrustBadge kind="RESEARCH_ONLY" />
-                </div>
-                <div className="font-mono text-[11px] text-teal-300">M02 ResNet18 • Ultrasound Upload (JPG/PNG)</div>
-                <h3 className="text-lg font-bold text-white">2. PCOS Ultrasound AI</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Upload ovarian ultrasound scans with CyberScan inspection to classify PCOM / Dominant Follicle / Normal morphology (86.67% held-out test).
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/features/pcos?tab=ultrasound"
-                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#2dd4bf] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
-                >
-                  <span>Open Ultrasound Page</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/research?module=pcos-ultrasound"
-                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
-                >
-                  Lab
-                </Link>
-              </div>
-            </article>
-
-            {/* 3. Viral Rash AI */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-indigo-400/60 transition">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-400/15 border border-indigo-400/35 flex items-center justify-center text-indigo-300">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-400/15 text-indigo-200 border border-indigo-400/35">
-                    755-FAMILY SPLIT
-                  </span>
-                </div>
-                <div className="font-mono text-[11px] text-indigo-300">M03 Grouped ResNet18 • Skin Lesion Upload</div>
-                <h3 className="text-lg font-bold text-white">3. Viral Rash AI</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Upload skin rash images for leak-free 6-class research softmax probabilities (Chickenpox, Measles, HFMD, Cowpox, Monkeypox, Healthy).
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/features/viral-rash"
-                  data-testid="home-goto-viral-rash"
-                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#818cf8] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
-                >
-                  <span>Open Viral Rash Page</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/research?module=viral-rash"
-                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
-                >
-                  Lab
-                </Link>
-              </div>
-            </article>
-
-            {/* 4. Prescription OCR */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-amber-400/60 transition">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-[#f2c879]/15 border border-[#f2c879]/40 flex items-center justify-center text-[#f2c879]">
-                    <ScanText className="w-5 h-5" />
-                  </div>
-                  <TrustBadge kind="HUMAN_VERIFIED" />
-                </div>
-                <div className="font-mono text-[11px] text-[#f2c879]">M04 EasyOCR bn+en • Image/PDF Upload</div>
-                <h3 className="text-lg font-bold text-white">4. Prescription OCR</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Laser scan + EasyOCR extracts bilingual text &amp; editable medicine fields locked behind HTTP 422 human verification.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/features/prescription-ocr"
-                  data-testid="home-goto-ocr"
-                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#f2c879] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
-                >
-                  Open OCR Page <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <Link
-                  to="/research?module=prescription-ocr"
-                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
-                >
-                  Lab
-                </Link>
-              </div>
-            </article>
-
-            {/* 5. Bangla Voice AI (Phase G) */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-purple-400/60 transition">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-purple-400/15 border border-purple-400/35 flex items-center justify-center text-purple-300">
-                    <Radio className="w-5 h-5" />
-                  </div>
-                  <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-200 border border-amber-400/35">
-                    PHASE G DEFERRED
-                  </span>
-                </div>
-                <div className="font-mono text-[11px] text-purple-300">M05 Whisper-Small-BN • 39.09% WER</div>
-                <h3 className="text-lg font-bold text-white">5. Bangla Voice AI</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Audited on 26 human FLEURS clips (98.37% Bengali Unicode). Interactive mic/RAG flow activates in Phase G per project roadmap.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/features/bangla-voice"
-                  data-testid="home-goto-voice"
-                  className="flex-1 min-h-11 px-4 rounded-full border border-purple-400/45 bg-purple-500/20 hover:bg-purple-500/30 text-purple-100 font-bold text-xs inline-flex items-center justify-center gap-1.5"
-                >
-                  <span>Open Voice Studio</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  to="/research?module=bangla-voice"
-                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
-                >
-                  Lab
-                </Link>
-              </div>
-            </article>
-
-            {/* 6. DermoPed AI */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-emerald-400/60 transition">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-400/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300">
-                    <Baby className="w-5 h-5" />
-                  </div>
-                  <TrustBadge kind="RESEARCH_ONLY" />
-                </div>
-                <div className="font-mono text-[11px] text-emerald-300">M06 EXP_B ResNet18 • N=22 Patients</div>
-                <h3 className="text-lg font-bold text-white">6. DermoPed AI</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Pediatric chickenpox / pediculosis research classifier with mandatory clinician review warnings &amp; strict small-cohort disclosure.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  to="/features/pediatric-rash"
-                  data-testid="home-goto-pediatric"
-                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#34d399] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
-                >
-                  Open DermoPed Page <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <Link
-                  to="/research?module=dermoped"
-                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
-                >
-                  Lab
-                </Link>
-              </div>
-            </article>
+          <div className="lg:col-span-7 space-y-4">
+            <SemiCircleRiskDial presets={PCOS_DIAL_PRESETS} pauseMotion={motionPaused} />
+            <SparklineKpiStrip items={PCOS_SPARKLINE_ITEMS} pauseMotion={motionPaused} />
           </div>
         </div>
       </section>
 
       {/* =================================================================
-          SECTION 03 · INTERACTIVE BANGLADESH HEALTHCARE ATLAS & MAP
+          CHAPTER 02 (#viral-rash-chapter) · VIRAL RASH GROUPED MCVSLD
+          ================================================================= */}
+      <section
+        id="viral-rash-chapter"
+        className="relative min-h-[76vh] py-20 px-4 sm:px-6 flex items-center overflow-hidden border-b border-sky-400/20"
+      >
+        <ChapterBackdrop src="/images/backgrounds/bg-viral-rash.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 order-2 lg:order-1">
+            <HexRadarTaxonomyChart pauseMotion={motionPaused} />
+          </div>
+
+          <div className="lg:col-span-5 order-1 lg:order-2 space-y-5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.2em] uppercase text-[#818cf8]">
+                <Sparkles className="w-4 h-4" /> CHAPTER 02 • M03 VIRAL RASH AI
+              </span>
+              <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-400/15 text-indigo-200 border border-indigo-400/35">
+                755-FAMILY LEAK-FREE SPLIT
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+              {locale === "bn" ? (
+                <>
+                  ভাইরাল র‍্যাশ ভিশন ও{" "}
+                  <span className="bg-gradient-to-r from-[#818cf8] to-[#38bdf8] bg-clip-text text-transparent">
+                    ৭৫৫-ফ্যামিলি লিকেজ-মুক্ত নিরীক্ষা
+                  </span>
+                </>
+              ) : (
+                <>
+                  Viral Rash Vision &amp;{" "}
+                  <span className="bg-gradient-to-r from-[#818cf8] to-[#38bdf8] bg-clip-text text-transparent">
+                    6-Class Taxonomy Radar
+                  </span>
+                </>
+              )}
+            </h2>
+            <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed">
+              {locale === "bn"
+                ? "আগের ৯৯.১০% ডেটা-লিকেজ মডেলটি কোয়ারেন্টাইন করে ৭৫৫টি পৃথক ফ্যামিলি গ্রুপে বিভক্ত ResNet18 দ্বারা Chickenpox, Measles, HFMD, Cowpox, Monkeypox ও Healthy শ্রেণিতে গবেষণামূলক বিশ্লেষণ প্রদান করা হয়।"
+                : "Quarantines legacy 99.10% leaked splits and evaluates skin scans across 6 viral skin classes using 755 source-grouped families (84.65% val accuracy, 84.22% macro F1, 0% overlap)."}
+            </p>
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Link
+                to="/features/viral-rash"
+                data-testid="home-goto-viral-rash"
+                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#818cf8] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 shadow-lg"
+              >
+                Open Viral Rash Workbench <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/research?module=viral-rash"
+                className="min-h-11 px-4 rounded-full border border-indigo-400/35 bg-[#040a18]/75 hover:bg-white/10 text-indigo-200 font-semibold text-xs inline-flex items-center gap-1.5"
+              >
+                Inspect Quarantine Audit
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================================
+          CHAPTER 03 (#ocr-chapter) · HUMAN-GATED PRESCRIPTION OCR
+          ================================================================= */}
+      <section
+        id="ocr-chapter"
+        className="relative min-h-[76vh] py-20 px-4 sm:px-6 flex items-center overflow-hidden border-b border-sky-400/20"
+      >
+        <ChapterBackdrop src="/images/backgrounds/bg-prescription-ocr.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-5 space-y-5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.2em] uppercase text-[#f2c879]">
+                <ScanText className="w-4 h-4" /> CHAPTER 03 • M04 SAFE OCR GATE
+              </span>
+              <TrustBadge kind="HUMAN_VERIFIED" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+              {locale === "bn" ? (
+                <>
+                  প্রেসক্রিপশন ওসিআর ও{" "}
+                  <span className="bg-gradient-to-r from-[#f2c879] to-[#2dd4bf] bg-clip-text text-transparent">
+                    HTTP 422 মানব-যাচাইকৃত পাইপলাইন
+                  </span>
+                </>
+              ) : (
+                <>
+                  Prescription OCR &amp;{" "}
+                  <span className="bg-gradient-to-r from-[#f2c879] to-[#2dd4bf] bg-clip-text text-transparent">
+                    Human-Verified Med Pipeline
+                  </span>
+                </>
+              )}
+            </h2>
+            <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed">
+              {locale === "bn"
+                ? "বাস্তব EasyOCR (বাংলা+ইংরেজি) এবং pypdf স্ক্যানের পর রোগী প্রতিটি ওষুধের নাম ও মাত্রা যাচাই না করলে রিমাইন্ডার চালু হয় না (HTTP 422 নিরাপত্তা বাধা)।"
+                : "Upload prescription photos or PDFs through EasyOCR (bn+en) and pypdf extraction. Server-side HTTP 422 UNVERIFIED_OCR_FIELDS locks out unverified schedules until a human confirms each item."}
+            </p>
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Link
+                to="/features/prescription-ocr"
+                data-testid="home-goto-ocr"
+                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#f2c879] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 shadow-lg"
+              >
+                Open Prescription OCR Lab <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/patient/ocr-review"
+                className="min-h-11 px-4 rounded-full border border-[#f2c879]/40 bg-[#040a18]/75 hover:bg-white/10 text-[#f2c879] font-semibold text-xs inline-flex items-center gap-1.5"
+              >
+                SQLite OCR Queue
+              </Link>
+            </div>
+          </div>
+
+          <div className="lg:col-span-7">
+            <AnimatedClinicalPipeline pauseMotion={motionPaused} />
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================================
+          CHAPTER 04 (#voice-chapter) · BANGLA VOICE AI (PHASE G DEFERRED)
+          ================================================================= */}
+      <section
+        id="voice-chapter"
+        className="relative min-h-[76vh] py-20 px-4 sm:px-6 flex items-center overflow-hidden border-b border-sky-400/20"
+      >
+        <ChapterBackdrop src="/images/backgrounds/bg-bangla-voice.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 order-2 lg:order-1">
+            <UncertaintyTrendCurveChart pauseMotion={motionPaused} />
+          </div>
+
+          <div className="lg:col-span-5 order-1 lg:order-2 space-y-5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.2em] uppercase text-purple-300">
+                <Radio className="w-4 h-4" /> CHAPTER 04 • M05 BANGLA VOICE AI
+              </span>
+              <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-200 border border-amber-400/35">
+                PHASE G DEFERRED
+              </span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+              {locale === "bn" ? (
+                <>
+                  বাংলা ভয়েস এআই ও{" "}
+                  <span className="bg-gradient-to-r from-[#c084fc] to-[#38bdf8] bg-clip-text text-transparent">
+                    FLEURS অ্যাকোস্টিক বেঞ্চমার্ক
+                  </span>
+                </>
+              ) : (
+                <>
+                  Bangla Voice ASR &amp;{" "}
+                  <span className="bg-gradient-to-r from-[#c084fc] to-[#38bdf8] bg-clip-text text-transparent">
+                    Uncertainty Trend Curve
+                  </span>
+                </>
+              )}
+            </h2>
+            <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed">
+              {locale === "bn"
+                ? "২৬টি মানব-কণ্ঠের FLEURS ক্লিপে Whisper-Small-BN দ্বারা ৯৮.৩৭% বাংলা ইউনিকোড ও ৩৯.০৯% Norm WER নিরীক্ষিত হয়েছে। লাইভ মাইক ও RAG ফেজ-জি অনুযায়ী সংরক্ষিত রয়েছে।"
+                : "Audited across 26 human FLEURS Bengali utterances (98.37% BN script purity, 39.09% norm WER vs 242.8% Whisper Base). Interactive live mic & medical RAG remain transparently scheduled for Phase G."}
+            </p>
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Link
+                to="/features/bangla-voice"
+                data-testid="home-goto-voice"
+                className="min-h-11 px-5 rounded-full border border-purple-400/45 bg-purple-500/20 hover:bg-purple-500/30 text-purple-100 font-bold text-xs inline-flex items-center gap-1.5"
+              >
+                Open Bangla Voice Studio <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/research?module=bangla-voice"
+                className="min-h-11 px-4 rounded-full border border-white/25 bg-[#040a18]/75 hover:bg-white/10 text-slate-200 font-semibold text-xs inline-flex items-center gap-1.5"
+              >
+                View Phase G Notes
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================================
+          CHAPTER 05 (#dermoped-chapter) · DERMOPED & PEDIATRIC RED-FLAG TRIAGE
+          ================================================================= */}
+      <section
+        id="dermoped-chapter"
+        className="relative min-h-[76vh] py-20 px-4 sm:px-6 flex items-center overflow-hidden border-b border-sky-400/20"
+      >
+        <ChapterBackdrop src="/images/backgrounds/bg-pediatric-care.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-5 space-y-5">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.2em] uppercase text-[#34d399]">
+                <Baby className="w-4 h-4" /> CHAPTER 05 • M06 DERMOPED &amp; PEDIATRIC
+              </span>
+              <TrustBadge kind="RESEARCH_ONLY" />
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+              {locale === "bn" ? (
+                <>
+                  ডার্মোপিড ও{" "}
+                  <span className="bg-gradient-to-r from-[#34d399] to-[#38bdf8] bg-clip-text text-transparent">
+                    ২২-রোগী কোহর্ট ওয়াফেল ম্যাট্রিক্স
+                  </span>
+                </>
+              ) : (
+                <>
+                  DermoPed AI &amp;{" "}
+                  <span className="bg-gradient-to-r from-[#34d399] to-[#38bdf8] bg-clip-text text-transparent">
+                    Patient-Isolated Triage Lab
+                  </span>
+                </>
+              )}
+            </h2>
+            <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed">
+              {locale === "bn"
+                ? "২২ জন রোগীর (১৯ Chickenpox, ৩ Pediculosis) রোগী-বিচ্ছিন্ন EXP_B মডেলে ৯২.৭৩% ইমেজ অ্যাকিউরেসি অর্জিত হয়েছে। পাশাপাশি নিশ্চিত শিশু বিপদচিহ্ন ট্রায়াজ ও ইপিআই টিকা গাইড যুক্ত আছে।"
+                : "Executes patient-isolated EXP_B ResNet18 predictions (92.73% test image accuracy) paired with explicit N=22 cohort disclosures and deterministic FR-PED-01..07 pediatric red-flag triage rules."}
+            </p>
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <Link
+                to="/features/pediatric-rash"
+                data-testid="home-goto-pediatric"
+                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#34d399] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 shadow-lg"
+              >
+                Open DermoPed &amp; Triage Page <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/patient/pediatric"
+                className="min-h-11 px-4 rounded-full border border-emerald-400/35 bg-[#040a18]/75 hover:bg-white/10 text-emerald-200 font-semibold text-xs inline-flex items-center gap-1.5"
+              >
+                Child Portal &amp; EPI
+              </Link>
+            </div>
+          </div>
+
+          <div className="lg:col-span-7">
+            <CohortWaffleMatrixChart />
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================================
+          SECTION 07 · INTERACTIVE BANGLADESH HEALTHCARE ATLAS & MAP
           ================================================================= */}
       <section id="care-map" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
         <div className="max-w-7xl mx-auto">
@@ -974,7 +1082,7 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          SECTION 04 · VERIFIED CLINICIAN DIRECTORY & QUICK DISCOVERY
+          SECTION 08 · VERIFIED CLINICIAN DIRECTORY & INSTANT SYMPTOM SEARCH
           ================================================================= */}
       <section id="journey" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
         <div className="max-w-7xl mx-auto space-y-10">
@@ -982,7 +1090,7 @@ export function PublicHomePage() {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div>
                 <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-                  04 • CLINICIAN DISCOVERY &amp; BOOKING
+                  08 • CLINICIAN DISCOVERY &amp; INSTANT SYMPTOM SEARCH
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-white">
                   {locale === "bn" ? "অনুমোদিত ডেমো চিকিৎসক ও উপসর্গ অনুসন্ধান" : "Verified Demo Clinicians & Instant Symptom Filter"}
@@ -992,6 +1100,30 @@ export function PublicHomePage() {
                 {locale === "bn" ? "সব চিকিৎসক দেখুন" : "Browse All Doctors"} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
+
+            <form onSubmit={handleQuickSearch} className="flex flex-col sm:flex-row gap-2.5 max-w-2xl">
+              <div className="flex-1 flex items-center gap-2 rounded-full bg-white/10 border border-sky-400/30 backdrop-blur-md px-4 min-h-12">
+                <Search className="w-4 h-4 text-sky-300 shrink-0" />
+                <input
+                  type="text"
+                  value={heroSearch}
+                  onChange={(e) => setHeroSearch(e.target.value)}
+                  placeholder={
+                    locale === "bn"
+                      ? "উপসর্গ, বিশেষজ্ঞ বা ডাক্তারের নাম লিখুন..."
+                      : "Search specialty, symptom (PCOS, fever, rash), or doctor..."
+                  }
+                  className="w-full bg-transparent text-white placeholder:text-slate-300/80 text-sm focus:outline-none"
+                  data-testid="hero-search-input"
+                />
+              </div>
+              <button
+                type="submit"
+                className="min-h-12 px-6 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 hover:from-sky-300 hover:to-teal-300 text-slate-950 font-bold text-sm inline-flex items-center justify-center gap-2 shadow-[0_8px_24px_rgba(56,189,248,0.35)] transition cursor-pointer shrink-0"
+              >
+                {t("publicSite.hero.ctaPrimary")} <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {quickSymptomChips.map((chip) => (

@@ -70,8 +70,12 @@ interface DivisionHub {
   districts: string[];
 }
 
-const BD_CENTER: [number, number] = [23.8103, 90.4125];
+const BD_CENTER: [number, number] = [23.685, 90.356];
 const BD_INITIAL_ZOOM = 7;
+const BD_BOUNDS: L.LatLngBoundsExpression = [
+  [20.59, 88.0],
+  [26.64, 92.69],
+];
 
 const DIVISION_HUBS: DivisionHub[] = [
   {
@@ -258,6 +262,7 @@ export function BangladeshCareMap({
   const leafletMapRef = useRef<L.Map | null>(null);
   const markerLayerRef = useRef<L.LayerGroup | null>(null);
   const divMarkersRef = useRef<Partial<Record<DivisionKey, L.Marker>>>({});
+  const hasUserInteractedRef = useRef(false);
 
   const [selectedDivKey, setSelectedDivKey] = useState<DivisionKey>("dhaka");
   const [filter, setFilter] = useState<CategoryFilter>("ALL");
@@ -340,6 +345,7 @@ export function BangladeshCareMap({
   const selectDivision = (key: DivisionKey, fly = true) => {
     const hub = DIVISION_HUBS.find((h) => h.key === key);
     if (!hub) return;
+    hasUserInteractedRef.current = true;
     setSelectedDivKey(key);
     setFlashCard(true);
     window.setTimeout(() => setFlashCard(false), 500);
@@ -360,15 +366,22 @@ export function BangladeshCareMap({
   };
 
   const resetBdMap = () => {
+    hasUserInteractedRef.current = false;
     const map = leafletMapRef.current;
     if (map) {
       map.closePopup();
-      map.flyTo(BD_CENTER, BD_INITIAL_ZOOM, { duration: motionPaused ? 0 : 1.0 });
+      const size = map.getSize();
+      if (size.x > 64 && size.y > 64) {
+        map.flyToBounds(BD_BOUNDS, { padding: [14, 14], duration: motionPaused ? 0 : 1.0 });
+      } else {
+        map.flyTo(BD_CENTER, BD_INITIAL_ZOOM, { duration: motionPaused ? 0 : 1.0 });
+      }
     }
     setSelectedDivKey("dhaka");
   };
 
   const handleUseGps = () => {
+    hasUserInteractedRef.current = true;
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setGpsStatus(locale === "bn" ? "জিপিএস উপলব্ধ নয়।" : "GPS unavailable; showing national hubs.");
       return;
@@ -410,11 +423,15 @@ export function BangladeshCareMap({
       leafletMapRef.current = null;
     }
 
+    hasUserInteractedRef.current = false;
+
     const map = L.map(el, {
       center: BD_CENTER,
       zoom: BD_INITIAL_ZOOM,
       minZoom: 6,
       maxZoom: 16,
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
       scrollWheelZoom: true,
       doubleClickZoom: true,
       touchZoom: true,
@@ -424,6 +441,44 @@ export function BangladeshCareMap({
     });
 
     leafletMapRef.current = map;
+
+    const fitBangladesh = () => {
+      const size = map.getSize();
+      if (size.x > 64 && size.y > 64) {
+        map.fitBounds(BD_BOUNDS, { padding: [14, 14], animate: false });
+      }
+    };
+
+    const markUserInteracted = () => {
+      hasUserInteractedRef.current = true;
+    };
+
+    const onContainerWheel = () => {
+      hasUserInteractedRef.current = true;
+    };
+
+    const onContainerClick = (evt: MouseEvent) => {
+      const target = evt.target as HTMLElement | null;
+      if (target?.closest(".leaflet-control-zoom")) {
+        hasUserInteractedRef.current = true;
+      }
+    };
+
+    const onContainerDblClick = () => {
+      hasUserInteractedRef.current = true;
+    };
+
+    const onContainerTouchStart = (evt: TouchEvent) => {
+      if (evt.touches.length > 1) {
+        hasUserInteractedRef.current = true;
+      }
+    };
+
+    map.on("dragstart", markUserInteracted);
+    el.addEventListener("wheel", onContainerWheel, { passive: true });
+    el.addEventListener("click", onContainerClick);
+    el.addEventListener("dblclick", onContainerDblClick);
+    el.addEventListener("touchstart", onContainerTouchStart, { passive: true });
 
     // 1. Cyber Dark ArcGIS Basemap (exact match with Land-Guard)
     L.tileLayer(
@@ -494,12 +549,36 @@ export function BangladeshCareMap({
     });
     divMarkersRef.current = divMarkerMap;
 
+    fitBangladesh();
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        if (!leafletMapRef.current) return;
+        map.invalidateSize({ animate: false });
+        if (!hasUserInteractedRef.current) {
+          fitBangladesh();
+        }
+      });
+      resizeObserver.observe(el);
+    }
+
     const resizeTimer = window.setTimeout(() => {
-      map.invalidateSize();
+      if (!leafletMapRef.current) return;
+      map.invalidateSize({ animate: false });
+      if (!hasUserInteractedRef.current) {
+        fitBangladesh();
+      }
     }, 260);
 
     return () => {
       window.clearTimeout(resizeTimer);
+      resizeObserver?.disconnect();
+      map.off("dragstart", markUserInteracted);
+      el.removeEventListener("wheel", onContainerWheel);
+      el.removeEventListener("click", onContainerClick);
+      el.removeEventListener("dblclick", onContainerDblClick);
+      el.removeEventListener("touchstart", onContainerTouchStart);
       abortCtrl.abort();
       divMarkersRef.current = {};
       markerLayerRef.current = null;
@@ -555,7 +634,7 @@ export function BangladeshCareMap({
     <div
       data-testid="bangladesh-care-map"
       data-no-tilt="true"
-      className="ss-sapphire-card relative rounded-3xl p-4 sm:p-6 space-y-5 text-white overflow-hidden"
+      className="ss-sapphire-card relative rounded-2xl sm:rounded-3xl p-3 sm:p-4 space-y-4 text-white overflow-clip"
     >
       {/* Atmospheric Aerial Map Backdrop from Land-Guard */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -618,11 +697,11 @@ export function BangladeshCareMap({
       </div>
 
       {/* Main 2-Column Land-Guard Map + Division Inspector Grid */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         {/* LEFT COLUMN (7 cols): Interactive Leaflet Map Shell */}
-        <div className="lg:col-span-7 rounded-3xl border border-slate-800 bg-slate-950/90 p-4 sm:p-5 shadow-2xl flex flex-col justify-between gap-3">
+        <div className="lg:col-span-7 rounded-2xl border border-slate-800/90 bg-slate-950/90 shadow-2xl overflow-clip flex flex-col">
           {/* Map Top Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-800/80">
+          <div className="px-3.5 py-2.5 border-b border-slate-800/80 bg-slate-950/95 shrink-0 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
               <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wider">
@@ -634,7 +713,7 @@ export function BangladeshCareMap({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-mono text-slate-400">
+              <span className="hidden xl:inline-flex items-center gap-1 text-[11px] font-mono text-slate-400">
                 <MousePointerClick className="w-3.5 h-3.5 text-cyan-400" />
                 <span>{locale === "bn" ? "মাউস জুম ও ড্র্যাগ" : "Mouse Zoom & Pan"}</span>
               </span>
@@ -658,7 +737,7 @@ export function BangladeshCareMap({
           </div>
 
           {gpsStatus ? (
-            <div className="text-[11px] font-mono text-teal-300 flex items-center gap-1.5">
+            <div className="px-3.5 py-1.5 border-b border-slate-800/60 bg-slate-950/90 shrink-0 text-[11px] font-mono text-teal-300 flex items-center gap-1.5">
               <Navigation className="w-3.5 h-3.5" />
               <span>{gpsStatus}</span>
             </div>
@@ -666,15 +745,19 @@ export function BangladeshCareMap({
 
           {/* Leaflet Canvas Container */}
           <div
-            className={`relative w-full ${
-              compact ? "h-[410px] sm:h-[460px]" : "h-[470px] sm:h-[530px]"
-            } rounded-2xl overflow-hidden border border-slate-800 shadow-inner`}
+            className={`relative w-full flex-1 ${
+              compact
+                ? "min-h-[460px] sm:min-h-[540px] lg:min-h-[580px]"
+                : "min-h-[500px] sm:min-h-[580px] lg:min-h-[640px]"
+            }`}
           >
-            <div ref={mapContainerRef} id="bd-leaflet-map" className="w-full h-full z-10" />
+            <div className="absolute inset-0">
+              <div ref={mapContainerRef} id="bd-leaflet-map" className="w-full h-full z-10" />
+            </div>
           </div>
 
           {/* Map Footnote Banner */}
-          <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 gap-2">
+          <div className="px-3.5 py-2.5 border-t border-slate-800/80 bg-slate-950/95 shrink-0 flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 gap-2">
             <span className="inline-flex items-center gap-1.5 text-amber-400">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
               {locale === "bn"
@@ -688,10 +771,10 @@ export function BangladeshCareMap({
         </div>
 
         {/* RIGHT COLUMN (5 cols): Division Healthcare Inspector & Quick Fly Controls */}
-        <div className="lg:col-span-5 flex flex-col justify-between gap-4">
+        <div className="lg:col-span-5 flex flex-col gap-3.5">
           {/* Selected Division Card */}
           <div
-            className={`rounded-2xl border border-cyan-500/40 bg-slate-900/90 p-5 sm:p-6 shadow-xl transition-all space-y-4 ${
+            className={`flex-1 flex flex-col rounded-2xl border border-cyan-500/40 bg-slate-900/90 p-4 sm:p-5 shadow-xl transition-all space-y-3.5 ${
               flashCard ? "ring-2 ring-cyan-400" : ""
             }`}
           >
@@ -746,7 +829,7 @@ export function BangladeshCareMap({
             </div>
 
             {/* Real SQLite Facilities Inside This Division */}
-            <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+            <div className="space-y-1.5 flex-1 min-h-[120px] max-h-56 overflow-y-auto overscroll-contain pr-1">
               {divisionEntities.length === 0 ? (
                 <p className="text-xs text-slate-400">
                   {locale === "bn"
@@ -782,7 +865,7 @@ export function BangladeshCareMap({
           </div>
 
           {/* 8-Division Quick Select ("Click to Inspect & Fly Map") */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/75 p-4 space-y-2.5">
+          <div className="shrink-0 rounded-2xl border border-slate-800 bg-slate-950/75 p-3.5 sm:p-4 space-y-2.5">
             <div className="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center justify-between">
               <span>{locale === "bn" ? "ক্লিক করে ম্যাপে ফ্লাই করুন:" : "Click to Inspect & Fly Map:"}</span>
               <span className="text-[10px] text-cyan-400 font-mono">8 DIVISIONS</span>
@@ -816,7 +899,7 @@ export function BangladeshCareMap({
           </div>
 
           {/* Bottom CTA Banner */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-cyan-950/60 border border-emerald-500/30 flex items-center justify-between gap-3">
+          <div className="shrink-0 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-cyan-950/60 border border-emerald-500/30 flex items-center justify-between gap-3">
             <div>
               <h5 className="text-xs font-bold text-white">
                 {locale === "bn"

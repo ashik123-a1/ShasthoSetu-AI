@@ -2,10 +2,8 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
-  Layers,
-  ShieldAlert,
-  ShieldCheck,
   Sparkles,
   Stethoscope,
 } from "lucide-react";
@@ -14,13 +12,8 @@ import { useI18n } from "../lib/i18n";
 import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
-import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
-import {
-  DigitalObservatoryDeck,
-  InteractiveBarGraph,
-  type TelemetryDeckCard,
-} from "../components/charts/AgriStyleTelemetry";
+import { HexRadarTaxonomyChart } from "../components/charts/VariedClinicalVisuals";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { TrustBadge } from "../components/ui";
 
@@ -68,122 +61,23 @@ export function ViralRashFeaturePage() {
     };
   }, []);
 
-  const telemetryCards: TelemetryDeckCard[] = [
-    {
-      id: "val-acc",
-      tag: "GROUPED VAL IMAGE ACC",
-      value: "84.65%",
-      sub: "Zero Family Leakage Split",
-      accent: "#818cf8",
-      icon: Sparkles,
-      pieCenter: "84.7%",
-      pieSub: "VAL",
-      pieSegments: [
-        { label: "Val Accuracy", pct: 84.65, color: "#818cf8" },
-        { label: "Error", pct: 15.35, color: "#0e1d38" },
-      ],
-      barSegments: [
-        { label: "Macro F1 (84.22%)", pct: 84.22, color: "#818cf8" },
-        { label: "Top-1 Margin", pct: 0.43, color: "#38bdf8" },
-      ],
-      barFootnote: "M03 Grouped ResNet18 • MCVSLD 755 visual families",
-    },
-    {
-      id: "macro-f1",
-      tag: "MACRO F1 SCORE",
-      value: "84.22%",
-      sub: "Balanced 6-Class Harmonic",
-      accent: "#38bdf8",
-      icon: Layers,
-      pieCenter: "84.2%",
-      pieSub: "F1",
-      pieSegments: [
-        { label: "Macro F1", pct: 84.22, color: "#38bdf8" },
-        { label: "Remainder", pct: 15.78, color: "#0e1d38" },
-      ],
-      barSegments: [
-        { label: "Train (528)", pct: 69.93, color: "#818cf8" },
-        { label: "Val (113)", pct: 14.97, color: "#38bdf8" },
-        { label: "Test (114)", pct: 15.1, color: "#2dd4bf" },
-      ],
-      barFootnote: "Strict 70% / 15% / 15% source-photo family grouping",
-    },
-    {
-      id: "zero-leak",
-      tag: "CROSS-SPLIT LEAKAGE",
-      value: "0.00%",
-      sub: "Verified By verify_final_lock",
-      accent: "#2dd4bf",
-      icon: ShieldCheck,
-      pieCenter: "0%",
-      pieSub: "LEAK",
-      pieSegments: [{ label: "Isolated Family Splits", pct: 100, color: "#2dd4bf" }],
-      barSegments: [{ label: "Zero Intersection Confirmed", pct: 100, color: "#2dd4bf" }],
-      barFootnote: "Historical 99.10% leaky checkpoint permanently quarantined",
-    },
-    {
-      id: "classes-6",
-      tag: "MORPHOLOGY CLASSES",
-      value: "6 Classes",
-      sub: "Dermatological Research Prototype",
-      accent: "#f2c879",
-      icon: ShieldAlert,
-      pieCenter: "6",
-      pieSub: "CLASS",
-      pieSegments: [
-        { label: "Chickenpox / Measles / HFMD", pct: 50, color: "#38bdf8" },
-        { label: "Cowpox / Mpox / Healthy", pct: 50, color: "#f2c879" },
-      ],
-      barSegments: [{ label: "Non-Diagnostic Softmax", pct: 100, color: "#f2c879" }],
-      barFootnote: "Non-Bangladesh cohort caveats require dermatologist review",
-    },
-  ];
-
-  const splitGraphItems = [
-    {
-      label: "Grouped Val Image Accuracy (resnet18_grouped_best.pth)",
-      value: 84.65,
-      displayValue: "84.65%",
-      sublabel: "Clean Grouped Evaluation",
-      color: "#818cf8",
-    },
-    {
-      label: "Grouped Validation Macro F1 Score",
-      value: 84.22,
-      displayValue: "84.22%",
-      sublabel: "6-Class Balanced",
-      color: "#38bdf8",
-    },
-    {
-      label: "Train Families Share (528 / 755 Families)",
-      value: 69.93,
-      displayValue: "69.93% (528 Families)",
-      sublabel: "Grouped Training",
-      color: "#2dd4bf",
-    },
-    {
-      label: "Validation Families Share (113 / 755 Families)",
-      value: 14.97,
-      displayValue: "14.97% (113 Families)",
-      sublabel: "Grouped Val",
-      color: "#f2c879",
-    },
-    {
-      label: "Test Families Share (114 / 755 Families)",
-      value: 15.1,
-      displayValue: "15.10% (114 Families)",
-      sublabel: "Grouped Holdout",
-      color: "#34d399",
-    },
-  ];
-
   return (
     <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-20 overflow-x-clip" data-testid="viral-rash-feature-page">
       <PageBackdropLayer imageSrc="/images/backgrounds/bg-viral-rash.jpg" />
       <PublicFloatingHeader transparentHero />
 
       <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
-        <HomeSubTabBar />
+        <div className="flex items-center justify-between">
+          <Link
+            to="/#viral-rash-chapter"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-indigo-300 hover:text-white transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> {locale === "bn" ? "হোম অধ্যায়ে ফিরুন" : "Back to Home Chapters"}
+          </Link>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+            02 / 05 • VIRAL RASH AI
+          </span>
+        </div>
 
         {/* Hero */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 space-y-5">
@@ -269,32 +163,11 @@ export function ViralRashFeaturePage() {
           />
         </section>
 
-        {/* AgriSense Telemetry Deck + Split Graph */}
+        {/* Viral Rash Signature 6-Class Hex Radar + Quarantine Audit */}
         <section className="space-y-5">
-          <DigitalObservatoryDeck
-            badgeLabel="MCVSLD 755-FAMILY GROUPED AUDIT • TEST 6 PASSED"
-            cards={telemetryCards}
-            breakdownTitle="6-Class Viral Rash Taxonomy Scope & Source Partition"
-            breakdownBars={SIX_VIRAL_CLASSES.slice(0, 4).map((c) => ({
-              name: c.name,
-              pct: 100,
-              valueLabel: "Included",
-              color: c.color,
-              note: c.note,
-            }))}
-            pauseMotion={motionPaused}
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <div className="lg:col-span-7">
-              <InteractiveBarGraph
-                title="Grouped Source-Family Validation Metrics & Partition Percentages"
-                subtitle="Reconciled from verify_final_lock.py (Test 6: 0% cross-split family overlap)."
-                items={splitGraphItems}
-                thresholdValue={84.65}
-                thresholdLabel="Val Acc 84.65%"
-                pauseMotion={motionPaused}
-              />
+              <HexRadarTaxonomyChart pauseMotion={motionPaused} />
             </div>
 
             <div className="lg:col-span-5 ss-sapphire-card rounded-3xl p-6 space-y-4 flex flex-col justify-between">

@@ -1,28 +1,22 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Activity,
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   Cpu,
   Lock,
   Mic,
   Radio,
   ShieldCheck,
-  Volume2,
 } from "lucide-react";
 import { apiGet } from "../lib/apiClient";
 import { useI18n } from "../lib/i18n";
 import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
-import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
-import {
-  DigitalObservatoryDeck,
-  InteractiveBarGraph,
-  type TelemetryDeckCard,
-} from "../components/charts/AgriStyleTelemetry";
+import { UncertaintyTrendCurveChart } from "../components/charts/VariedClinicalVisuals";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 
 const LazyAiModuleScene3D = lazy(() =>
@@ -67,130 +61,23 @@ export function BanglaVoiceFeaturePage() {
     return () => window.clearInterval(id);
   }, [motionPaused]);
 
-  const telemetryCards: TelemetryDeckCard[] = [
-    {
-      id: "bn-unicode",
-      tag: "BN UNICODE INTEGRITY",
-      value: "98.37%",
-      sub: "anuragshas/whisper-small-bn",
-      accent: "#c084fc",
-      icon: Volume2,
-      pieCenter: "98.4%",
-      pieSub: "BN",
-      pieSegments: [
-        { label: "Bengali Unicode Output", pct: 98.37, color: "#c084fc" },
-        { label: "Punctuation / Other", pct: 1.63, color: "#0e1d38" },
-      ],
-      barSegments: [
-        { label: "Smoke (97.68%)", pct: 97.68, color: "#38bdf8" },
-        { label: "Extended Lift", pct: 0.69, color: "#c084fc" },
-      ],
-      barFootnote: "vs 0.00% BN Unicode in openai/whisper-base & whisper-tiny",
-    },
-    {
-      id: "norm-wer",
-      tag: "CORPUS NORM WER",
-      value: "39.09%",
-      sub: "26 FLEURS Clips • 22 Speakers",
-      accent: "#38bdf8",
-      icon: Activity,
-      pieCenter: "39.1%",
-      pieSub: "WER",
-      pieSegments: [
-        { label: "Word Error Rate (Lower Better)", pct: 39.09, color: "#f2c879" },
-        { label: "Recognized Word Match", pct: 60.91, color: "#38bdf8" },
-      ],
-      barSegments: [
-        { label: "Mean Sample Norm WER", pct: 38.23, color: "#38bdf8" },
-        { label: "Raw WER (45.62%)", pct: 45.62, color: "#818cf8" },
-      ],
-      barFootnote: "Measured on NVIDIA RTX 5060 Ti cuda:0 • No clinical NER in FLEURS",
-    },
-    {
-      id: "norm-cer",
-      tag: "CORPUS NORM CER",
-      value: "13.44%",
-      sub: "Char Error vs 175.6% Base",
-      accent: "#2dd4bf",
-      icon: Radio,
-      pieCenter: "13.4%",
-      pieSub: "CER",
-      pieSegments: [
-        { label: "Character Accuracy Approx", pct: 86.56, color: "#2dd4bf" },
-        { label: "Normalized CER", pct: 13.44, color: "#fb7185" },
-      ],
-      barSegments: [
-        { label: "Smoke CER (8.97%)", pct: 8.97, color: "#2dd4bf" },
-        { label: "Extended CER (14.16%)", pct: 14.16, color: "#38bdf8" },
-      ],
-      barFootnote: "Mean Sample Norm CER: 12.24% (Raw CER: 14.58%)",
-    },
-    {
-      id: "phase-g-lock",
-      tag: "GOVERNANCE STATUS",
-      value: "PHASE G",
-      sub: "AI-02 Deferred Draft Scope",
-      accent: "#f2c879",
-      icon: Lock,
-      pieCenter: "LOCK",
-      pieSub: "GATE",
-      pieSegments: [{ label: "Clinical Review Required", pct: 100, color: "#f2c879" }],
-      barSegments: [{ label: "Transparently Deferred to Phase G", pct: 100, color: "#f2c879" }],
-      barFootnote: "Draft clinical transcription only — live mic/RAG gated to Phase G",
-    },
-  ];
-
-  // Real audited values directly from 05_Bangla_Voice_AI/pretrained_bengali_comparison/task_03_2/comparison_metrics.json
-  const modelComparisonItems = [
-    {
-      label: "anuragshas/whisper-small-bn — Bengali Script Purity (%)",
-      value: 98.37,
-      maxValue: 100,
-      displayValue: "98.37% BN Unicode",
-      sublabel: "Selected Candidate",
-      color: "#c084fc",
-    },
-    {
-      label: "anuragshas/whisper-small-bn — Corpus Norm WER (Lower = Better)",
-      value: 39.09,
-      maxValue: 250,
-      displayValue: "39.09% WER",
-      sublabel: "Raw WER 45.62%",
-      color: "#38bdf8",
-    },
-    {
-      label: "anuragshas/whisper-small-bn — Corpus Norm CER (Lower = Better)",
-      value: 13.44,
-      maxValue: 250,
-      displayValue: "13.44% CER",
-      sublabel: "Raw CER 14.58%",
-      color: "#2dd4bf",
-    },
-    {
-      label: "openai/whisper-base — Corpus Norm WER (Non-Bengali Script Fail)",
-      value: 242.83,
-      maxValue: 250,
-      displayValue: "242.83% WER (0.0% BN)",
-      sublabel: "Baseline Comparison",
-      color: "#fb7185",
-    },
-    {
-      label: "openai/whisper-base — Corpus Norm CER",
-      value: 175.62,
-      maxValue: 250,
-      displayValue: "175.62% CER",
-      sublabel: "Latin translit errors",
-      color: "#f2c879",
-    },
-  ];
-
   return (
     <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-20 overflow-x-clip" data-testid="bangla-voice-feature-page">
       <PageBackdropLayer imageSrc="/images/backgrounds/bg-bangla-voice.jpg" />
       <PublicFloatingHeader transparentHero />
 
       <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
-        <HomeSubTabBar />
+        <div className="flex items-center justify-between">
+          <Link
+            to="/#voice-chapter"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-purple-300 hover:text-white transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> {locale === "bn" ? "হোম অধ্যায়ে ফিরুন" : "Back to Home Chapters"}
+          </Link>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+            04 / 05 • BANGLA VOICE (PHASE G)
+          </span>
+        </div>
 
         {/* Hero Banner + 3D Neural Scene */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 space-y-5">
@@ -281,33 +168,11 @@ export function BanglaVoiceFeaturePage() {
         {/* Honest Phase G Roadmap Workbench (Reusing CyberScanWorkbench honest card) */}
         <CyberScanWorkbench activeModule="bangla-voice" />
 
-        {/* AgriSense Digital Observatory + Audited Model Comparison Graphs */}
+        {/* Bangla Voice Signature WER & Bengali Script Integrity Uncertainty Curve */}
         <section className="space-y-5">
-          <DigitalObservatoryDeck
-            badgeLabel="M05 FLEURS BENCHMARK • TASK_03_2 REPRODUCIBLE EVALUATION"
-            statusLabel="PHASE G DEFERRED • HONEST AUDIT"
-            cards={telemetryCards}
-            breakdownTitle="Pretrained Model Evaluation Summary (RTX 5060 Ti • 26 FLEURS Clips)"
-            breakdownBars={[
-              { name: "Whisper-Small-BN Unicode", pct: 98.37, valueLabel: "98.37%", color: "#c084fc", note: "Selected baseline" },
-              { name: "Whisper-Small-BN WER", pct: 39.09, valueLabel: "39.09%", color: "#38bdf8", note: "vs 242.8% Base" },
-              { name: "Whisper-Small-BN CER", pct: 13.44, valueLabel: "13.44%", color: "#2dd4bf", note: "vs 175.6% Base" },
-              { name: "Vivasoft HF Model", pct: 100, valueLabel: "401 Blocked", color: "#fb7185", note: "Gated HF repo" },
-            ]}
-            pauseMotion={motionPaused}
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <div className="lg:col-span-7">
-              <InteractiveBarGraph
-                title="Bengali ASR Pretrained Benchmark Graph (FLEURS 26 Clips / 22 Speakers)"
-                subtitle="Values verbatim from 05_Bangla_Voice_AI/pretrained_bengali_comparison/task_03_2/comparison_metrics.json."
-                items={modelComparisonItems}
-                unit="%"
-                thresholdValue={40}
-                thresholdLabel="39.09% Target WER"
-                pauseMotion={motionPaused}
-              />
+              <UncertaintyTrendCurveChart pauseMotion={motionPaused} />
             </div>
 
             <div className="lg:col-span-5 ss-sapphire-card rounded-3xl p-6 space-y-4 flex flex-col justify-between">

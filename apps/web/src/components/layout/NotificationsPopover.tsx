@@ -57,7 +57,7 @@ export function NotificationsPopover({
 
   const btnClasses =
     variant === "capsule"
-      ? `relative min-h-11 min-w-11 px-2.5 rounded-full flex items-center justify-center transition cursor-pointer ${
+      ? `relative h-8 w-8 rounded-full flex items-center justify-center transition cursor-pointer ${
           darkOverlay
             ? "bg-white/5 hover:bg-white/15 border border-white/15 text-slate-100"
             : "bg-[var(--color-surface-alt)] hover:bg-[var(--color-border)] border border-[var(--color-border)] text-[var(--color-text)]"
@@ -81,9 +81,9 @@ export function NotificationsPopover({
         data-testid="notifications-bell-btn"
         className={btnClasses}
       >
-        <Bell className="w-4 h-4" />
+        <Bell className="w-3.5 h-3.5" />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-4.5 h-4.5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow">
+          <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center shadow">
             {unread > 9 ? "9+" : unread}
           </span>
         )}

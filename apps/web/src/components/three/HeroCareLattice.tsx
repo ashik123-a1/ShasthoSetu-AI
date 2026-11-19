@@ -209,6 +209,8 @@ export function HeroCareLattice({
       <WebGlErrorBoundary fallback={<StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />}>
         <Canvas
           dpr={[1, 1.6]}
+          gl={{ alpha: true, antialias: true }}
+          style={{ background: "transparent" }}
           camera={{ position: [0, 0, 6.4], fov: 42 }}
           frameloop={inView && !motionPaused ? "always" : "never"}
           onCreated={({ gl }) => {

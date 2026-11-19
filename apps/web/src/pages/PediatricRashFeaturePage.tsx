@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   Baby,
   CalendarCheck2,
@@ -13,16 +14,10 @@ import {
 } from "lucide-react";
 import { apiGet } from "../lib/apiClient";
 import { useI18n } from "../lib/i18n";
-import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
-import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
-import {
-  DigitalObservatoryDeck,
-  InteractiveBarGraph,
-  type TelemetryDeckCard,
-} from "../components/charts/AgriStyleTelemetry";
+import { CohortWaffleMatrixChart } from "../components/charts/VariedClinicalVisuals";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { TrustBadge } from "../components/ui";
 
@@ -56,7 +51,6 @@ function deroNote(ds?: ResearchDataset) {
 
 export function PediatricRashFeaturePage() {
   const { locale } = useI18n();
-  const { motionPaused } = usePreferences();
   const [scanning, setScanning] = useState(false);
   const [lastConf, setLastConf] = useState<number | null>(null);
   const [datasets, setDatasets] = useState<ResearchDataset[]>([]);
@@ -119,113 +113,23 @@ export function PediatricRashFeaturePage() {
     return { reportedFacts, missingFacts, ruleTriggers, level };
   }, [ageBand, feverDays, breathingDistress, lethargyOrConvulsions, spreadingRash, vaccinesUpToDate]);
 
-  const telemetryCards: TelemetryDeckCard[] = [
-    {
-      id: "dermoped-acc",
-      tag: "EXP_B TEST IMAGE ACC",
-      value: "92.73%",
-      sub: "Patient-Separated Eval",
-      accent: "#34d399",
-      icon: Baby,
-      pieCenter: "92.7%",
-      pieSub: "TEST",
-      pieSegments: [
-        { label: "EXP_B Test Image Acc", pct: 92.73, color: "#34d399" },
-        { label: "Error Rate", pct: 7.27, color: "#0e1d38" },
-      ],
-      barSegments: [
-        { label: "Chickenpox (19 pts)", pct: 86.36, color: "#34d399" },
-        { label: "Pediculosis (3 pts)", pct: 13.64, color: "#f2c879" },
-      ],
-      barFootnote: "Local cohort N=22 patients • 656 region crops",
-    },
-    {
-      id: "patient-count",
-      tag: "VERIFIED COHORT",
-      value: "22 Pts",
-      sub: "pt72 / pt71 / pt74 Pediculosis",
-      accent: "#f2c879",
-      icon: FlaskConical,
-      pieCenter: "22",
-      pieSub: "PTS",
-      pieSegments: [
-        { label: "Chickenpox (19 pts)", pct: 86.4, color: "#38bdf8" },
-        { label: "Pediculosis (3 pts)", pct: 13.6, color: "#f2c879" },
-      ],
-      barSegments: [
-        { label: "Train + Val + Test Isolated", pct: 100, color: "#38bdf8" },
-      ],
-      barFootnote: "Strict patient isolation • full 19 GB Zenodo not local",
-    },
-    {
-      id: "sha-ckpt",
-      tag: "SHA-256 CHECKPOINTS",
-      value: "2 Models",
-      sub: "EXP_B (44.8MB) & EXP_D",
-      accent: "#38bdf8",
-      icon: ShieldCheck,
-      pieCenter: "100%",
-      pieSub: "SHA",
-      pieSegments: [{ label: "Verified Weights", pct: 100, color: "#38bdf8" }],
-      barSegments: [
-        { label: "EXP_B 5a98...8da", pct: 50, color: "#38bdf8" },
-        { label: "EXP_D e9ef...e67", pct: 50, color: "#2dd4bf" },
-      ],
-      barFootnote: "DERMOPED_PATIENT_CHECKPOINT_VERIFICATION.csv (Test 1 & 2)",
-    },
-    {
-      id: "red-flag-rules",
-      tag: "PEDIATRIC RED-FLAG ENGINE",
-      value: "Zero Risk",
-      sub: "Unknown Never = Low Risk",
-      accent: "#2dd4bf",
-      icon: Thermometer,
-      pieCenter: "SAFE",
-      pieSub: "RULES",
-      pieSegments: [{ label: "Deterministic Escalation", pct: 100, color: "#2dd4bf" }],
-      barSegments: [{ label: "Mandatory Clinician Warning", pct: 100, color: "#2dd4bf" }],
-      barFootnote: "FR-PED-02 & FR-PED-03 emergency chest-indrawing & lethargy guard",
-    },
-  ];
-
-  const cohortGraphItems = [
-    {
-      label: "EXP_B Checkpoint Test Image Accuracy (Patient-Separated)",
-      value: 92.73,
-      displayValue: "92.73% Image Acc",
-      sublabel: "proofs/EXP_B/model_best.pth",
-      color: "#34d399",
-    },
-    {
-      label: "Chickenpox Cohort Share (19 / 22 Verified Patients)",
-      value: 86.36,
-      displayValue: "86.36% (19 Patients)",
-      sublabel: "Primary Local Cohort",
-      color: "#38bdf8",
-    },
-    {
-      label: "Pediculosis Cohort Share (3 / 22 Patients — Severe Constraint)",
-      value: 13.64,
-      displayValue: "13.64% (pt72 / pt71 / pt74)",
-      sublabel: "3 Patients Total",
-      color: "#f2c879",
-    },
-    {
-      label: "SAM Segmentation Artifacts Excluded From Clinician Ground Truth",
-      value: 100,
-      displayValue: "100% Isolated Caveat",
-      sublabel: "FR-SKIN-04",
-      color: "#818cf8",
-    },
-  ];
-
   return (
     <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-20 overflow-x-clip" data-testid="pediatric-feature-page">
       <PageBackdropLayer imageSrc="/images/backgrounds/bg-pediatric-care.jpg" />
       <PublicFloatingHeader transparentHero />
 
       <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
-        <HomeSubTabBar />
+        <div className="flex items-center justify-between">
+          <Link
+            to="/#dermoped-chapter"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-[#34d399] hover:text-white transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> {locale === "bn" ? "হোম অধ্যায়ে ফিরুন" : "Back to Home Chapters"}
+          </Link>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-400">
+            05 / 05 • DERMOPED &amp; TRIAGE
+          </span>
+        </div>
 
         {/* Hero + 3D Scene */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 space-y-5">
@@ -309,29 +213,9 @@ export function PediatricRashFeaturePage() {
           />
         </section>
 
-        {/* AgriSense Telemetry Deck + 22-Patient Cohort Graph */}
+        {/* DermoPed Signature Interactive 22-Patient Cohort Waffle Matrix */}
         <section className="space-y-5">
-          <DigitalObservatoryDeck
-            badgeLabel="M06 DERMOPED AUDIT • 22 PATIENTS (19 CHICKENPOX / 3 PEDICULOSIS)"
-            cards={telemetryCards}
-            breakdownTitle="Patient-Separated Split & Safety Constraints"
-            breakdownBars={[
-              { name: "EXP_B Test Image Acc", pct: 92.73, valueLabel: "92.73%", color: "#34d399", note: "Chickenpox majority" },
-              { name: "Chickenpox Share", pct: 86.36, valueLabel: "19 / 22 Pts", color: "#38bdf8", note: "Patient isolated" },
-              { name: "Pediculosis Share", pct: 13.64, valueLabel: "3 / 22 Pts", color: "#f2c879", note: "pt72/pt71/pt74" },
-              { name: "Clinician Review Gate", pct: 100, valueLabel: "MANDATORY", color: "#818cf8", note: "Never standalone dx" },
-            ]}
-            pauseMotion={motionPaused}
-          />
-
-          <InteractiveBarGraph
-            title="DermoPed Local Cohort Distribution & Checkpoint Integrity Graph"
-            subtitle="Reconciled via verify_final_lock.py (Tests 1 & 2). Severe Pediculosis sample limitation highlighted in amber."
-            items={cohortGraphItems}
-            thresholdValue={85}
-            thresholdLabel="85% Reference"
-            pauseMotion={motionPaused}
-          />
+          <CohortWaffleMatrixChart />
         </section>
 
         {/* Deterministic Triage Rules Simulator + Output Breakdown (Preserved) */}
