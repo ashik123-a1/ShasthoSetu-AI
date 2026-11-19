@@ -13,8 +13,9 @@ export class ApiError extends Error {
 }
 
 async function requestJson<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   const headers: Record<string, string> = {
-    ...(options.body ? { "Content-Type": "application/json" } : {}),
+    ...(options.body && !isFormData ? { "Content-Type": "application/json" } : {}),
     ...((options.headers as Record<string, string>) || {}),
   };
 
@@ -76,4 +77,11 @@ export function apiPatch<T>(url: string, body?: unknown): Promise<T> {
 
 export function apiDelete<T>(url: string): Promise<T> {
   return requestJson<T>(url, { method: "DELETE" });
+}
+
+export function apiPostForm<T>(url: string, formData: FormData): Promise<T> {
+  return requestJson<T>(url, {
+    method: "POST",
+    body: formData,
+  });
 }

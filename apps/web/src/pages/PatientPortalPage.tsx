@@ -21,6 +21,7 @@ import { formatBdtFromPoisha, formatDhakaDateTime } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { PortalLayout } from "../components/layout/PortalLayout";
 import { Skeleton, StatusBadge, StatCard, TrustBadge, useToast } from "../components/ui";
+import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 
 interface PatientDashboardData {
   profiles: Array<{ id: string; display_name: string; relationship_type: string; date_of_birth?: string; blood_group?: string; district?: string }>;
@@ -145,6 +146,9 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
   const [ocrDraftEdits, setOcrDraftEdits] = useState<Record<string, string>>({});
   const [pcosEntries, setPcosEntries] = useState<Array<{ id: string; start_date: string; cycle_length_days?: number; user_notes?: string; symptoms_json: string }>>([]);
   const [pediatricData, setPediatricData] = useState<{ vaccines: Array<Record<string, string>>; cases: Array<Record<string, string>> } | null>(null);
+  const [aiDrafts, setAiDrafts] = useState<Array<{ id: string; module_key: string; model_id: string; input_summary: string; doctor_review_status: string; doctor_notes?: string; reviewed_doctor_name?: string; created_at_utc: string }>>([]);
+  const [pcosAiMode, setPcosAiMode] = useState<"pcos-clinical" | "pcos-ultrasound">("pcos-clinical");
+  const [pedAiMode, setPedAiMode] = useState<"viral-rash" | "dermoped">("viral-rash");
   const [diagTests, setDiagTests] = useState<Array<{ id: string; code: string; name_bn: string; name_en: string; fee_minor_poisha: number }>>([]);
   const [consultations, setConsultations] = useState<Array<Record<string, string>>>([]);
 
@@ -175,11 +179,22 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
         setDoctors(docsRes.doctors || []);
       } else if (section === "records" || section === "ocr") {
         setOcrData(await apiGet<OcrPayload>("/v1/patient/documents"));
+        const dRes = await apiGet<{ drafts: typeof aiDrafts }>("/v1/ai/drafts/mine");
+        setAiDrafts(dRes.drafts || []);
       } else if (section === "pcos") {
-        const p = await apiGet<{ entries: typeof pcosEntries }>("/v1/patient/pcos");
+        const [p, dRes] = await Promise.all([
+          apiGet<{ entries: typeof pcosEntries }>("/v1/patient/pcos"),
+          apiGet<{ drafts: typeof aiDrafts }>("/v1/ai/drafts/mine"),
+        ]);
         setPcosEntries(p.entries || []);
+        setAiDrafts(dRes.drafts || []);
       } else if (section === "pediatric") {
-        setPediatricData(await apiGet("/v1/patient/pediatric"));
+        const [pedRes, dRes] = await Promise.all([
+          apiGet<{ vaccines: Array<Record<string, string>>; cases: Array<Record<string, string>> }>("/v1/patient/pediatric"),
+          apiGet<{ drafts: typeof aiDrafts }>("/v1/ai/drafts/mine"),
+        ]);
+        setPediatricData(pedRes);
+        setAiDrafts(dRes.drafts || []);
       } else if (section === "diagnostics") {
         const svc = await apiGet<{ diagnostic_tests: typeof diagTests }>("/v1/public/services");
         setDiagTests(svc.diagnostic_tests || []);
@@ -665,8 +680,17 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
               <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs flex items-start gap-2.5">
                 <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
                 <div>
-                  <strong>Mandatory Human Safety Gate (HTTP 422):</strong> Uncertain OCR fields cannot generate active reminders until you verify every critical item manually.
+                  <strong>Mandatory Human Safety Gate (HTTP 422):</strong> Upload any JPG/PNG/PDF prescription below to execute real bilingual EasyOCR and queue extracted fields into your human-gated verification workflow.
                 </div>
+              </div>
+
+              <div className="ss-sapphire-always rounded-3xl p-4 sm:p-5">
+                <CyberScanWorkbench
+                  activeModule="prescription-ocr"
+                  persistOcrToQueue
+                  compact
+                  onDraftSaved={() => void loadAll()}
+                />
               </div>
 
               {ocrData.ocr_jobs.map((job) => (
@@ -792,6 +816,49 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                   </div>
                 ))}
               </div>
+
+              {/* Real M01 XGBoost & M02 Ultrasound Inference + Doctor Draft Sharing */}
+              <div className="ss-sapphire-always rounded-3xl p-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm font-bold text-white">Real PCOS AI Models (M01 Clinical XGBoost &amp; M02 Ultrasound)</div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPcosAiMode("pcos-clinical")}
+                      className={`min-h-10 px-3.5 rounded-full text-xs font-bold cursor-pointer ${
+                        pcosAiMode === "pcos-clinical" ? "bg-sky-400 text-slate-950" : "border border-white/20 text-slate-200"
+                      }`}
+                    >
+                      Clinical Tabular XGBoost
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPcosAiMode("pcos-ultrasound")}
+                      className={`min-h-10 px-3.5 rounded-full text-xs font-bold cursor-pointer ${
+                        pcosAiMode === "pcos-ultrasound" ? "bg-teal-400 text-slate-950" : "border border-white/20 text-slate-200"
+                      }`}
+                    >
+                      Ultrasound Image ResNet18
+                    </button>
+                  </div>
+                </div>
+                <CyberScanWorkbench activeModule={pcosAiMode} compact onDraftSaved={() => void loadAll()} />
+              </div>
+
+              {aiDrafts.length > 0 && (
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2.5">
+                  <h3 className="font-bold text-sm">Saved AI Research Drafts &amp; Doctor Reviews</h3>
+                  {aiDrafts.map((d) => (
+                    <div key={d.id} className="p-3 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] text-xs flex flex-wrap justify-between gap-2">
+                      <div>
+                        <strong>{d.module_key}</strong> ({d.model_id}) — {d.input_summary}
+                        {d.doctor_notes && <div className="text-emerald-600 dark:text-emerald-300 mt-1">Clinician Note: {d.doctor_notes}</div>}
+                      </div>
+                      <StatusBadge status={d.doctor_review_status} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -853,6 +920,49 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                   ))}
                 </div>
               </div>
+
+              {/* Real Viral Rash (M03) & DermoPed (M06) Inference + Doctor Share */}
+              <div className="ss-sapphire-always rounded-3xl p-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm font-bold text-white">Skin Lesion / Rash Real AI Research Models (Non-Diagnostic)</div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPedAiMode("viral-rash")}
+                      className={`min-h-10 px-3.5 rounded-full text-xs font-bold cursor-pointer ${
+                        pedAiMode === "viral-rash" ? "bg-[#818cf8] text-slate-950" : "border border-white/20 text-slate-200"
+                      }`}
+                    >
+                      Viral Rash (M03 Grouped)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPedAiMode("dermoped")}
+                      className={`min-h-10 px-3.5 rounded-full text-xs font-bold cursor-pointer ${
+                        pedAiMode === "dermoped" ? "bg-emerald-400 text-slate-950" : "border border-white/20 text-slate-200"
+                      }`}
+                    >
+                      DermoPed (M06 EXP_B)
+                    </button>
+                  </div>
+                </div>
+                <CyberScanWorkbench activeModule={pedAiMode} compact onDraftSaved={() => void loadAll()} />
+              </div>
+
+              {aiDrafts.length > 0 && (
+                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2.5">
+                  <h3 className="font-bold text-sm">Saved AI Research Drafts &amp; Doctor Reviews</h3>
+                  {aiDrafts.map((d) => (
+                    <div key={d.id} className="p-3 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] text-xs flex flex-wrap justify-between gap-2">
+                      <div>
+                        <strong>{d.module_key}</strong> ({d.model_id}) — {d.input_summary}
+                        {d.doctor_notes && <div className="text-emerald-600 dark:text-emerald-300 mt-1">Clinician Note: {d.doctor_notes}</div>}
+                      </div>
+                      <StatusBadge status={d.doctor_review_status} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

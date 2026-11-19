@@ -7,6 +7,19 @@ import { useI18n } from "../lib/i18n";
 import { PortalLayout } from "../components/layout/PortalLayout";
 import { Skeleton, StatCard, StatusBadge, useToast } from "../components/ui";
 
+interface DoctorAiDraft {
+  id: string;
+  module_key: string;
+  model_id: string;
+  input_summary: string;
+  confidence_score: number;
+  patient_name?: string;
+  submitted_by_name?: string;
+  doctor_review_status: string;
+  doctor_notes?: string;
+  created_at_utc: string;
+}
+
 interface DoctorDashResponse {
   approved: boolean;
   verification_status: string;
@@ -27,6 +40,8 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
   const [availability, setAvailability] = useState<{ slots: Array<Record<string, unknown>>; rules: Array<Record<string, unknown>> } | null>(null);
   const [appointments, setAppointments] = useState<Array<Record<string, unknown>>>([]);
   const [workspace, setWorkspace] = useState<Record<string, unknown> | null>(null);
+  const [aiDraftQueue, setAiDraftQueue] = useState<DoctorAiDraft[]>([]);
+  const [draftNotes, setDraftNotes] = useState<Record<string, string>>({});
 
   // Form inputs
   const [slotDate, setSlotDate] = useState("2027-02-10");
@@ -51,6 +66,8 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
       setFeeBdt(Math.round(Number(d.doctor_profile?.consultation_fee_minor_poisha || 50000) / 100));
 
       if (d.approved) {
+        const qRes = await apiGet<{ drafts: DoctorAiDraft[] }>("/v1/ai/drafts/doctor-queue");
+        setAiDraftQueue(qRes.drafts || []);
         if (section === "availability" || section === "calendar") {
           setAvailability(await apiGet("/v1/doctor/availability"));
         } else if (section === "appointments" || section === "referrals") {
@@ -101,6 +118,65 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
     pushToast({ title: `Queue status -> ${status}`, tone: "success" });
     await loadData();
   };
+
+  const reviewAiDraft = async (draftId: string, reviewStatus: "CLINICIAN_REVIEWED" | "FLAGGED_INCONCLUSIVE") => {
+    const note = (draftNotes[draftId] || "").trim() || "Reviewed research draft alongside clinical encounter context.";
+    await apiPost(`/v1/ai/drafts/${draftId}/review`, {
+      doctor_review_status: reviewStatus,
+      doctor_notes: note,
+    });
+    pushToast({ title: `AI Draft marked ${reviewStatus}`, tone: "success" });
+    await loadData();
+  };
+
+  const renderAiDraftsPanel = () => (
+    <div className="rounded-2xl border border-sky-500/35 bg-[var(--color-surface)] p-5 space-y-3" data-testid="doctor-ai-drafts-panel">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-bold text-base">Patient Consented AI Research Drafts &amp; OCR Review ({aiDraftQueue.length})</h2>
+        <span className="font-mono text-[11px] text-amber-600 dark:text-amber-300">NON-DIAGNOSTIC • CLINICIAN VERIFICATION</span>
+      </div>
+      {aiDraftQueue.length === 0 ? (
+        <p className="text-xs text-[var(--color-text-muted)]">No patient AI drafts shared for review yet.</p>
+      ) : (
+        aiDraftQueue.map((d) => (
+          <div key={d.id} className="p-4 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] space-y-2.5 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span className="font-bold text-sm">{d.patient_name || d.submitted_by_name}</span> •{" "}
+                <span className="font-mono text-sky-600 dark:text-sky-300">{d.module_key}</span> ({d.model_id})
+              </div>
+              <StatusBadge status={d.doctor_review_status} />
+            </div>
+            <div className="font-mono text-xs">{d.input_summary}</div>
+            {d.doctor_notes && <div className="text-emerald-600 dark:text-emerald-300">Signed Note: {d.doctor_notes}</div>}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={draftNotes[d.id] ?? d.doctor_notes ?? ""}
+                onChange={(e) => setDraftNotes((prev) => ({ ...prev, [d.id]: e.target.value }))}
+                placeholder="Add clinician review remarks (visible to patient)..."
+                className="flex-1 min-h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => void reviewAiDraft(d.id, "CLINICIAN_REVIEWED")}
+                className="min-h-10 px-3.5 rounded-lg bg-emerald-600 text-white font-semibold cursor-pointer"
+              >
+                Sign Clinician Review
+              </button>
+              <button
+                type="button"
+                onClick={() => void reviewAiDraft(d.id, "FLAGGED_INCONCLUSIVE")}
+                className="min-h-10 px-3 rounded-lg border border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold cursor-pointer"
+              >
+                Flag Inconclusive
+              </button>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
 
   const saveNote = async (state: "DRAFT" | "SIGNED") => {
     if (!appointmentId) return;
@@ -204,6 +280,9 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
                   </div>
                 ))}
               </div>
+
+              {/* Patient-Consented AI Research Draft Review Queue */}
+              {renderAiDraftsPanel()}
             </>
           )}
 
@@ -320,6 +399,7 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
                   ))}
                 </div>
               </form>
+              <div className="lg:col-span-12">{renderAiDraftsPanel()}</div>
             </div>
           )}
 

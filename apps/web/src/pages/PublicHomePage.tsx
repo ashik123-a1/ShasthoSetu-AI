@@ -582,94 +582,177 @@ export function PublicHomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Module 1: PCOS */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-5 hover:border-sky-400/60 transition">
-              <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {/* 1. PCOS Clinical AI */}
+            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-sky-400/60 transition">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="w-11 h-11 rounded-2xl bg-[#818cf8]/20 border border-[#818cf8]/40 flex items-center justify-center text-[#c7d2fe]">
+                  <div className="w-10 h-10 rounded-xl bg-sky-400/15 border border-sky-400/35 flex items-center justify-center text-sky-300">
                     <CalendarHeart className="w-5 h-5" />
                   </div>
                   <TrustBadge kind="RESEARCH_ONLY" />
                 </div>
-                <div className="font-mono text-[11px] text-sky-300">M01 XGBoost (88.57%) • M02 Ultrasound (86.67%)</div>
-                <h3 className="text-xl font-bold text-white">
-                  {locale === "bn" ? "পিসিওএস যত্ন ও নন-ডায়াগনস্টিক স্টুডিও" : "PCOS Care Studio & Non-Diagnostic ML"}
-                </h3>
+                <div className="font-mono text-[11px] text-sky-300">M01 XGBoost • Age, BMI &amp; Hormone Form</div>
+                <h3 className="text-lg font-bold text-white">1. PCOS Clinical AI</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  {locale === "bn"
-                    ? "মাসিক চক্র ট্র্যাকার, চিকিৎসক ভিজিট সারাংশ নির্মাতা ও M01 ক্লিনিকাল XGBoost / M02 PCOM আল্ট্রাসাউন্ড পৃথক গবেষণা প্রদর্শনী।"
-                    : "Cycle tracking prep summary builder plus separate M01 clinical XGBoost risk preview and M02 PCOM ultrasound morphology benchmarks."}
+                  Structured 20-feature clinical profile input with SimpleImputer running the real `model_best.joblib` probability pipeline (88.57% CV bal acc).
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/research?module=pcos-clinical"
+                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
+                >
+                  Try Research Demo <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  to="/features/pcos"
+                  data-testid="home-goto-pcos"
+                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
+                >
+                  PCOS Page
+                </Link>
+              </div>
+            </article>
+
+            {/* 2. PCOS Ultrasound AI */}
+            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-teal-400/60 transition">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-teal-400/15 border border-teal-400/35 flex items-center justify-center text-teal-300">
+                    <FlaskConical className="w-5 h-5" />
+                  </div>
+                  <TrustBadge kind="RESEARCH_ONLY" />
+                </div>
+                <div className="font-mono text-[11px] text-teal-300">M02 ResNet18 • Ultrasound Upload (JPG/PNG)</div>
+                <h3 className="text-lg font-bold text-white">2. PCOS Ultrasound AI</h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Upload ovarian ultrasound scans with CyberScan inspection to classify PCOM / Dominant Follicle / Normal morphology (86.67% held-out test).
                 </p>
               </div>
               <Link
-                to="/features/pcos"
-                data-testid="home-goto-pcos"
-                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#38bdf8] to-[#818cf8] text-slate-950 font-bold text-xs inline-flex items-center justify-between"
+                to="/research?module=pcos-ultrasound"
+                className="min-h-11 px-4 rounded-full bg-gradient-to-r from-[#2dd4bf] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-between"
               >
-                <span>{locale === "bn" ? "PCOS পাতা খুলুন" : "Open PCOS Page"}</span>
+                <span>Try Research Demo</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </article>
 
-            {/* Module 2: Safe OCR & Meds */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-5 hover:border-teal-400/60 transition">
-              <div className="space-y-3">
+            {/* 3. Viral Rash AI */}
+            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-indigo-400/60 transition">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="w-11 h-11 rounded-2xl bg-[#f2c879]/15 border border-[#f2c879]/40 flex items-center justify-center text-[#f2c879]">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-400/15 border border-indigo-400/35 flex items-center justify-center text-indigo-300">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-400/15 text-indigo-200 border border-indigo-400/35">
+                    755-FAMILY SPLIT
+                  </span>
+                </div>
+                <div className="font-mono text-[11px] text-indigo-300">M03 Grouped ResNet18 • Skin Lesion Upload</div>
+                <h3 className="text-lg font-bold text-white">3. Viral Rash AI</h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Upload skin rash images for leak-free 6-class research softmax probabilities (Chickenpox, Measles, HFMD, Cowpox, Monkeypox, Healthy).
+                </p>
+              </div>
+              <Link
+                to="/research?module=viral-rash"
+                className="min-h-11 px-4 rounded-full bg-gradient-to-r from-[#818cf8] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-between"
+              >
+                <span>Try Research Demo</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </article>
+
+            {/* 4. Prescription OCR */}
+            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-amber-400/60 transition">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-[#f2c879]/15 border border-[#f2c879]/40 flex items-center justify-center text-[#f2c879]">
                     <ScanText className="w-5 h-5" />
                   </div>
                   <TrustBadge kind="HUMAN_VERIFIED" />
                 </div>
-                <div className="font-mono text-[11px] text-[#f2c879]">M04 Bilingual Rx (1,000 Rows) • HTTP 422 Gate</div>
-                <h3 className="text-xl font-bold text-white">
-                  {locale === "bn" ? "প্রেসক্রিপশন OCR ও নিরাপদ ওষুধ ভল্ট" : "Prescription OCR & Safe Medication Vault"}
-                </h3>
+                <div className="font-mono text-[11px] text-[#f2c879]">M04 EasyOCR bn+en • Image/PDF Upload</div>
+                <h3 className="text-lg font-bold text-white">4. Prescription OCR</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  {locale === "bn"
-                    ? "বাংলা-ইংরেজি বাউন্ডিং বক্স, কম-আত্মবিশ্বাস ডোজ সতর্কতা ও মানুষ যাচাই না করা পর্যন্ত ৪২২ নিরাপত্তা লক পরীক্ষা করুন।"
-                    : "Side-by-side bounding-box verification simulator enforcing the live HTTP 422 safety lock before Asia/Dhaka reminders unlock."}
+                  Laser scan + EasyOCR extracts bilingual text &amp; editable medicine fields locked behind HTTP 422 human verification.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/research?module=prescription-ocr"
+                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#f2c879] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
+                >
+                  Try Research Demo <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  to="/features/prescription-ocr"
+                  data-testid="home-goto-ocr"
+                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
+                >
+                  OCR Page
+                </Link>
+              </div>
+            </article>
+
+            {/* 5. Bangla Voice AI (Phase G) */}
+            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-purple-400/60 transition">
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-purple-400/15 border border-purple-400/35 flex items-center justify-center text-purple-300">
+                    <Radio className="w-5 h-5" />
+                  </div>
+                  <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-200 border border-amber-400/35">
+                    PHASE G DEFERRED
+                  </span>
+                </div>
+                <div className="font-mono text-[11px] text-purple-300">M05 Whisper-Small-BN • 39.09% WER</div>
+                <h3 className="text-lg font-bold text-white">5. Bangla Voice AI</h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Audited on 26 human FLEURS clips (98.37% Bengali Unicode). Interactive mic/RAG flow activates in Phase G per project roadmap.
                 </p>
               </div>
               <Link
-                to="/features/prescription-ocr"
-                data-testid="home-goto-ocr"
-                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#2dd4bf] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-between"
+                to="/research?module=bangla-voice"
+                className="min-h-11 px-4 rounded-full border border-purple-400/40 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 font-bold text-xs inline-flex items-center justify-between"
               >
-                <span>{locale === "bn" ? "নিরাপদ OCR পাতা খুলুন" : "Open Safe OCR Page"}</span>
+                <span>View Phase G Preview</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </article>
 
-            {/* Module 3: Pediatric, Viral Rash & DermoPed */}
-            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-5 hover:border-teal-300/60 transition">
-              <div className="space-y-3">
+            {/* 6. DermoPed AI */}
+            <article className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-emerald-400/60 transition">
+              <div className="space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="w-11 h-11 rounded-2xl bg-[#2dd4bf]/15 border border-[#2dd4bf]/40 flex items-center justify-center text-[#2dd4bf]">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-400/15 border border-emerald-400/35 flex items-center justify-center text-emerald-300">
                     <Baby className="w-5 h-5" />
                   </div>
-                  <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-teal-400/15 text-teal-200 border border-teal-400/35">
-                    DETERMINISTIC + M03/M06
-                  </span>
+                  <TrustBadge kind="RESEARCH_ONLY" />
                 </div>
-                <div className="font-mono text-[11px] text-teal-300">M03 MCVSLD (84.65%) • M06 DermoPed (22 Pt)</div>
-                <h3 className="text-xl font-bold text-white">
-                  {locale === "bn" ? "শিশু জরুরি ট্রায়াজ, ভাইরাল র‍্যাশ ও টিকা" : "Pediatric Triage, Viral Rash & DermoPed"}
-                </h3>
+                <div className="font-mono text-[11px] text-emerald-300">M06 EXP_B ResNet18 • N=22 Patients</div>
+                <h3 className="text-lg font-bold text-white">6. DermoPed AI</h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  {locale === "bn"
-                    ? "অনিশ্চিত উত্তর কখনো কম-ঝুঁকি ধরা হয় না; সাথে বাংলাদেশ EPI টিকা সূচি ও পৃথক ভাইরাল র‍্যাশ/ডার্মোপিড অডিট।"
-                    : "Deterministic fever/rash escalation rules (unknown fields elevate caution), Bangladesh EPI schedule, and leak-free M03/M06 cards."}
+                  Pediatric chickenpox / pediculosis research classifier with mandatory clinician review warnings &amp; strict small-cohort disclosure.
                 </p>
               </div>
-              <Link
-                to="/features/pediatric-rash"
-                data-testid="home-goto-pediatric"
-                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#f2c879] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center justify-between"
-              >
-                <span>{locale === "bn" ? "শিশু ও র‍্যাশ পাতা খুলুন" : "Open Pediatric & Rash Page"}</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/research?module=dermoped"
+                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#34d399] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
+                >
+                  Try Research Demo <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  to="/features/pediatric-rash"
+                  data-testid="home-goto-pediatric"
+                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
+                >
+                  Triage Page
+                </Link>
+              </div>
             </article>
           </div>
         </div>

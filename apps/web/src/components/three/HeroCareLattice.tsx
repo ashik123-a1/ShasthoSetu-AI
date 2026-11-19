@@ -36,6 +36,9 @@ function CareLatticeScene({
   const ring1Ref = useRef<THREE.Mesh>(null);
   const ring2Ref = useRef<THREE.Mesh>(null);
 
+  const haloRef = useRef<THREE.Group>(null);
+  const ring3Ref = useRef<THREE.Mesh>(null);
+
   const colorHex = LAYER_COLORS[activeLayer % LAYER_COLORS.length];
 
   const nodePositions = useMemo(() => {
@@ -53,17 +56,40 @@ function CareLatticeScene({
     return pts;
   }, []);
 
+  const outerParticles = useMemo(() => {
+    const pts: Array<[number, number, number]> = [];
+    for (let i = 0; i < 24; i += 1) {
+      const phi = Math.acos(1 - (2 * (i + 0.5)) / 24);
+      const theta = Math.PI * (1 + Math.sqrt(5)) * (i + 7);
+      const r = 2.86;
+      pts.push([
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.sin(phi) * Math.sin(theta),
+        r * Math.cos(phi),
+      ]);
+    }
+    return pts;
+  }, []);
+
   useFrame((state, delta) => {
     if (motionPaused || !autoRotate) return;
     if (coreRef.current) {
       coreRef.current.rotation.y += delta * 0.28;
+      coreRef.current.rotation.x = THREE.MathUtils.lerp(coreRef.current.rotation.x, state.pointer.y * 0.25, 0.06);
       coreRef.current.position.y = Math.sin(state.clock.elapsedTime * 1.1) * 0.1;
+    }
+    if (haloRef.current) {
+      haloRef.current.rotation.y -= delta * 0.14;
+      haloRef.current.rotation.z = THREE.MathUtils.lerp(haloRef.current.rotation.z, -state.pointer.x * 0.2, 0.05);
     }
     if (ring1Ref.current) {
       ring1Ref.current.rotation.z += delta * 0.22;
     }
     if (ring2Ref.current) {
       ring2Ref.current.rotation.x -= delta * 0.18;
+    }
+    if (ring3Ref.current) {
+      ring3Ref.current.rotation.y += delta * 0.15;
     }
   });
 
@@ -115,6 +141,24 @@ function CareLatticeScene({
         <torusGeometry args={[2.68, 0.018, 16, 80]} />
         <meshStandardMaterial color="#f2c879" transparent opacity={0.42} />
       </mesh>
+      <mesh ref={ring3Ref} rotation={[Math.PI / 5, -0.5, 0.2]}>
+        <torusGeometry args={[2.95, 0.014, 14, 72]} />
+        <meshStandardMaterial color="#2dd4bf" emissive="#2dd4bf" emissiveIntensity={0.45} transparent opacity={0.36} />
+      </mesh>
+      <group ref={haloRef}>
+        {outerParticles.map((pos, idx) => (
+          <mesh key={`outer-${idx}`} position={pos}>
+            <sphereGeometry args={[0.042, 8, 8]} />
+            <meshStandardMaterial
+              color={idx % 2 === 0 ? "#38bdf8" : "#2dd4bf"}
+              emissive={idx % 2 === 0 ? "#38bdf8" : "#2dd4bf"}
+              emissiveIntensity={0.75}
+              transparent
+              opacity={0.78}
+            />
+          </mesh>
+        ))}
+      </group>
     </>
   );
 }

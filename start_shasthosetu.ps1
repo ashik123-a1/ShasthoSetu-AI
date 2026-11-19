@@ -9,7 +9,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$PythonExe = Join-Path $Root "_reference_repos\.ref_venv\Scripts\python.exe"
+$SharedPy = Join-Path $Root "_shared\venv\Scripts\python.exe"
+$PythonExe = if (Test-Path $SharedPy) { $SharedPy } else { Join-Path $Root "_reference_repos\.ref_venv\Scripts\python.exe" }
 $ApiDir = Join-Path $Root "services\api"
 $WebDir = Join-Path $Root "apps\web"
 

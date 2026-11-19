@@ -280,8 +280,79 @@
   animation: ss-map-pulse 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+/* Land-Guard CyberScan Upload, Vortex, Laser Scanner & OCR Bounding Box Animations */
+.hud-corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: #38bdf8;
+  pointer-events: none;
+  z-index: 30;
+}
+.hud-tl { top: 8px; left: 8px; border-top: 2px solid; border-left: 2px solid; }
+.hud-tr { top: 8px; right: 8px; border-top: 2px solid; border-right: 2px solid; }
+.hud-bl { bottom: 8px; left: 8px; border-bottom: 2px solid; border-left: 2px solid; }
+.hud-br { bottom: 8px; right: 8px; border-bottom: 2px solid; border-right: 2px solid; }
+
+@keyframes ss-laser-scan {
+  0% { top: 0%; opacity: 0.95; }
+  50% { top: 96%; opacity: 1; }
+  100% { top: 0%; opacity: 0.95; }
+}
+
+@keyframes ss-laser-curtain {
+  0% { top: -22%; height: 22%; }
+  50% { top: 78%; height: 22%; }
+  100% { top: -22%; height: 22%; }
+}
+
+@keyframes ss-radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ss-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes ss-bbox-pop {
+  0% { transform: scale(0.86); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.ss-laser-line {
+  animation: ss-laser-scan 2.4s ease-in-out infinite;
+}
+
+.ss-laser-curtain {
+  animation: ss-laser-curtain 2.4s ease-in-out infinite;
+}
+
+.ss-radar-sweep {
+  animation: ss-radar-sweep 2.2s linear infinite;
+}
+
+.ss-spin-slow {
+  animation: ss-radar-sweep 9s linear infinite;
+}
+
+.ss-spin-reverse {
+  animation: ss-spin-reverse 6s linear infinite;
+}
+
+.ss-bbox-active {
+  animation: ss-bbox-pop 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+
 html.reduce-motion .ss-animate-marquee,
-html.reduce-motion .ss-map-pulse {
+html.reduce-motion .ss-map-pulse,
+html.reduce-motion .ss-laser-line,
+html.reduce-motion .ss-laser-curtain,
+html.reduce-motion .ss-radar-sweep,
+html.reduce-motion .ss-spin-slow,
+html.reduce-motion .ss-spin-reverse,
+html.reduce-motion .ss-bbox-active {
   animation: none !important;
 }
 

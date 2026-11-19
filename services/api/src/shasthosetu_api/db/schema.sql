@@ -571,3 +571,26 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 CREATE INDEX IF NOT EXISTS idx_audit_logs_actor_time ON audit_logs(actor_user_id, created_at_utc);
+
+-- =========================================================================
+-- 16. REAL AI MODEL INFERENCE DRAFTS & CLINICIAN REVIEW
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS ai_inference_drafts (
+    id TEXT PRIMARY KEY,
+    patient_profile_id TEXT REFERENCES patient_profiles(id) ON DELETE CASCADE,
+    submitted_by_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    module_key TEXT NOT NULL CHECK (module_key IN ('pcos-clinical','pcos-ultrasound','viral-rash','prescription-ocr','dermoped')),
+    model_id TEXT NOT NULL,
+    input_summary TEXT NOT NULL,
+    result_json TEXT NOT NULL,
+    confidence_score REAL DEFAULT 0.0,
+    shared_with_doctor INTEGER NOT NULL DEFAULT 1,
+    doctor_review_status TEXT NOT NULL DEFAULT 'PENDING_CLINICIAN_REVIEW' CHECK (doctor_review_status IN ('PENDING_CLINICIAN_REVIEW','CLINICIAN_REVIEWED','FLAGGED_INCONCLUSIVE')),
+    reviewed_by_doctor_id TEXT REFERENCES doctor_profiles(id) ON DELETE SET NULL,
+    doctor_notes TEXT DEFAULT '',
+    reviewed_at_utc TEXT,
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_ai_drafts_user_time ON ai_inference_drafts(submitted_by_user_id, created_at_utc);
+CREATE INDEX IF NOT EXISTS idx_ai_drafts_doctor_shared ON ai_inference_drafts(shared_with_doctor, doctor_review_status);
