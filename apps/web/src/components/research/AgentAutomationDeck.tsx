@@ -72,29 +72,29 @@ export function AgentAutomationDeck() {
 
   const automations = [
     {
-      name: "n8n (1 Base + 2 Bonus = 3 pts)",
-      badge: "n8n Bonus Active",
+      name: "n8n Automation Engine",
+      badge: "Event Workflows",
       badgeColor: "bg-rose-950 border-rose-500 text-rose-300",
       descEn: "4 production JSON workflows: Emergency Blood SMS dispatch, Doctor BMDC approval webhook, daily clinical audit, and weekly health summary.",
       descBn: "৪টি প্রোডাকশন JSON ওয়ার্কফ্লো: ব্লাড এসএমএস ডিসপ্যাচ, বিএমডিসি ভেরিফিকেশন, ডেইলি অডিট ও সাপ্তাহিক রিপোর্ট।",
     },
     {
-      name: "LangGraph (1 pt Base)",
+      name: "LangGraph Triage State Machine",
       badge: "Live State Graph",
       badgeColor: "bg-purple-950 border-purple-500 text-purple-300",
       descEn: "Stateful 5-node clinical triage machine with deterministic Code 999 emergency exit and FastMCP tool execution.",
       descBn: "লাইভ ৫-নোড ক্লিনিক্যাল ট্রায়াজ ইঞ্জিন ও ৯৯৯ ন্যাশনাল হটলাইন হ্যান্ডঅফ গেট।",
     },
     {
-      name: "Prefect (1 pt Base)",
+      name: "Prefect Data Pipeline",
       badge: "Data Orchestration",
       badgeColor: "bg-blue-950 border-blue-500 text-blue-300",
       descEn: "Automated daily sync for PubMed & DGHS clinical guidelines, keeping RAG indices fresh with zero manual intervention.",
       descBn: "পাবমেড ও স্বাস্থ্য অধিদপ্তর গাইডলাইন আরএজি ইনডেক্স দৈনিক স্বয়ংক্রিয় সিঙ্ক শিডিউল।",
     },
     {
-      name: "Dagster (1 pt Base)",
-      badge: "Asset & Integrity Job",
+      name: "Dagster Asset & Audit Job",
+      badge: "Integrity Monitor",
       badgeColor: "bg-amber-950 border-amber-500 text-amber-300",
       descEn: "Daily cryptographic SHA-256 verification of 6 locked diagnostic model weights and SQLite WAL database integrity checks.",
       descBn: "ক্লিনিক্যাল মডেল ওয়েট এবং এসকিউলাইট ডাটাবেসের ক্রিপ্টোগ্রাফিক হ্যাশ অডিট ও ইন্টিগ্রিটি মনিটর।",
@@ -115,7 +115,7 @@ export function AgentAutomationDeck() {
             <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
               <span>{locale === "bn" ? "অটোমেশন ও পাইপলাইন অর্কেস্ট্রেশন ডেক" : "Automation Tools & Workflow Orchestration"}</span>
               <span className="text-xs font-mono font-normal px-2.5 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/40 text-indigo-300">
-                Category 6: 6/6 pts (4 Base + 2 n8n Bonus)
+                {locale === "bn" ? "৪টি অটোমেশন ইঞ্জিন সক্রিয়" : "4 Active Engines Connected"}
               </span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">

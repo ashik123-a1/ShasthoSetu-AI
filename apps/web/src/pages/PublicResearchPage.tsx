@@ -953,7 +953,7 @@ export function PublicResearchPage() {
         <section id="res-mcp" className="scroll-mt-28 space-y-6">
           <MethodsChapterHeader
             num="09"
-            eyebrow="MODEL CONTEXT PROTOCOL (MCP) • BUILT 3 + USED 3+ + ARCHITECTURE"
+            eyebrow="MODEL CONTEXT PROTOCOL (MCP) • SECURE TOOL RUNTIMES & CLINICAL AGENT INTERFACES"
             title="Live ShasthoSetu MCP Hub &"
             goldAccent="Zero-PHI Tool Governance"
             subtitle="Explore and invoke ShasthoSetu's 3 custom-built MCP servers (guideline-mcp, directory-mcp, care-record-mcp) alongside official public MCP integrations (filesystem, memory, sequential-thinking, cloudcamp-bd) with Stdio/SSE/HTTP transports and strict RBAC."
@@ -965,7 +965,7 @@ export function PublicResearchPage() {
         <section id="res-agents" className="scroll-mt-28 space-y-6">
           <MethodsChapterHeader
             num="10"
-            eyebrow="AGENT FRAMEWORKS (5/5 PTS) • LANGGRAPH, CREWAI, AUTOGEN, AGENTS SDK, SWARM"
+            eyebrow="MULTI-AGENT CLINICAL SUITE • LANGGRAPH, CREWAI, AUTOGEN, AGENTS SDK, SWARM"
             title="Interactive LangGraph State Machine &"
             goldAccent="Continuous Clinical Automation"
             subtitle="Explore the 5-node deterministic LangGraph clinical triage state machine with real-time token pulse animation alongside automated n8n, Prefect, and Dagster clinical pipeline jobs."
@@ -978,7 +978,7 @@ export function PublicResearchPage() {
         <section id="res-frontend-ai" className="scroll-mt-28 space-y-6">
           <MethodsChapterHeader
             num="11"
-            eyebrow="FRONTEND AI TOOLS (5/5 PTS) • LOVABLE, V0, BOLT.NEW, CURSOR, CLAUDE ARTIFACTS"
+            eyebrow="AI-ASSISTED UI ENGINEERING • LOVABLE, V0, BOLT.NEW, CURSOR, CLAUDE ARTIFACTS"
             title="Frontend AI Tools Prototyping Ledger &"
             goldAccent="Production Component Registry"
             subtitle="Transparent attribution and live interactive rendering for the 5 AI-assisted clinical UI components across patient medication adherence, emergency blood requests, OCR safety, BMI telemetry, and receipt disclaimers."

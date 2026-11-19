@@ -26,7 +26,7 @@ export function FrontendAiAttributionCard() {
     {
       id: "lovable",
       name: "Lovable.dev",
-      category: "Frontend AI (1 pt)",
+      category: "Interactive Prototype",
       roleEn: "Rapid interactive component prototyping for Patient Medication Adherence & Streak Tracker.",
       roleBn: "রোগীর ওষুধ খাওয়ার ধারাবাহিকতা ও রিমাইন্ডার ট্র্যাকার কম্পোনেন্ট প্রোটোটাইপিং।",
       promptSample: `Create a dark sapphire glassmorphic React component for a medication adherence tracker in Tailwind CSS with streak counter, medicine dose time, and a 'Mark as Taken' toggle button.`,
@@ -35,7 +35,7 @@ export function FrontendAiAttributionCard() {
     {
       id: "v0",
       name: "v0 by Vercel",
-      category: "Frontend AI (1 pt)",
+      category: "Social Care Card",
       roleEn: "Emergency Blood Request social share card with masked donor contact.",
       roleBn: "মাস্কড কন্টাক্টসহ সোশ্যাল মিডিয়ায় জরুরি রক্তের রিকোয়েস্ট শেয়ার কার্ড ডিজাইন।",
       promptSample: `Design a high-contrast emergency blood donor request card in dark crimson/slate theme with blood group badge, hospital location, masked phone number, and a copy button.`,
@@ -44,7 +44,7 @@ export function FrontendAiAttributionCard() {
     {
       id: "bolt",
       name: "Bolt.new",
-      category: "Frontend AI (1 pt)",
+      category: "Safety Flow Widget",
       roleEn: "Interactive 3-stage Prescription OCR safety refusal (HTTP 422) protocol explainer.",
       roleBn: "প্রেসক্রিপশন অস্পষ্ট হলে কেন HTTP ৪২২ এর মাধ্যমে থামানো হয় তার ৩ ধাপের ব্যাখ্যা উইজেট।",
       promptSample: `Build a 3-step clinical safety gate card explaining how ambiguous prescription OCR is rejected with HTTP 422 and routed to registered physicians.`,
@@ -53,7 +53,7 @@ export function FrontendAiAttributionCard() {
     {
       id: "cursor",
       name: "Cursor IDE (Claude 3.5 Sonnet)",
-      category: "Frontend AI (1 pt)",
+      category: "Telemetry Gauge",
       roleEn: "Bilingual BMI and daily hydration recommendation gauge with responsive glassmorphism.",
       roleBn: "ওজন এবং উচ্চতা দিয়ে লাইভ বডি মাস ইনডেক্স এবং দৈনিক পানি গ্রহণের লক্ষ্যমাত্রা পরিমাপক।",
       promptSample: `Develop an interactive BMI and water intake calculator card with responsive layout and color-coded status badges for clinical telemetry.`,
@@ -62,7 +62,7 @@ export function FrontendAiAttributionCard() {
     {
       id: "claude-artifacts",
       name: "Claude Artifacts",
-      category: "Frontend AI (1 pt)",
+      category: "Clinical Legal Banner",
       roleEn: "Standardized non-diagnostic clinical disclaimer banner for consultation checkout.",
       roleBn: "ক্লিনিক্যাল দায়মুক্তি এবং ৯৯৯ জরুরি সেবা সংক্রান্ত নোটিশ ব্যানার কম্পোনেন্ট।",
       promptSample: `Author a clinical disclaimer banner in React and Tailwind clarifying that AI provides triage guidance rather than definitive physician diagnosis, highlighting national 999 hotline.`,
@@ -92,7 +92,7 @@ export function FrontendAiAttributionCard() {
             <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
               <span>{locale === "bn" ? "ফ্রন্টএন্ড এআই টুলস লেজার ও অ্যাট্রিবিউশন" : "Frontend AI Tools Attribution Ledger"}</span>
               <span className="text-xs font-mono font-normal px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300">
-                Category 5: 5/5 pts
+                {locale === "bn" ? "৫টি ইউআই ফ্রেমওয়ার্ক অ্যাক্টিভ" : "5 Verified UI Components"}
               </span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">

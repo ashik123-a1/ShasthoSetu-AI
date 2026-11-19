@@ -133,10 +133,10 @@ export function McpArchitectureExplorer({ compact = false }: { compact?: boolean
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div className="bento-card rounded-2xl p-4 space-y-1">
           <div className="font-mono text-[10px] uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
-            <Server className="w-3.5 h-3.5" /> Custom MCP Built
+            <Server className="w-3.5 h-3.5" /> Custom MCP Servers
           </div>
           <div className="text-2xl font-bold text-white">
-            {catalog.summary.custom_built_passed} / {catalog.summary.custom_built_count}
+            {catalog.summary.custom_built_count} Servers Active
           </div>
           <div className="text-[11px] text-emerald-300 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" /> 12 Read-Only Tools Verified
@@ -145,10 +145,10 @@ export function McpArchitectureExplorer({ compact = false }: { compact?: boolean
 
         <div className="bento-card rounded-2xl p-4 space-y-1">
           <div className="font-mono text-[10px] uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
-            <Globe className="w-3.5 h-3.5" /> Public MCP Integrated
+            <Globe className="w-3.5 h-3.5" /> Public MCP Integrations
           </div>
           <div className="text-2xl font-bold text-white">
-            {catalog.summary.public_stdio_passed}+1 / {catalog.summary.public_configured_count}
+            {catalog.summary.public_configured_count} Connected Protocols
           </div>
           <div className="text-[11px] text-slate-300">
             Filesystem + Memory + Thinking + CloudCamp

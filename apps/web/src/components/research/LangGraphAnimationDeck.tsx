@@ -174,7 +174,7 @@ export function LangGraphAnimationDeck() {
             <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
               <span>{locale === "bn" ? "ল্যাংগ্রাফ ক্লিনিক্যাল মাল্টি-এজেন্ট অ্যানিমেশন ডেক" : "LangGraph Multi-Agent State Machine"}</span>
               <span className="text-xs font-mono font-normal px-2.5 py-0.5 rounded-full bg-purple-950 border border-purple-500/40 text-purple-300">
-                Agent Framework 1: LangGraph (1 pt)
+                {locale === "bn" ? "প্রোডাকশন ট্রায়াজ ইঞ্জিন" : "Production Clinical Engine"}
               </span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
