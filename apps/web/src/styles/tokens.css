@@ -143,6 +143,18 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
+
+  /* Prevent page scroll chaining beneath modal <dialog> overlays */
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(6px);
+  }
 }
 
 .ss-glass-bar {
@@ -285,8 +297,8 @@
 }
 
 .ss-sapphire-always .ss-sapphire-card {
-  background: rgba(7, 16, 36, 0.78);
-  border: 1px solid rgba(56, 189, 248, 0.22);
+  background: rgba(7, 16, 36, 0.70);
+  border: 1px solid rgba(56, 189, 248, 0.24);
   backdrop-filter: blur(18px) saturate(165%);
   -webkit-backdrop-filter: blur(18px) saturate(165%);
   box-shadow: 0 18px 42px -12px rgba(2, 8, 24, 0.65);
@@ -303,10 +315,10 @@
   padding: 1.5px;
   pointer-events: none;
   background: radial-gradient(
-    380px circle at var(--mx, -400px) var(--my, -400px),
-    rgba(56, 189, 248, 0.85),
-    rgba(45, 212, 191, 0.48) 34%,
-    rgba(242, 200, 121, 0.22) 55%,
+    420px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(125, 211, 252, 0.95),
+    rgba(45, 212, 191, 0.58) 34%,
+    rgba(242, 200, 121, 0.28) 55%,
     transparent 72%
   );
   -webkit-mask:
@@ -315,8 +327,8 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   opacity: var(--ss-card-glow, 0);
-  transition: opacity 0.32s ease;
-  z-index: 2;
+  transition: opacity 0.28s ease;
+  z-index: 5;
 }
 
 /* Mouse-Tracked Inner Radial Spotlight Illumination (::after) */
@@ -330,20 +342,21 @@
   pointer-events: none;
   background: radial-gradient(
     460px circle at var(--mx, -400px) var(--my, -400px),
-    rgba(56, 189, 248, 0.18),
-    rgba(45, 212, 191, 0.08) 38%,
+    rgba(125, 211, 252, 0.24),
+    rgba(45, 212, 191, 0.11) 40%,
     transparent 70%
   );
   opacity: var(--ss-card-glow, 0);
-  transition: opacity 0.32s ease;
-  z-index: 1;
+  transition: opacity 0.28s ease;
+  mix-blend-mode: screen;
+  z-index: 4;
 }
 
 html[data-theme="light"] .ss-card::before {
   background: radial-gradient(
-    360px circle at var(--mx, -400px) var(--my, -400px),
-    rgba(2, 132, 199, 0.65),
-    rgba(13, 148, 136, 0.35) 38%,
+    380px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(2, 132, 199, 0.72),
+    rgba(13, 148, 136, 0.42) 38%,
     transparent 72%
   );
 }
@@ -351,18 +364,19 @@ html[data-theme="light"] .ss-card::before {
 html[data-theme="light"] .ss-card::after {
   background: radial-gradient(
     420px circle at var(--mx, -400px) var(--my, -400px),
-    rgba(2, 132, 199, 0.09),
-    rgba(13, 148, 136, 0.04) 40%,
+    rgba(2, 132, 199, 0.14),
+    rgba(13, 148, 136, 0.06) 40%,
     transparent 70%
   );
+  mix-blend-mode: normal;
 }
 
 .ss-sapphire-always .ss-card::before {
   background: radial-gradient(
-    380px circle at var(--mx, -400px) var(--my, -400px),
-    rgba(56, 189, 248, 0.85),
-    rgba(45, 212, 191, 0.48) 34%,
-    rgba(242, 200, 121, 0.22) 55%,
+    420px circle at var(--mx, -400px) var(--my, -400px),
+    rgba(125, 211, 252, 0.95),
+    rgba(45, 212, 191, 0.58) 34%,
+    rgba(242, 200, 121, 0.28) 55%,
     transparent 72%
   );
 }
@@ -370,10 +384,12 @@ html[data-theme="light"] .ss-card::after {
 .ss-sapphire-always .ss-card::after {
   background: radial-gradient(
     460px circle at var(--mx, -400px) var(--my, -400px),
-    rgba(56, 189, 248, 0.18),
-    rgba(45, 212, 191, 0.08) 38%,
+    rgba(125, 211, 252, 0.24),
+    rgba(45, 212, 191, 0.11) 40%,
     transparent 70%
   );
+  mix-blend-mode: screen;
+  z-index: 4;
 }
 
 @media (hover: hover) {
@@ -428,19 +444,19 @@ html[data-theme="light"] .ss-card::after {
   position: fixed;
   top: 0;
   left: 0;
-  width: 540px;
-  height: 540px;
+  width: 460px;
+  height: 460px;
   border-radius: 9999px;
   pointer-events: none;
-  z-index: 35;
+  z-index: 45;
   will-change: transform, opacity;
   opacity: 0;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.28s ease;
   background: radial-gradient(
     circle,
-    rgba(2, 132, 199, 0.14) 0%,
-    rgba(13, 148, 136, 0.07) 36%,
-    transparent 70%
+    rgba(14, 165, 233, 0.20) 0%,
+    rgba(20, 184, 166, 0.11) 38%,
+    transparent 72%
   );
   mix-blend-mode: normal;
 }
@@ -448,10 +464,10 @@ html[data-theme="light"] .ss-card::after {
 .ss-cursor-aurora.ss-cursor-on-dark {
   background: radial-gradient(
     circle,
-    rgba(56, 189, 248, 0.22) 0%,
-    rgba(45, 212, 191, 0.11) 32%,
-    rgba(242, 200, 121, 0.045) 54%,
-    transparent 72%
+    rgba(56, 189, 248, 0.28) 0%,
+    rgba(45, 212, 191, 0.16) 32%,
+    rgba(129, 140, 248, 0.08) 54%,
+    transparent 74%
   );
   mix-blend-mode: screen;
 }
@@ -460,28 +476,29 @@ html[data-theme="light"] .ss-card::after {
   position: fixed;
   top: 0;
   left: 0;
-  width: 150px;
-  height: 150px;
+  width: 180px;
+  height: 180px;
   border-radius: 9999px;
   pointer-events: none;
-  z-index: 35;
+  z-index: 45;
   will-change: transform, opacity;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
   background: radial-gradient(
     circle,
-    rgba(2, 132, 199, 0.16) 0%,
-    rgba(13, 148, 136, 0.06) 44%,
-    transparent 72%
+    rgba(56, 189, 248, 0.28) 0%,
+    rgba(13, 148, 136, 0.12) 45%,
+    transparent 74%
   );
 }
 
 .ss-cursor-core.ss-cursor-on-dark {
   background: radial-gradient(
     circle,
-    rgba(125, 211, 252, 0.28) 0%,
-    rgba(45, 212, 191, 0.10) 42%,
-    transparent 72%
+    rgba(224, 242, 254, 0.42) 0%,
+    rgba(125, 211, 252, 0.26) 28%,
+    rgba(45, 212, 191, 0.12) 55%,
+    transparent 76%
   );
   mix-blend-mode: screen;
 }
@@ -706,11 +723,6 @@ html.reduce-motion *::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ss-cursor-aurora,
-  .ss-cursor-core {
-    display: none !important;
-  }
-
   .ss-sapphire-card::before,
   .ss-sapphire-card::after,
   .ss-card::before,

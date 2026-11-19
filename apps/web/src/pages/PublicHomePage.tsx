@@ -4,11 +4,14 @@ import {
   Activity,
   ArrowRight,
   Baby,
+  BookOpen,
   CalendarClock,
   CalendarHeart,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Database,
+  Droplet,
   FileLock2,
   FlaskConical,
   HeartPulse,
@@ -18,6 +21,7 @@ import {
   Radio,
   ScanText,
   Search,
+  ShieldCheck,
   Sparkles,
   Stethoscope,
   Video,
@@ -26,7 +30,6 @@ import { apiGet } from "../lib/apiClient";
 import { formatBdtFromPoisha } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { usePreferences } from "../lib/preferences";
-import { HomeSectionRail } from "../components/layout/HomeSectionRail";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
 import { HERO_DOCTOR_SLIDES } from "../components/home/HeroDoctorShowcase";
@@ -77,10 +80,18 @@ interface PublicServicesPayload {
 
 interface ResearchDatasetRow {
   module: string;
-  dataset_or_scope: string;
-  reconciled_count: string;
-  scientific_classification: string;
-  limitations: string;
+  dataset_name?: string;
+  dataset_or_scope?: string;
+  total_units_raw?: string | number;
+  total_independent_groups?: string | number;
+  grouping_level?: string;
+  admissible_units?: string | number;
+  quarantined_units?: string | number;
+  cross_split_leakage_detected?: string | boolean;
+  reconciliation_notes?: string;
+  reconciled_count?: string;
+  scientific_classification?: string;
+  limitations?: string;
 }
 
 const FOCUS_PHRASES_EN = [
@@ -97,7 +108,10 @@ const FOCUS_PHRASES_BN = [
 ];
 
 const SOURCE_MARQUEE_ITEMS = [
-  "SQLITE 3 WAL • 36 TABLES",
+  "SQLITE 3 WAL • 54 TABLES",
+  "BLOOD CONNECT • 5/10/20 KM PRIVACY MATCHING",
+  "LIVE BANGLA VOICE AI • WHISPER-BN + QWEN2.5 RAG",
+  "HEALTH JOURNAL • স্বাস্থ্যবার্তা",
   "ARGON2ID + HTTPONLY SESSION",
   "ZERO-PHI SUPPORT GUARD (403)",
   "SAFE-OCR VERIFICATION (422)",
@@ -109,20 +123,25 @@ const SOURCE_MARQUEE_ITEMS = [
 ];
 
 /** Full-bleed dark sapphire photographic backdrop with smooth edge blends for vertical scroll chapters. */
-function ChapterBackdrop({ src }: { src: string }) {
+function ChapterBackdrop({ src, position = "center" }: { src: string; position?: string }) {
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden select-none">
       <img
         src={src}
         alt=""
         loading="lazy"
-        className="w-full h-full object-cover object-center opacity-28 scale-[1.02]"
+        className="w-full h-full object-cover scale-[1.02]"
+        style={{
+          objectPosition: position,
+          opacity: 0.48,
+          filter: "saturate(1.16) brightness(0.96) contrast(1.06)",
+        }}
       />
       <div
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, #040914 0%, rgba(4,9,20,0.68) 26%, rgba(4,9,20,0.64) 74%, #040914 100%), linear-gradient(90deg, rgba(4,9,20,0.92) 0%, rgba(4,9,20,0.68) 55%, rgba(4,9,20,0.82) 100%)",
+            "linear-gradient(105deg, rgba(4,9,20,0.72) 0%, rgba(4,9,20,0.44) 52%, rgba(4,9,20,0.58) 100%), linear-gradient(180deg, rgba(4,9,20,0.78) 0%, rgba(4,9,20,0.14) 22%, rgba(4,9,20,0.14) 78%, rgba(4,9,20,0.82) 100%)",
         }}
       />
     </div>
@@ -372,7 +391,7 @@ export function PublicHomePage() {
           { label: "Chickenpox (19 pts)", pct: 86.4, color: "#2dd4bf" },
           { label: "Pediculosis (3 pts)", pct: 13.6, color: "#fbbf24" },
         ],
-        barFootnote: "M05 FLEURS BN Unicode 98.37% (39.09% WER • Phase G Deferred)",
+        barFootnote: "M05 FLEURS BN Unicode 98.37% • Live Whisper-BN + Qwen2.5 RAG + MMS-TTS",
       },
     ],
     []
@@ -421,11 +440,11 @@ export function PublicHomePage() {
         color: "#f2c879",
       },
       {
-        label: "M05 • Bangla Voice FLEURS Script Integrity (Phase G)",
+        label: "M05 • Bangla Voice FLEURS Script Integrity (Live)",
         value: 98.37,
         maxValue: 100,
         displayValue: "98.37% BN Unicode (39.09% WER)",
-        sublabel: "26 Clips • Deferred",
+        sublabel: "26 Clips • Live Voice RAG",
         color: "#c084fc",
       },
     ],
@@ -452,16 +471,15 @@ export function PublicHomePage() {
       aEn: "No. Support operates under Zero-PHI SQL projection (blocked from clinical columns with HTTP 403 PHI_ACCESS_DENIED), and Admin Governance APIs also block raw doctor prose (HTTP 403).",
     },
     {
-      qBn: "AI-01 চ্যাটবট এবং AI-02 ভয়েস এআই কোথায়?",
-      qEn: "Where are AI-01 Medical Chatbot/RAG and AI-02 Bangla Voice integration?",
-      aBn: "মালিকের সিদ্ধান্ত এবং SRS v2.0 ফেজ-জি অনুযায়ী AI-01 ও AI-02 আপাতত DEFERRED অবস্থায় রাখা হয়েছে। ৪টি রোল পোর্টাল, ডেমো পেমেন্ট ও নিরাপদ ওসিআর আগে সম্পন্ন করা হয়েছে।",
-      aEn: "Per Master SRS v2.0 Phase G and project governance, AI-01 RAG and AI-02 Voice AI remain transparently marked DEFERRED while the 4-role healthcare workflow and research showcase are live.",
+      qBn: "AI-01 চ্যাটবট এবং AI-02 বাংলা ভয়েস এআই কি এখন সক্রিয়?",
+      qEn: "Are AI-01 Medical Chatbot/RAG and AI-02 Bangla Voice integration active?",
+      aBn: "হ্যাঁ। AI-01 মেডিকেল চ্যাটবট/RAG (Qwen2.5:7b + bge-m3) এবং AI-02 বাংলা ভয়েস AI (Whisper-Small-BN + 3D অর্ব + MMS-TTS) এখন Health Services-এ লাইভ সক্রিয় রয়েছে।",
+      aEn: "Yes. AI-01 Medical Chatbot/RAG (Qwen2.5:7b + bge-m3) and AI-02 Bangla Voice AI (Whisper-Small-BN + 3D Land-Guard Orb + MMS-TTS) are live inside Health Services alongside Blood Connect, Safe-OCR, and all 4 role portals.",
     },
   ];
 
   return (
     <div className="ss-sapphire-always min-h-screen overflow-x-clip">
-      <HomeSectionRail />
       <PublicFloatingHeader transparentHero />
 
       {/* =================================================================
@@ -873,7 +891,7 @@ export function PublicHomePage() {
                 Open Viral Rash Workbench <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                to="/research?module=viral-rash"
+                to="/research#res-models"
                 className="min-h-11 px-4 rounded-full border border-indigo-400/35 bg-[#040a18]/75 hover:bg-white/10 text-indigo-200 font-semibold text-xs inline-flex items-center gap-1.5"
               >
                 Inspect Quarantine Audit
@@ -945,7 +963,7 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          CHAPTER 04 (#voice-chapter) · BANGLA VOICE AI (PHASE G DEFERRED)
+          CHAPTER 04 (#voice-chapter) · LIVE BILINGUAL VOICE AI + RAG
           ================================================================= */}
       <section
         id="voice-chapter"
@@ -962,8 +980,8 @@ export function PublicHomePage() {
               <span className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.2em] uppercase text-purple-300">
                 <Radio className="w-4 h-4" /> CHAPTER 04 • M05 BANGLA VOICE AI
               </span>
-              <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-200 border border-amber-400/35">
-                PHASE G DEFERRED
+              <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-full bg-teal-400/15 text-teal-200 border border-teal-400/35">
+                LIVE BILINGUAL VOICE AI • WHISPER-SMALL-BN + QWEN2.5 RAG
               </span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
@@ -971,36 +989,36 @@ export function PublicHomePage() {
                 <>
                   বাংলা ভয়েস এআই ও{" "}
                   <span className="bg-gradient-to-r from-[#c084fc] to-[#38bdf8] bg-clip-text text-transparent">
-                    FLEURS অ্যাকোস্টিক বেঞ্চমার্ক
+                    লাইভ ৩ডি ভয়েস RAG স্টুডিও
                   </span>
                 </>
               ) : (
                 <>
-                  Bangla Voice ASR &amp;{" "}
+                  Bangla &amp; English Voice AI &amp;{" "}
                   <span className="bg-gradient-to-r from-[#c084fc] to-[#38bdf8] bg-clip-text text-transparent">
-                    Uncertainty Trend Curve
+                    3D Acoustic RAG Studio
                   </span>
                 </>
               )}
             </h2>
             <p className="text-sm sm:text-base text-slate-200/90 leading-relaxed">
               {locale === "bn"
-                ? "২৬টি মানব-কণ্ঠের FLEURS ক্লিপে Whisper-Small-BN দ্বারা ৯৮.৩৭% বাংলা ইউনিকোড ও ৩৯.০৯% Norm WER নিরীক্ষিত হয়েছে। লাইভ মাইক ও RAG ফেজ-জি অনুযায়ী সংরক্ষিত রয়েছে।"
-                : "Audited across 26 human FLEURS Bengali utterances (98.37% BN script purity, 39.09% norm WER vs 242.8% Whisper Base). Interactive live mic & medical RAG remain transparently scheduled for Phase G."}
+                ? "২৬টি মানব-কণ্ঠের FLEURS ক্লিপে Whisper-Small-BN দ্বারা ৯৮.৩৭% বাংলা ইউনিকোড ও ৩৯.০৯% Norm WER নিরীক্ষিত হয়েছে। এখন 3D Land-Guard ভয়েস অর্ব, Whisper ASR, Qwen2.5 মেডিকেল RAG ও MMS-TTS ভয়েস আউটপুট সহ লাইভ চালু রয়েছে।"
+                : "Audited across 26 human FLEURS Bengali utterances (98.37% BN script purity, 39.09% norm WER vs 242.8% Whisper Base). Now live with interactive 3D Land-Guard Voice Orb, Whisper-Small-BN/EN ASR, Qwen2.5 medical RAG, and MMS-TTS voice synthesis."}
             </p>
             <div className="flex flex-wrap gap-2.5 pt-1">
               <Link
-                to="/features/bangla-voice"
+                to="/services?tool=bangla-voice"
                 data-testid="home-goto-voice"
-                className="min-h-11 px-5 rounded-full border border-purple-400/45 bg-purple-500/20 hover:bg-purple-500/30 text-purple-100 font-bold text-xs inline-flex items-center gap-1.5"
+                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#c084fc] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 shadow-lg"
               >
-                Open Bangla Voice Studio <ArrowRight className="w-4 h-4" />
+                {locale === "bn" ? "লাইভ ভয়েস এআই স্টুডিও খুলুন" : "Open Live Voice AI Studio"} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                to="/research?module=bangla-voice"
+                to="/features/bangla-voice"
                 className="min-h-11 px-4 rounded-full border border-white/25 bg-[#040a18]/75 hover:bg-white/10 text-slate-200 font-semibold text-xs inline-flex items-center gap-1.5"
               >
-                View Phase G Notes
+                {locale === "bn" ? "ভয়েস বেঞ্চমার্ক প্রমাণ" : "Voice Benchmark Proof"}
               </Link>
             </div>
           </div>
@@ -1069,10 +1087,138 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          SECTION 07 · INTERACTIVE BANGLADESH HEALTHCARE ATLAS & MAP
+          CHAPTER 06 (#blood-journal-chapter) · BLOOD CONNECT & HEALTH JOURNAL SPOTLIGHT
           ================================================================= */}
-      <section id="care-map" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
-        <div className="max-w-7xl mx-auto">
+      <section
+        id="blood-journal-chapter"
+        className="relative min-h-[72vh] py-20 px-4 sm:px-6 flex items-center overflow-hidden border-b border-sky-400/20"
+      >
+        <ChapterBackdrop src="/images/backgrounds/bg-blood-connect.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto w-full space-y-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="space-y-2 max-w-2xl">
+              <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-rose-300">
+                CHAPTER 06 • BLOOD CONNECT &amp; HEALTH JOURNAL
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight">
+                {locale === "bn" ? (
+                  <>
+                    জরুরি{" "}
+                    <span className="bg-gradient-to-r from-rose-300 via-[#38bdf8] to-[#2dd4bf] bg-clip-text text-transparent">
+                      ব্লাড কানেক্ট ও স্বাস্থ্যবার্তা জার্নাল
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Emergency{" "}
+                    <span className="bg-gradient-to-r from-rose-300 via-[#38bdf8] to-[#2dd4bf] bg-clip-text text-transparent">
+                      Blood Connect &amp; Health Journal
+                    </span>
+                  </>
+                )}
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-200/90 max-w-md">
+              {locale === "bn"
+                ? "৮টি বিভাগে গোপনীয়তা-সুরক্ষিত রক্তদাতা সমন্বয় এবং যাচাইকৃত বাংলা ও ইংরেজি জনস্বাস্থ্য প্রতিবেদন।"
+                : "Consent-gated blood donor coordination across all 8 divisions paired with bilingual verified public health reporting."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <article className="ss-sapphire-card rounded-3xl p-7 space-y-4 text-white flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-rose-300">
+                    <Droplet className="w-4 h-4" /> BLOOD CONNECT • 5 / 10 / 20 KM
+                  </span>
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-400/35 text-rose-200 font-bold">
+                    HIDDEN_UNTIL_CONSENT
+                  </span>
+                </div>
+                <h3 className="text-2xl font-bold">
+                  {locale === "bn" ? "স্বাস্থ্যসেতু ব্লাড কানেক্ট নেটওয়ার্ক" : "ShasthoSetu Blood Connect Engine"}
+                </h3>
+                <p className="text-sm text-slate-200/90 leading-relaxed">
+                  {locale === "bn"
+                    ? "Haversine ৫/১০/২০ কিমি দূরত্ব ফিল্টার, হাসপাতাল-যাচাইকৃত জরুরি অনুরোধ, দ্বিমুখী রক্তদান নিশ্চিতকরণ এবং দাতার ফোন নম্বর সম্মতি ছাড়া গোপন রাখার নিরাপত্তা ব্যবস্থা।"
+                    : "Real-time Haversine 5 / 10 / 20 km donor radius matching across 8 Bangladesh divisions, hospital-verified emergency requests, dual confirmation, masked phone sharing until explicit consent, and no fixed 90-day cutoff rule."}
+                </p>
+                <div className="flex flex-wrap gap-2 text-[11px] font-mono">
+                  <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-rose-200">
+                    Masked Phone Privacy
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-sky-200">
+                    Hospital Cross-Match Guard
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2">
+                <Link
+                  to="/blood-connect"
+                  data-testid="home-goto-blood-connect"
+                  className="min-h-11 px-5 rounded-full bg-gradient-to-r from-rose-400 to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center gap-2 shadow-lg"
+                >
+                  {locale === "bn" ? "ব্লাড কানেক্ট খুলুন" : "Open Blood Connect"} <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </article>
+
+            <article className="ss-sapphire-card rounded-3xl p-7 space-y-4 text-white flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-[#2dd4bf]">
+                    <BookOpen className="w-4 h-4" /> HEALTH JOURNAL • স্বাস্থ্যবার্তা
+                  </span>
+                  <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-teal-400/15 border border-teal-400/35 text-teal-200 font-bold">
+                    BN + EN EDITORIAL
+                  </span>
+                </div>
+                <h3 className="text-2xl font-bold">
+                  {locale === "bn" ? "জনস্বাস্থ্য ও ক্লিনিক্যাল গবেষণা বার্তা" : "Medical News, Research Notes & Prevention"}
+                </h3>
+                <p className="text-sm text-slate-200/90 leading-relaxed">
+                  {locale === "bn"
+                    ? "ডেঙ্গু সতর্কতা, পিসিওএস সচেতনতা, নিরাপদ প্রেসক্রিপশন OCR ও শিশু চর্মরোগ সম্পর্কে বাংলা এবং ইংরেজিতে যাচাইকৃত চিকিৎসাবিজ্ঞান প্রতিবেদন।"
+                    : "Verified bilingual medical articles, dengue alerts, PCOS cycle literacy, safe prescription practices, and model validation briefings written cleanly for patients and judges."}
+                </p>
+                <div className="flex flex-wrap gap-2 text-[11px] font-mono">
+                  <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-teal-200">
+                    Public Health Guides
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-[#f2c879]">
+                    Model Transparency Updates
+                  </span>
+                </div>
+              </div>
+              <div className="pt-2">
+                <Link
+                  to="/journal"
+                  data-testid="home-goto-journal"
+                  className="min-h-11 px-5 rounded-full bg-gradient-to-r from-[#2dd4bf] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center gap-2 shadow-lg"
+                >
+                  {locale === "bn" ? "স্বাস্থ্যবার্তা পড়ুন" : "Read Health Journal"} <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* =================================================================
+          SECTION 08 · INTERACTIVE BANGLADESH HEALTHCARE ATLAS & MAP
+          ================================================================= */}
+      <section id="care-map" className="relative overflow-hidden py-16 px-4 sm:px-6 border-b border-sky-400/20">
+        <ChapterBackdrop src="/images/backgrounds/dhaka-aerial-map-bg.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto space-y-5">
+          <div>
+            <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
+              08 • NATIONAL HOSPITAL &amp; CARE FINDER ATLAS
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">
+              {locale === "bn" ? "বাংলাদেশ হাসপাতাল, ফার্মেসি ও ব্লাড ব্যাংক মানচিত্র" : "Bangladesh Clinical Atlas & Proximity Network"}
+            </h2>
+          </div>
           <BangladeshCareMap
             compact
             facilities={services?.facilities || []}
@@ -1082,22 +1228,23 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          SECTION 08 · VERIFIED CLINICIAN DIRECTORY & INSTANT SYMPTOM SEARCH
+          SECTION 09 · VERIFIED CLINICIAN DIRECTORY & INSTANT SYMPTOM SEARCH
           ================================================================= */}
-      <section id="journey" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
-        <div className="max-w-7xl mx-auto space-y-10">
+      <section id="journey" className="relative overflow-hidden py-16 px-4 sm:px-6 border-b border-sky-400/20">
+        <ChapterBackdrop src="/images/backgrounds/bg-doctors-consult.jpg" position="center top" />
+        <div className="relative z-10 max-w-7xl mx-auto space-y-10">
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div>
                 <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-                  08 • CLINICIAN DISCOVERY &amp; INSTANT SYMPTOM SEARCH
+                  09 • CLINICIAN DISCOVERY &amp; INSTANT SYMPTOM SEARCH
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-white">
                   {locale === "bn" ? "অনুমোদিত ডেমো চিকিৎসক ও উপসর্গ অনুসন্ধান" : "Verified Demo Clinicians & Instant Symptom Filter"}
                 </h2>
               </div>
-              <Link to="/doctors" className="min-h-11 inline-flex items-center gap-1.5 text-sm font-semibold text-[#38bdf8] hover:underline">
-                {locale === "bn" ? "সব চিকিৎসক দেখুন" : "Browse All Doctors"} <ArrowRight className="w-4 h-4" />
+              <Link to="/find-care" className="min-h-11 inline-flex items-center gap-1.5 text-sm font-semibold text-[#38bdf8] hover:underline">
+                {locale === "bn" ? "স্বাস্থ্যসেবা ও চিকিৎসক খুঁজুন" : "Browse All Doctors & Care"} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
@@ -1189,20 +1336,21 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          SECTION 05 · 4-LAYER ROLE ARCHITECTURE & DEVICE PREVIEW
+          SECTION 10 · 4-LAYER ROLE ARCHITECTURE & DEVICE PREVIEW
           ================================================================= */}
-      <section id="care-twin" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <section id="care-twin" className="relative overflow-hidden py-16 px-4 sm:px-6 border-b border-sky-400/20">
+        <ChapterBackdrop src="/images/hero/hero-doctors-team-care.jpg" position="center 20%" />
+        <div className="relative z-10 max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-                05 • ANATOMY OF THE 4-ROLE CARE OS
+                10 • ANATOMY OF THE 4-ROLE CARE OS
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
                 {locale === "bn" ? "রোগী, চিকিৎসক, সাপোর্ট ও অ্যাডমিন স্তরসমূহ" : "Anatomy of a Strict 4-Role Clinical Architecture"}
               </h2>
             </div>
-            <Link to="/consultations" className="min-h-11 px-4 rounded-xl border border-sky-400/35 bg-sky-400/10 text-sky-200 text-sm font-semibold inline-flex items-center gap-2">
+            <Link to="/services#section-consultations" className="min-h-11 px-4 rounded-xl border border-sky-400/35 bg-sky-400/10 text-sky-200 text-sm font-semibold inline-flex items-center gap-2">
               <Video className="w-4 h-4 text-[#38bdf8]" />
               {locale === "bn" ? "ভিডিও ডিভাইস প্রিভিউ" : "Open Consultation Demo"}
             </Link>
@@ -1248,14 +1396,15 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          SECTION 06 · CLINICAL SAFETY CHALLENGES & AUDITED M1–M6 BENCHMARKS
+          SECTION 11 · CLINICAL SAFETY CHALLENGES & AUDITED M1–M6 BENCHMARKS
           ================================================================= */}
-      <section id="challenge" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
-        <div className="max-w-7xl mx-auto space-y-12">
+      <section id="challenge" className="relative overflow-hidden py-16 px-4 sm:px-6 border-b border-sky-400/20">
+        <ChapterBackdrop src="/images/backgrounds/bg-ai-research.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto space-y-12">
           <div className="space-y-6">
             <div>
               <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-                06 • FAIL-CLOSED HEALTHCARE SAFETY &amp; RESEARCH BENCHMARKS
+                11 • FAIL-CLOSED HEALTHCARE SAFETY &amp; RESEARCH BENCHMARKS
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
                 {locale === "bn" ? "সার্ভার নিরাপত্তা গার্ড ও নিরীক্ষিত গবেষণা" : "Fail-Closed Safety Barriers & Audited M1–M6 Models"}
@@ -1325,35 +1474,64 @@ export function PublicHomePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {datasets.map((ds) => (
-                <div key={ds.module} className="ss-sapphire-card rounded-2xl p-5 space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-sm text-white">{ds.module}</span>
-                    <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#818cf8]/20 text-[#c7d2fe] font-bold">
-                      {ds.scientific_classification}
-                    </span>
+              {datasets.map((ds) => {
+                const leakFree = String(ds.cross_split_leakage_detected).toLowerCase() === "false";
+                const rawUnits = ds.total_units_raw ?? ds.reconciled_count ?? "Verified";
+                const admitted = ds.admissible_units ?? ds.reconciled_count ?? "Verified";
+                const quarantined = ds.quarantined_units ?? "0";
+                return (
+                  <div key={ds.module} className="ss-sapphire-card rounded-2xl p-5 flex flex-col justify-between gap-3">
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-bold text-sm text-white inline-flex items-center gap-1.5">
+                          <Database className="w-4 h-4 text-[#38bdf8] shrink-0" />
+                          <span>{ds.module}</span>
+                        </span>
+                        <span
+                          className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full font-bold shrink-0 border inline-flex items-center gap-1 ${
+                            leakFree
+                              ? "bg-emerald-500/15 border-emerald-400/35 text-emerald-200"
+                              : "bg-indigo-400/20 border-indigo-400/35 text-indigo-200"
+                          }`}
+                        >
+                          <ShieldCheck className="w-3 h-3" />
+                          {leakFree ? "0% LEAK VERIFIED" : ds.scientific_classification || "AUDIT CHECK"}
+                        </span>
+                      </div>
+                      <p className="text-xs font-semibold text-sky-200">
+                        {ds.dataset_name || ds.dataset_or_scope || ds.module}
+                      </p>
+                      <div className="rounded-xl bg-[#040a18]/80 border border-white/10 p-2.5 space-y-1 font-mono text-[11px]">
+                        <div className="text-emerald-300 font-bold">
+                          Admissible: {admitted} / {rawUnits}
+                        </div>
+                        <div className="text-[#f2c879] text-[10px]">
+                          Quarantined: {quarantined}
+                          {ds.total_independent_groups ? ` • ${ds.total_independent_groups} groups` : ""}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-300 border-t border-white/10 pt-2 leading-relaxed">
+                      {ds.reconciliation_notes || ds.limitations}
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-300">{ds.dataset_or_scope}</p>
-                  <div className="text-xs font-mono font-bold text-sky-300">Reconciled: {ds.reconciled_count}</div>
-                  <p className="text-xs text-slate-400 border-t border-white/10 pt-2">
-                    {ds.limitations}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
       {/* =================================================================
-          SECTION 07 · BY THE NUMBERS (AGRISENSE 60FPS DIGITAL DATA & GRAPH SYSTEM)
+          SECTION 12 · BY THE NUMBERS (AGRISENSE 60FPS DIGITAL DATA & GRAPH SYSTEM)
           ================================================================= */}
-      <section id="impact" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <section id="impact" className="relative overflow-hidden py-16 px-4 sm:px-6 border-b border-sky-400/20">
+        <ChapterBackdrop src="/images/backgrounds/bg-observatory-lab.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
               <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-                07 • EMPIRICAL RIGOR &amp; AGRISENSE-STYLE DIGITAL TELEMETRY
+                12 • EMPIRICAL RIGOR &amp; AGRISENSE-STYLE DIGITAL TELEMETRY
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
                 {locale === "bn"
@@ -1379,7 +1557,7 @@ export function PublicHomePage() {
                 : "Platform Integrity & Research Parity Breakdown"
             }
             breakdownBars={[
-              { name: "SQLite 3 WAL Schema", pct: 100, valueLabel: "37 Tables", color: "#f2c879", note: "BEGIN IMMEDIATE + FK + Triggers" },
+              { name: "SQLite 3 WAL Schema", pct: 100, valueLabel: "54 Tables", color: "#f2c879", note: "BEGIN IMMEDIATE + FK + Triggers" },
               { name: "Bilingual i18n Parity", pct: 100, valueLabel: "100% BN/EN", color: "#38bdf8", note: "Zero untranslated UI keys" },
               { name: "Zero-PHI Support Guard", pct: 100, valueLabel: "403 Block", color: "#2dd4bf", note: "Clinical prose excluded" },
               { name: "HTTP 422 OCR Lockout", pct: 100, valueLabel: "Human-Gated", color: "#818cf8", note: "No auto-scheduled Rx" },
@@ -1407,14 +1585,15 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          SECTION 08 · INTERACTIVE SERVICES HUD & BILINGUAL FAQ
+          SECTION 13 · INTERACTIVE SERVICES HUD & BILINGUAL FAQ
           ================================================================= */}
-      <section id="preview" className="py-16 px-4 sm:px-6 border-b border-sky-400/20 space-y-12">
-        <div className="max-w-7xl mx-auto space-y-6">
+      <section id="preview" className="relative overflow-hidden py-16 px-4 sm:px-6 border-b border-sky-400/20 space-y-12">
+        <ChapterBackdrop src="/images/backgrounds/bg-health-journal.jpg" />
+        <div className="relative z-10 max-w-7xl mx-auto space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
               <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-                08 • INTERACTIVE SERVICES &amp; CARE HUD
+                13 • INTERACTIVE SERVICES &amp; CARE HUD
               </div>
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
                 {locale === "bn" ? "ল্যাব টেস্ট, পারিবারিক প্যাকেজ ও নিরাপদ ক্লিনিক্যাল মডিউল" : "DocTime-Inspired Diagnostics, Family Plans & Care Trackers"}
@@ -1520,7 +1699,7 @@ export function PublicHomePage() {
         </div>
 
         {/* Bilingual FAQ Accordion */}
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className="relative z-10 max-w-4xl mx-auto space-y-4">
           <h2 className="text-2xl font-bold text-center text-white">
             {locale === "bn" ? "সচরাচর জিজ্ঞাসিত প্রশ্ন (FAQ)" : "Frequently Asked Questions"}
           </h2>
@@ -1551,13 +1730,14 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          SECTION 09 · FINAL CONVERSION CTA
+          SECTION 14 · FINAL CONVERSION CTA
           ================================================================= */}
-      <section id="final-cta" className="py-16 px-4 sm:px-6 text-white">
-        <div className="max-w-6xl mx-auto ss-sapphire-card rounded-3xl p-8 sm:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+      <section id="final-cta" className="relative overflow-hidden py-16 px-4 sm:px-6 text-white">
+        <ChapterBackdrop src="/images/hero/hero-doctors-telemedicine.jpg" position="center 22%" />
+        <div className="relative z-10 max-w-6xl mx-auto ss-sapphire-card rounded-3xl p-8 sm:p-10 flex flex-col lg:flex-row items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-1.5 text-xs font-mono text-sky-300 uppercase tracking-widest">
-              <Sparkles className="w-4 h-4" /> READY TO EXPLORE
+              <Sparkles className="w-4 h-4" /> 14 • READY TO EXPLORE
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
               <Stethoscope className="w-6 h-6 text-teal-300" />
@@ -1565,15 +1745,21 @@ export function PublicHomePage() {
             </h2>
             <p className="text-sm text-slate-300">
               {locale === "bn"
-                ? "রোগী, ডাক্তার, সাপোর্ট বা অ্যাডমিন অ্যাকাউন্ট দিয়ে সাইন ইন করুন অথবা নতুন রোগী হিসেবে নিবন্ধন করুন।"
-                : "Sign in with synthetic demo accounts or register a fresh Patient or Doctor application right now."}
+                ? "রোগী, ডাক্তার, সাপোর্ট বা অ্যাডমিন অ্যাকাউন্ট দিয়ে সাইন ইন করুন অথবা ব্লাড কানেক্ট, স্বাস্থ্যসেবা ও স্বাস্থ্যবার্তা ঘুরে দেখুন।"
+                : "Sign in with synthetic demo accounts, register a fresh Patient or Doctor application, or launch Blood Connect, Health Services, and Health Journal."}
             </p>
           </div>
-          <div className="flex flex-wrap gap-3 shrink-0">
-            <Link to="/login" className="min-h-12 px-6 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 text-slate-950 font-bold text-sm inline-flex items-center gap-2 hover:from-sky-300 hover:to-teal-300 shadow-lg">
+          <div className="flex flex-wrap gap-2.5 shrink-0">
+            <Link to="/login" className="min-h-11 px-5 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 text-slate-950 font-bold text-xs inline-flex items-center gap-2 hover:from-sky-300 hover:to-teal-300 shadow-lg">
               {t("publicSite.nav.login")} <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link to="/doctor-apply" className="min-h-12 px-6 rounded-full border border-white/25 bg-white/5 hover:bg-white/10 text-white font-semibold text-sm inline-flex items-center">
+            <Link to="/blood-connect" className="min-h-11 px-4 rounded-full border border-rose-400/40 bg-rose-500/15 hover:bg-rose-500/25 text-rose-200 font-semibold text-xs inline-flex items-center gap-1.5">
+              <Droplet className="w-3.5 h-3.5" /> {locale === "bn" ? "ব্লাড কানেক্ট" : "Blood Connect"}
+            </Link>
+            <Link to="/journal" className="min-h-11 px-4 rounded-full border border-teal-400/35 bg-teal-400/15 hover:bg-teal-400/25 text-teal-200 font-semibold text-xs inline-flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5" /> {locale === "bn" ? "স্বাস্থ্যবার্তা" : "Health Journal"}
+            </Link>
+            <Link to="/doctor-apply" className="min-h-11 px-4 rounded-full border border-white/25 bg-white/5 hover:bg-white/10 text-white font-semibold text-xs inline-flex items-center">
               {t("auth.doctorApplyLink")}
             </Link>
           </div>

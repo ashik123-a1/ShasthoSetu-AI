@@ -119,7 +119,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
     <>
       <header
         data-testid="public-floating-header"
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 pointer-events-none ${
+        className={`fixed top-[4px] left-0 right-0 z-40 transition-all duration-300 pointer-events-none ${
           isHeroGlass ? "pt-2.5 pb-1.5" : "py-2 bg-[var(--glass-bg)]/80 backdrop-blur-xl border-b border-[var(--glass-border)] shadow-sm"
         }`}
       >

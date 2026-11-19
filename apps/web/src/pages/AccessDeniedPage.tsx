@@ -3,6 +3,7 @@ import { ShieldAlert } from "lucide-react";
 import { roleHomePath, useAuth } from "../lib/authContext";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 
 export function AccessDeniedPage() {
   const { locale } = useI18n();
@@ -11,11 +12,12 @@ export function AccessDeniedPage() {
   const state = (location.state || {}) as { from?: string };
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-28 px-4">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-28 px-4 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-ai-research.jpg" mode="adaptive" />
       <PublicFloatingHeader />
       <div
         data-testid="access-denied-page"
-        className="max-w-xl mx-auto rounded-3xl border border-rose-500/40 bg-[var(--color-surface)] p-8 text-center space-y-4 shadow-xl"
+        className="relative z-10 max-w-xl mx-auto rounded-3xl border border-rose-500/40 bg-[var(--color-surface)] p-8 text-center space-y-4 shadow-xl"
       >
         <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto" />
         <h1 className="text-2xl font-bold">

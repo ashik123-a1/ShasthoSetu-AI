@@ -24,6 +24,13 @@ export function PortalLayout({
 
   if (!user) return null;
   const navItems = FOUR_ROLE_NAV_CONFIG[user.primary_role] || [];
+  const backdropMap: Record<string, string> = {
+    PATIENT: "/images/backgrounds/bg-services-lab.jpg",
+    DOCTOR: "/images/backgrounds/bg-doctors-consult.jpg",
+    ADMIN: "/images/backgrounds/bg-ai-research.jpg",
+    SUPPORT: "/images/backgrounds/bg-bangla-voice.jpg",
+  };
+  const backdropSrc = backdropMap[user.primary_role] || "/images/backgrounds/bg-services-lab.jpg";
 
   const handleLogout = async () => {
     await logout();
@@ -32,7 +39,7 @@ export function PortalLayout({
 
   return (
     <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] flex flex-col overflow-x-clip">
-      <PageBackdropLayer imageSrc="/images/backgrounds/bg-ai-research.jpg" mode="adaptive" opacity={0.08} />
+      <PageBackdropLayer imageSrc={backdropSrc} mode="adaptive" />
       {/* Authenticated Top Header */}
       <header
         data-testid="portal-header"

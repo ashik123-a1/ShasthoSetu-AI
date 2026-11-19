@@ -494,7 +494,7 @@ export function BloodConnectPage() {
 
   return (
     <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-24 overflow-x-clip text-white" data-testid="blood-connect-page">
-      <PageBackdropLayer imageSrc="/images/backgrounds/bg-services-lab.jpg" />
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-blood-connect.jpg" />
       <PublicFloatingHeader transparentHero />
 
       <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-6 flex-1">

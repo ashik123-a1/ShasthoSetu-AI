@@ -6,8 +6,8 @@ const INTERACTIVE_SELECTOR =
   'a, button, [role="button"], [role="tab"], input, select, textarea, summary, .ss-sapphire-card, .ss-card, .ss-glow-card, [data-glow-card]';
 const NO_TILT_SELECTOR = '[data-no-tilt], [role="dialog"], [role="alert"], [data-testid="ui-data-table"]';
 
-const AURORA_HALF = 270; // 540px / 2
-const CORE_HALF = 75; // 150px / 2
+const AURORA_HALF = 230; // 460px / 2
+const CORE_HALF = 90; // 180px / 2
 
 function clampUnit(value: number): number {
   return Math.max(-1, Math.min(1, value));
@@ -36,19 +36,16 @@ export function GlobalCursorGlow() {
       return;
     }
 
-    const fineMq = window.matchMedia("(pointer: fine)");
-    const reducedMq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const fineMq = window.matchMedia("(any-pointer: fine)");
 
     const update = () => {
-      setPointerEligible(fineMq.matches && !reducedMq.matches && !motionPaused);
+      setPointerEligible(fineMq.matches && !motionPaused);
     };
     update();
 
     fineMq.addEventListener("change", update);
-    reducedMq.addEventListener("change", update);
     return () => {
       fineMq.removeEventListener("change", update);
-      reducedMq.removeEventListener("change", update);
     };
   }, [motionPaused]);
 
@@ -81,7 +78,8 @@ export function GlobalCursorGlow() {
 
     const applyDarkSurfaceClass = (target: EventTarget | null) => {
       const el = target instanceof Element ? target : null;
-      const onSapphireAlways = Boolean(el?.closest(".ss-sapphire-always"));
+      const onSapphireAlways =
+        Boolean(el?.closest(".ss-sapphire-always")) || Boolean(document.querySelector(".ss-sapphire-always"));
       const isDark = theme === "dark" || onSapphireAlways;
       auroraEl?.classList.toggle("ss-cursor-on-dark", isDark);
       coreEl?.classList.toggle("ss-cursor-on-dark", isDark);
@@ -138,7 +136,7 @@ export function GlobalCursorGlow() {
         root.classList.add("is-scrolling");
       }
       window.clearTimeout(scrollTimer);
-      scrollTimer = window.setTimeout(clearScrollFlag, 140);
+      scrollTimer = window.setTimeout(clearScrollFlag, 80);
     };
 
     const onPointerMove = (e: PointerEvent) => {

@@ -35,7 +35,7 @@ export function PublicCareMapPage() {
 
   return (
     <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-24 overflow-x-clip" data-testid="care-map-page">
-      <PageBackdropLayer imageSrc="/images/backgrounds/dhaka-aerial-map-bg.jpg" opacity={0.22} />
+      <PageBackdropLayer imageSrc="/images/backgrounds/dhaka-aerial-map-bg.jpg" />
       <PublicFloatingHeader transparentHero />
 
       <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
