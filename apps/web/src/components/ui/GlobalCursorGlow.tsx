@@ -6,7 +6,7 @@ const INTERACTIVE_SELECTOR =
   'a, button, [role="button"], [role="tab"], input, select, textarea, summary, .ss-sapphire-card, .ss-card, .ss-glow-card, [data-glow-card]';
 const NO_TILT_SELECTOR = '[data-no-tilt], [role="dialog"], [role="alert"], [data-testid="ui-data-table"]';
 
-const AURORA_HALF = 230; // 460px / 2
+const AURORA_HALF = 220; // 440px / 2
 const CORE_HALF = 90; // 180px / 2
 
 function clampUnit(value: number): number {

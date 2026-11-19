@@ -164,13 +164,13 @@ interface MyBloodProfile {
   }>;
 }
 
-type BcTab = "requests" | "nearby" | "donor" | "tracker";
-
 export function BloodConnectPage() {
   const { locale } = useI18n();
   const { authenticated, user } = useAuth();
 
-  const [tab, setTab] = useState<BcTab>("requests");
+  const scrollToSection = (sectionId: string) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const [overview, setOverview] = useState<BloodOverview | null>(null);
   const [requests, setRequests] = useState<BloodRequestItem[]>([]);
   const [nearbyDonors, setNearbyDonors] = useState<PublicDonor[]>([]);
@@ -277,9 +277,9 @@ export function BloodConnectPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterGroup, includeCompat, radiusKm, hubIdx, customCenter, authenticated]);
 
-  // Mount & update Leaflet map when viewing Nearby Radius Matching tab
+  // Mount & update Leaflet radius map for continuous vertical Section 02
   useEffect(() => {
-    if (tab !== "nearby" || !mapRef.current) return;
+    if ((loading && !overview) || !mapRef.current) return;
 
     if (!leafletRef.current) {
       const map = L.map(mapRef.current, {
@@ -297,6 +297,7 @@ export function BloodConnectPage() {
       ).addTo(map);
       layerGroupRef.current = L.layerGroup().addTo(map);
       leafletRef.current = map;
+      window.setTimeout(() => map.invalidateSize(), 120);
     }
 
     const map = leafletRef.current;
@@ -341,15 +342,17 @@ export function BloodConnectPage() {
         )
         .addTo(lg);
     });
-  }, [tab, activeCenter.lat, activeCenter.lng, radiusKm, nearbyDonors, hubIdx]);
+  }, [loading, Boolean(overview), activeCenter.lat, activeCenter.lng, radiusKm, nearbyDonors, hubIdx]);
 
   useEffect(() => {
-    if (tab !== "nearby" && leafletRef.current) {
-      leafletRef.current.remove();
-      leafletRef.current = null;
-      layerGroupRef.current = null;
-    }
-  }, [tab]);
+    return () => {
+      if (leafletRef.current) {
+        leafletRef.current.remove();
+        leafletRef.current = null;
+        layerGroupRef.current = null;
+      }
+    };
+  }, []);
 
   const handleUseGps = () => {
     if (!navigator.geolocation) return;
@@ -429,7 +432,7 @@ export function BloodConnectPage() {
       });
       setConsentTargetReq(null);
       setConsentChecked(false);
-      setTab("tracker");
+      scrollToSection("bc-tracking");
       await loadAllData();
     } catch (err) {
       setBannerMsg({ tone: "err", text: err instanceof Error ? err.message : "Register a donor profile first to accept requests." });
@@ -497,7 +500,7 @@ export function BloodConnectPage() {
       <PageBackdropLayer imageSrc="/images/backgrounds/bg-blood-connect.jpg" />
       <PublicFloatingHeader transparentHero />
 
-      <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-6 flex-1">
+      <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-12 flex-1">
         {/* Top Hero & Clinical Safeguard Banner */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 space-y-5 border-rose-500/35">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -587,25 +590,25 @@ export function BloodConnectPage() {
             </div>
           </div>
 
-          {/* 4 Workflow Tabs */}
+          {/* 4 Workflow Smooth-Scroll Jump Pills (Scroll down to see all 4 sections sequentially) */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             <div className="flex flex-wrap gap-2">
               {(
                 [
-                  ["requests", locale === "bn" ? "১. জরুরি রক্ত খুঁজুন" : "1. Find Blood Requests"],
-                  ["nearby", locale === "bn" ? "২. ৫/১০/২০ কিমি ম্যাপ ম্যাচিং" : "2. Nearby Radius Map"],
-                  ["donor", locale === "bn" ? "৩. রক্তদাতা নিবন্ধন" : "3. Become a Donor"],
-                  ["tracker", locale === "bn" ? "৪. কনসেন্ট ও ট্র্যাকিং" : "4. Consent & Tracking"],
+                  ["bc-requests", locale === "bn" ? "১. জরুরি রক্ত খুঁজুন" : "1. Find Blood Requests"],
+                  ["bc-map", locale === "bn" ? "২. ৫/১০/২০ কিমি ম্যাপ ম্যাচিং" : "2. Nearby Radius Map"],
+                  ["bc-donor", locale === "bn" ? "৩. রক্তদাতা নিবন্ধন" : "3. Become a Donor"],
+                  ["bc-tracking", locale === "bn" ? "৪. কনসেন্ট ও ট্র্যাকিং" : "4. Consent & Tracking"],
                 ] as const
-              ).map(([k, label]) => (
+              ).map(([targetId, label], idx) => (
                 <button
-                  key={k}
+                  key={targetId}
                   type="button"
-                  onClick={() => setTab(k)}
+                  onClick={() => scrollToSection(targetId)}
                   className={`min-h-11 px-4 rounded-full text-xs font-bold cursor-pointer transition ${
-                    tab === k
+                    idx === 0
                       ? "bg-gradient-to-r from-rose-500 to-sky-400 text-slate-950 shadow"
-                      : "bg-white/10 hover:bg-white/15 text-slate-200 border border-white/15"
+                      : "bg-white/10 hover:bg-gradient-to-r hover:from-rose-500/80 hover:to-sky-400/80 hover:text-slate-950 text-slate-100 border border-white/15"
                   }`}
                 >
                   {label}
@@ -639,49 +642,47 @@ export function BloodConnectPage() {
           </div>
         )}
 
-        {/* Blood Group Filter Strip */}
-        {(tab === "requests" || tab === "nearby") && (
-          <section className="flex flex-wrap items-center gap-2">
-            {BLOOD_GROUPS.map((bg) => (
-              <button
-                key={bg}
-                type="button"
-                onClick={() => setFilterGroup(bg)}
-                className={`min-h-10 px-3.5 rounded-full text-xs font-mono font-bold cursor-pointer border transition ${
-                  filterGroup === bg
-                    ? "bg-rose-500 text-white border-transparent shadow"
-                    : "bg-[#040a18]/80 border-white/15 text-slate-300 hover:border-rose-400/50"
-                }`}
-              >
-                {bg}
-              </button>
-            ))}
-            {tab === "nearby" && (
-              <label className="ml-auto inline-flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
-                <input type="checkbox" checked={includeCompat} onChange={(e) => setIncludeCompat(e.target.checked)} />
-                <span>Include coordination group notes (non-diagnostic)</span>
-              </label>
-            )}
-          </section>
-        )}
-
         {loading && !overview ? (
           <Skeleton className="h-64 w-full" />
-        ) : tab === "requests" ? (
-          <section className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Radio className="w-5 h-5 text-rose-400" />
-                {locale === "bn" ? "সক্রিয় জরুরি রক্তের অনুরোধ" : "Live Active Blood Requests"}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowPostForm((v) => !v)}
-                className="min-h-11 px-5 rounded-full bg-gradient-to-r from-rose-500 to-amber-400 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <PlusCircle className="w-4 h-4" /> Post Emergency Blood Request
-              </button>
-            </div>
+        ) : (
+          <>
+            {/* SECTION 01 · FIND BLOOD REQUESTS + BLOOD GROUP FILTER */}
+            <section id="bc-requests" className="scroll-mt-28 space-y-5">
+              <div className="flex flex-wrap items-center gap-2">
+                {BLOOD_GROUPS.map((bg) => (
+                  <button
+                    key={bg}
+                    type="button"
+                    onClick={() => setFilterGroup(bg)}
+                    className={`min-h-10 px-3.5 rounded-full text-xs font-mono font-bold cursor-pointer border transition ${
+                      filterGroup === bg
+                        ? "bg-rose-500 text-white border-transparent shadow"
+                        : "bg-[#040a18]/80 border-white/15 text-slate-300 hover:border-rose-400/50"
+                    }`}
+                  >
+                    {bg}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-rose-400">
+                    01 • FIND BLOOD REQUESTS
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                    <Radio className="w-5 h-5 text-rose-400" />
+                    {locale === "bn" ? "সক্রিয় জরুরি রক্তের অনুরোধ" : "Live Active Blood Requests"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPostForm((v) => !v)}
+                  className="min-h-11 px-5 rounded-full bg-gradient-to-r from-rose-500 to-amber-400 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4" /> Post Emergency Blood Request
+                </button>
+              </div>
 
             {showPostForm && (
               <form onSubmit={(e) => void handleCreateRequest(e)} className="ss-sapphire-card rounded-3xl p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -814,9 +815,25 @@ export function BloodConnectPage() {
                 </article>
               ))}
             </div>
-          </section>
-        ) : tab === "nearby" ? (
-          <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            </section>
+
+            {/* SECTION 02 · 5 / 10 / 20 KM NEARBY RADIUS MAP & MATCHING */}
+            <section id="bc-map" className="scroll-mt-28 space-y-5">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#38bdf8]">
+                    02 • 5 / 10 / 20 KM NEARBY RADIUS MAP &amp; MATCHING
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold">
+                    {locale === "bn" ? "কাছাকাছি রক্তদাতা ও হাসপাতাল রেডিয়াস ম্যাপ" : "Proximity Radius Donor Map & Matching"}
+                  </h2>
+                </div>
+                <label className="inline-flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                  <input type="checkbox" checked={includeCompat} onChange={(e) => setIncludeCompat(e.target.checked)} />
+                  <span>Include coordination group notes (non-diagnostic)</span>
+                </label>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <div className="lg:col-span-7 ss-sapphire-card rounded-3xl p-4 sm:p-5 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap gap-1.5">
@@ -945,13 +962,15 @@ export function BloodConnectPage() {
                 </div>
               </div>
             </div>
-          </section>
-        ) : tab === "donor" ? (
-          <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 max-w-4xl mx-auto space-y-5">
-            <div className="space-y-1">
-              <span className="font-mono text-xs text-rose-400 inline-flex items-center gap-1.5">
-                <UserPlus className="w-4 h-4" /> VOLUNTARY DONOR REGISTRY (DATA INTAKE)
-              </span>
+              </div>
+            </section>
+
+            {/* SECTION 03 · BECOME A REGISTERED DONOR */}
+            <section id="bc-donor" className="scroll-mt-28 ss-sapphire-card rounded-3xl p-6 sm:p-8 max-w-4xl mx-auto space-y-5">
+              <div className="space-y-1">
+                <span className="font-mono text-xs text-rose-400 inline-flex items-center gap-1.5">
+                  <UserPlus className="w-4 h-4" /> 03 • VOLUNTARY DONOR REGISTRY (DATA INTAKE)
+                </span>
               <h2 className="text-2xl font-bold">
                 {locale === "bn" ? "রক্তদাতা হিসেবে নিবন্ধন / তথ্য হালনাগাদ" : "Register or Update Your Voluntary Donor Profile"}
               </h2>
@@ -1026,10 +1045,18 @@ export function BloodConnectPage() {
                 </button>
               </div>
             </form>
-          </section>
-        ) : (
-          /* TAB 4: CONSENT, MASKED CONTACT REVEAL & DONATION CONFIRMATION TRACKER */
-          <section className="space-y-6">
+            </section>
+
+            {/* SECTION 04 · CONSENT-GATED CONTACT ACCESS & TRACKING */}
+            <section id="bc-tracking" className="scroll-mt-28 space-y-6">
+              <div className="space-y-1">
+                <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#2dd4bf]">
+                  04 • CONSENT-GATED CONTACT ACCESS &amp; TRACKING
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold">
+                  {locale === "bn" ? "কনসেন্ট-নিয়ন্ত্রিত যোগাযোগ ও রক্তদান ট্র্যাকার" : "Consent Contact Access & Donation Confirmation Tracker"}
+                </h2>
+              </div>
             {!authenticated ? (
               <div className="ss-sapphire-card rounded-3xl p-8 text-center space-y-4">
                 <Lock className="w-10 h-10 mx-auto text-sky-400" />
@@ -1176,7 +1203,8 @@ export function BloodConnectPage() {
                 </div>
               </div>
             )}
-          </section>
+            </section>
+          </>
         )}
 
         {/* Explicit Two-Way Consent Modal before revealing phone */}

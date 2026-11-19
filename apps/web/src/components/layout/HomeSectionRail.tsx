@@ -50,6 +50,13 @@ const RESEARCH_SECTIONS: RailSectionItem[] = [
   { id: "res-sandbox", num: "08", labelEn: "Sandbox", labelBn: "স্যান্ডবক্স" },
 ];
 
+const BLOOD_CONNECT_SECTIONS: RailSectionItem[] = [
+  { id: "bc-requests", num: "01", labelEn: "Find Blood", labelBn: "রক্ত খুঁজুন" },
+  { id: "bc-map", num: "02", labelEn: "Radius Map", labelBn: "রেডিয়াস ম্যাপ" },
+  { id: "bc-donor", num: "03", labelEn: "Become Donor", labelBn: "রক্তদাতা নিবন্ধন" },
+  { id: "bc-tracking", num: "04", labelEn: "Consent & Track", labelBn: "কনসেন্ট ও ট্র্যাক" },
+];
+
 /**
  * Global AgriSense-style top scroll-progress bar with route-aware interactive chapter ticks.
  * Mounted globally across ALL pages so every route displays the luminous emerald-cyan-gold scroll rail.
@@ -66,6 +73,7 @@ export function HomeSectionRail() {
     if (pathname === "/") return HOME_SECTIONS;
     if (pathname.startsWith("/services")) return SERVICES_SECTIONS;
     if (pathname.startsWith("/find-care")) return FIND_CARE_SECTIONS;
+    if (pathname.startsWith("/blood-connect")) return BLOOD_CONNECT_SECTIONS;
     if (pathname === "/research") return RESEARCH_SECTIONS;
     return [];
   }, [pathname]);
