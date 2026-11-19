@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FlaskConical, Hospital, Search, Stethoscope, X } from "lucide-react";
+import { Droplets, FlaskConical, Hospital, Newspaper, Search, Stethoscope, X } from "lucide-react";
 import { apiGet } from "../../lib/apiClient";
 import { useI18n } from "../../lib/i18n";
 
@@ -8,7 +8,8 @@ interface SearchResultPayload {
   doctors: Array<{ id: string; display_name: string; display_name_bn?: string; specialty: string; district: string }>;
   diagnostic_tests: Array<{ id: string; code: string; name_bn: string; name_en: string; fee_minor_poisha: number }>;
   facilities: Array<{ id: string; name: string; facility_type: string; district: string }>;
-  healthcare_plans: Array<{ id: string; name_bn: string; name_en: string; monthly_fee_minor_poisha: number }>;
+  blood_requests?: Array<{ id: string; patient_ref_label: string; blood_group: string; urgency_level: string; hospital_name: string; district: string }>;
+  journal_items?: Array<{ id: string; item_type: string; language: string; title: string; title_bn?: string; source_name: string }>;
 }
 
 export function CommandSearchModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -158,7 +159,7 @@ export function CommandSearchModal({ open, onClose }: { open: boolean; onClose: 
                     <button
                       key={fac.id}
                       type="button"
-                      onClick={() => go("/services")}
+                      onClick={() => go("/find-care")}
                       className="w-full min-h-11 px-3 py-2 rounded-xl flex items-center justify-between text-left hover:bg-[var(--color-surface-alt)] transition"
                     >
                       <span className="flex items-center gap-2.5">
@@ -166,6 +167,38 @@ export function CommandSearchModal({ open, onClose }: { open: boolean; onClose: 
                         <span className="text-sm text-[var(--color-text)]">{fac.name}</span>
                       </span>
                       <span className="text-xs text-[var(--color-text-muted)]">{fac.district}</span>
+                    </button>
+                  ))}
+                  {(results.blood_requests || []).map((req) => (
+                    <button
+                      key={req.id}
+                      type="button"
+                      onClick={() => go("/blood-connect")}
+                      className="w-full min-h-11 px-3 py-2 rounded-xl flex items-center justify-between text-left hover:bg-rose-500/10 transition"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Droplets className="w-4 h-4 text-rose-500" />
+                        <span className="text-sm text-[var(--color-text)]">
+                          [{req.blood_group}] {req.hospital_name}
+                        </span>
+                      </span>
+                      <span className="text-xs font-mono text-rose-400">{req.urgency_level}</span>
+                    </button>
+                  ))}
+                  {(results.journal_items || []).map((art) => (
+                    <button
+                      key={art.id}
+                      type="button"
+                      onClick={() => go("/journal")}
+                      className="w-full min-h-11 px-3 py-2 rounded-xl flex items-center justify-between text-left hover:bg-[var(--color-surface-alt)] transition"
+                    >
+                      <span className="flex items-center gap-2.5 min-w-0">
+                        <Newspaper className="w-4 h-4 text-sky-400 shrink-0" />
+                        <span className="text-sm text-[var(--color-text)] truncate">
+                          {locale === "bn" && art.title_bn ? art.title_bn : art.title}
+                        </span>
+                      </span>
+                      <span className="text-xs text-[var(--color-text-muted)] shrink-0">{art.source_name}</span>
                     </button>
                   ))}
                 </div>

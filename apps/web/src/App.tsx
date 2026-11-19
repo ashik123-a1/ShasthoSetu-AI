@@ -8,10 +8,14 @@ import { PreferencesProvider, usePreferences } from "./lib/preferences";
 import type { AppRole } from "./lib/roleNavigation";
 import { RequireRole } from "./components/auth/RequireRole";
 import { PublicHomePage } from "./pages/PublicHomePage";
+import { BloodConnectPage } from "./pages/BloodConnectPage";
+import { FindCarePage } from "./pages/FindCarePage";
 import { PublicDoctorsPage } from "./pages/PublicDoctorsPage";
 import { PublicConsultationsPage } from "./pages/PublicConsultationsPage";
 import { PublicServicesPage } from "./pages/PublicServicesPage";
 import { PublicResearchPage } from "./pages/PublicResearchPage";
+import { ResearchModelDetailPage } from "./pages/ResearchModelDetailPage";
+import { HealthJournalPage } from "./pages/HealthJournalPage";
 import { PublicAboutPage } from "./pages/PublicAboutPage";
 import { PublicCareMapPage } from "./pages/PublicCareMapPage";
 import { PcosFeaturePage } from "./pages/PcosFeaturePage";
@@ -80,8 +84,10 @@ function AppRoutes() {
     <MotionConfig reducedMotion={motionPaused ? "always" : "user"}>
       <GlobalCursorGlow />
       <Routes>
-        {/* Public Routes */}
+        {/* Public Routes (Home & /features/* untouched) */}
         <Route path="/" element={<PublicHomePage />} />
+        <Route path="/blood-connect" element={<BloodConnectPage />} />
+        <Route path="/find-care" element={<FindCarePage />} />
         <Route path="/doctors" element={<PublicDoctorsPage />} />
         <Route path="/doctors/:doctorId" element={<PublicDoctorsPage />} />
         <Route path="/care-map" element={<PublicCareMapPage />} />
@@ -93,6 +99,8 @@ function AppRoutes() {
         <Route path="/consultations" element={<PublicConsultationsPage />} />
         <Route path="/services" element={<PublicServicesPage />} />
         <Route path="/research" element={<PublicResearchPage />} />
+        <Route path="/research/:modelSlug" element={<ResearchModelDetailPage />} />
+        <Route path="/journal" element={<HealthJournalPage />} />
         <Route path="/about" element={<PublicAboutPage />} />
 
         {/* Auth & Onboarding Routes */}

@@ -25,6 +25,121 @@ def _slot_iso(days_ahead: int, hour_utc: int, minute: int = 0) -> str:
     return base.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 
+def _seed_blood_and_journal(conn, now: str) -> None:
+    """Idempotent seed for Blood Connect & Health Journal (runs safely even on existing DBs)."""
+    donor_count = conn.execute("SELECT COUNT(*) FROM blood_donors").fetchone()[0]
+    if donor_count == 0:
+        donors = [
+            ("bdon-rahima", "usr-pt-demo", "রহিমা বেগম (Rahima Begum • Demo)", "O+", "WHOLE_BLOOD", "2026-07-10", "AVAILABLE", "Dhaka", "Dhaka", "Bakshibazar / DMCH Zone", 23.7295, 90.3985, "+8801711000101", 4.9, 3, 0),
+            ("bdon-sakib", "usr-pt-demo2", "সাকিব হাসান (Sakib Hasan • Demo)", "B+", "WHOLE_BLOOD", "2026-08-22", "AVAILABLE", "Dhaka", "Dhaka", "Dhanmondi / Kalabagan", 23.7450, 90.3820, "+8801711000109", 4.85, 2, 0),
+            ("bdon-tanvir-dhk", None, "তানজিম করিম (Tanzim • Demo Donor)", "O+", "PLATELETS", "2026-09-04", "AVAILABLE", "Dhaka", "Dhaka", "Shahbagh Square", 23.7382, 90.3958, "+8801711900111", 4.95, 5, 0),
+            ("bdon-nusrat-dhk", None, "মালিহা তাসনিম (Maliha • Demo Donor)", "A+", "WHOLE_BLOOD", "2026-06-18", "AVAILABLE", "Dhaka", "Dhaka", "Mohakhali icddr,b Zone", 23.7785, 90.3992, "+8801711900112", 4.9, 4, 0),
+            ("bdon-farhan-dhk", None, "ফারহান ইসলাম (Farhan • Demo Donor)", "O-", "WHOLE_BLOOD", None, "AVAILABLE", "Dhaka", "Dhaka", "Uttara Sector 7", 23.8685, 90.4012, "+8801711900113", 4.8, 1, 0),
+            ("bdon-arif-ctg", None, "আরিফ চৌধুরী (Arif • Chattogram)", "B+", "WHOLE_BLOOD", "2026-08-01", "AVAILABLE", "Chattogram", "Chattogram", "Panchlaish / CMCH Gate", 22.3612, 91.8322, "+8801811900201", 4.92, 4, 0),
+            ("bdon-sumaiya-ctg", None, "সুমাইয়া আক্তার (Sumaiya • Ctg)", "AB+", "PLASMA", "2026-10-12", "RECENTLY_DONATED", "Chattogram", "Chattogram", "Agrabad Commercial", 22.3264, 91.8124, "+8801811900202", 4.7, 2, 0),
+            ("bdon-mahmud-raj", None, "মাহমুদ হাসান (Mahmud • Rajshahi)", "A+", "WHOLE_BLOOD", "2026-07-28", "AVAILABLE", "Rajshahi", "Rajshahi", "Laxmipur / RMCH Road", 24.3735, 88.5842, "+8801711900301", 4.88, 3, 0),
+            ("bdon-nadia-syl", None, "নাদিয়া ইসলাম (Nadia • Sylhet)", "AB-", "WHOLE_BLOOD", "2026-05-15", "AVAILABLE", "Sylhet", "Sylhet", "Ambarkhana / Osmani Rd", 24.9045, 91.8615, "+8801711900401", 4.94, 3, 0),
+            ("bdon-kamrul-khl", None, "কামরুল শেখ (Kamrul • Khulna)", "O+", "WHOLE_BLOOD", "2026-08-19", "AVAILABLE", "Khulna", "Khulna", "Boyra Medical More", 22.8315, 89.5418, "+8801911900501", 4.85, 2, 0),
+            ("bdon-tasnia-bar", None, "তাসনিয়া রহমান (Tasnia • Barishal)", "B-", "WHOLE_BLOOD", None, "AVAILABLE", "Barishal", "Barishal", "Band Road / SBMCH", 22.6889, 90.3635, "+8801711900601", 4.8, 1, 0),
+            ("bdon-shafiq-rng", None, "শফিকুল ইসলাম (Shafiq • Rangpur)", "A-", "WHOLE_BLOOD", "2026-07-02", "AVAILABLE", "Rangpur", "Rangpur", "Medical East Gate", 25.7662, 89.2361, "+8801711900701", 4.87, 2, 0),
+            ("bdon-mehedi-mym", None, "মেহেদী হাসান (Mehedi • Mymensingh)", "O+", "WHOLE_BLOOD", "2026-09-01", "AVAILABLE", "Mymensingh", "Mymensingh", "Charpara MMCH Crossing", 24.7445, 90.4112, "+8801711900801", 4.9, 3, 0),
+        ]
+        for row in donors:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO blood_donors (
+                    id, user_id, display_name, blood_group, donation_type, last_donation_date,
+                    availability_status, division, district, area_name, lat, lng, contact_phone,
+                    trust_score, verified_donations_count, no_show_count, screening_policy_acknowledged,
+                    is_synthetic, created_at_utc, updated_at_utc
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)
+                """,
+                (*row, now, now),
+            )
+
+    req_count = conn.execute("SELECT COUNT(*) FROM blood_requests").fetchone()[0]
+    if req_count == 0:
+        reqs = [
+            ("breq-dmch-emg", "usr-pt-demo2", "Ward-14 Hematology Patient (Demo)", "O+", 2, 0, "EMERGENCY", "Dhaka Medical College Hospital (DMCH)", 1, "Dhaka", "Dhaka", 23.7259, 90.3976, 5.0, "2026-11-20T12:00:00.000Z", "Urgent 2 bags Whole Blood / RBC needed per hospital blood bank cross-match requisition.", "OPEN"),
+            ("breq-cmch-emg", "usr-dr-nusrat", "Surgical Unit-2 Patient (Demo)", "B+", 1, 0, "EMERGENCY", "Chattogram Medical College Hospital (CMCH)", 1, "Chattogram", "Chattogram", 22.3596, 91.8305, 10.0, "2026-11-20T18:00:00.000Z", "Hospital-verified emergency surgery support; cross-match desk open 24h.", "OPEN"),
+            ("breq-rmch-urg", "usr-pt-demo", "Maternal Care Ward-4 (Demo)", "A+", 1, 0, "URGENT", "Rajshahi Medical College Hospital (RMCH)", 0, "Rajshahi", "Rajshahi", 24.3718, 88.5806, 10.0, "2026-11-21T10:00:00.000Z", "Postpartum anemia coordination request.", "OPEN"),
+            ("breq-somch-sch", "usr-dr-farhana", "Thalassemia Routine Schedule (Demo)", "AB-", 1, 0, "SCHEDULED", "Sylhet MAG Osmani Medical College Hospital", 1, "Sylhet", "Sylhet", 24.9016, 91.8533, 20.0, "2026-11-23T09:00:00.000Z", "Planned scheduled support; blood bank screening mandatory before donation.", "OPEN"),
+        ]
+        for row in reqs:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO blood_requests (
+                    id, requester_user_id, patient_ref_label, blood_group, units_required, units_fulfilled,
+                    urgency_level, hospital_name, hospital_verified, division, district, lat, lng,
+                    search_radius_km, needed_by_utc, notes, status, is_synthetic, created_at_utc, updated_at_utc
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                """,
+                (*row, now, now),
+            )
+
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO blood_match_logs (id, request_id, donor_id, notified_at_utc, response_status, consent_phone_shared)
+            VALUES
+              ('bmat-seed-1', 'breq-dmch-emg', 'bdon-rahima', ?, 'NOTIFIED', 0),
+              ('bmat-seed-2', 'breq-cmch-emg', 'bdon-arif-ctg', ?, 'NOTIFIED', 0)
+            """,
+            (now, now),
+        )
+
+    blog_count = conn.execute("SELECT COUNT(*) FROM journal_items WHERE item_type = 'BLOG'").fetchone()[0]
+    if blog_count == 0:
+        curated = [
+            (
+                "jrn-blog-pcos", "BLOG", "bilingual", "womens-health",
+                "PCOS Clinical Assessment vs. Ultrasound PCOM Morphology: Why Track Separation Matters",
+                "পিসিওএস ক্লিনিকাল মূল্যায়ন বনাম আল্ট্রাসাউন্ড PCOM মরফোলজি: দুই ট্র্যাক আলাদা রাখা কেন জরুরি",
+                "Rotterdam diagnostic guidelines require multiple clinical, hormonal, and sonographic inputs. Research classifiers must keep lab models (M01) separate from ovarian ultrasound morphology (M02) under clinician oversight.",
+                "রটারডাম মানদণ্ড অনুযায়ী হরমোনাল ল্যাব তথ্য ও আল্ট্রাসাউন্ড মরফোলজি আলাদাভাবে চিকিৎসকের পর্যালোচনায় দেখা উচিত—একটি আল্ট্রাসাউন্ড ছবি এককভাবে রোগ নির্ণয় নয়।",
+                "ShasthoSetu Editorial Board", "https://www.who.int/news-room/fact-sheets/detail/polycystic-ovary-syndrome",
+                None, None, None, "2026-11-18T10:00:00Z", "EDITORIAL_REVIEWED", '{"reading_min": 4}',
+            ),
+            (
+                "jrn-blog-ocr", "BLOG", "bilingual", "medical-news",
+                "Why Every Scanned Prescription Needs Human Verification Before Setting Pill Reminders",
+                "ওষুধের রিমাইন্ডার চালুর আগে প্রেসক্রিপশন OCR কেন মানুষের যাচাই বাধ্যতামূলক?",
+                "Handwritten Bangla/English dosage scripts carry ambiguity (e.g., 5mg vs 50mg or 1+0+1). ShasthoSetu's HTTP 422 Safe-OCR gate blocks automatic scheduling until you verify every flagged medicine.",
+                "হাতে লেখা প্রেসক্রিপশনে ডোজ ভুল পড়ার ঝুঁকি থাকে। তাই ব্যবহারকারী নিশ্চিত না করা পর্যন্ত সার্ভার HTTP 422 দ্বারা রিমাইন্ডার চালু বন্ধ রাখে।",
+                "ShasthoSetu Clinical Safety Team", "https://medlineplus.gov/medicines.html",
+                None, None, None, "2026-11-17T10:00:00Z", "EDITORIAL_REVIEWED", '{"reading_min": 3}',
+            ),
+            (
+                "jrn-blog-ped", "BLOG", "bilingual", "child-care",
+                "Pediatric Fever & Viral Rash Warning Signs + Bangladesh EPI Immunization Checklist",
+                "শিশুর জ্বর ও ভাইরাল র‍্যাশের জরুরি বিপদচিহ্ন ও বাংলাদেশ ইপিআই টিকা সূচি",
+                "Immediate medical attention is vital when child fever or rash accompanies fast breathing, chest indrawing, convulsions, or extreme lethargy. Follow Bangladesh EPI intervals at birth, 6/10/14 weeks, 9 months & 15 months.",
+                "শিশুর জ্বর-র‍্যাশের সাথে শ্বাসকষ্ট, পাঁজর দেবে যাওয়া বা তীব্র ঝিমুনি থাকলে দ্রুত হাসপাতালে নিন এবং ইপিআই টিকার নির্ধারিত তারিখ মেনে চলুন।",
+                "ShasthoSetu Pediatric Guidance", "https://www.unicef.org/bangladesh/en",
+                None, None, None, "2026-11-16T10:00:00Z", "EDITORIAL_REVIEWED", '{"reading_min": 4}',
+            ),
+            (
+                "jrn-blog-blood", "BLOG", "bilingual", "blood-donation",
+                "Voluntary Blood Donation Preparation, Clinical Screening & Cross-Match Safety Facts",
+                "স্বেচ্ছায় রক্তদান প্রস্তুতি, স্থানীয় ব্লাড ব্যাংক স্ক্রিনিং ও ক্রস-ম্যাচিং নিরাপত্তা",
+                "Eligibility intervals depend on donation component (Whole Blood, Platelets, Plasma), hemoglobin levels, and local blood bank clinical screening — never rely solely on software dates or skip laboratory cross-matching.",
+                "রক্তদানের যোগ্যতা রক্তের উপাদান, হিমোগ্লোবিন ও ব্লাড ব্যাংকের সরাসরি চিকিৎসক স্ক্রিনিংয়ে নির্ধারিত হয়—ট্রান্সফিউশনের আগে ল্যাব ক্রস-ম্যাচিং অপরিহার্য।",
+                "ShasthoSetu Blood Connect Editorial", "https://www.who.int/campaigns/world-blood-donor-day",
+                None, None, None, "2026-11-15T10:00:00Z", "EDITORIAL_REVIEWED", '{"reading_min": 4}',
+            ),
+        ]
+        for row in curated:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO journal_items (
+                    id, item_type, language, category, title, title_bn, summary, summary_bn,
+                    source_name, source_url, video_id, video_embed_url, thumbnail_url,
+                    published_at_utc, editorial_status, citation_meta_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                row,
+            )
+
+
 def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dict:
     target = db_path
     if force_reset and target and target.exists():
@@ -32,15 +147,24 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
     apply_schema(target)
 
     with get_db_conn(target) as conn:
+        now = utc_now_iso()
         existing = conn.execute("SELECT COUNT(*) FROM users WHERE is_synthetic = 1").fetchone()[0]
         if existing > 0 and not force_reset:
-            return {"seeded": False, "reason": "Synthetic demo records already present."}
+            conn.execute("BEGIN IMMEDIATE;")
+            try:
+                _seed_blood_and_journal(conn, now)
+                conn.execute("COMMIT;")
+            except Exception:
+                conn.execute("ROLLBACK;")
+                raise
+            return {"seeded": False, "reason": "Base synthetic records present; ensured Blood Connect & Journal seeds."}
 
         conn.execute("BEGIN IMMEDIATE;")
         try:
             if force_reset:
                 # Clear dependent tables safely in reverse order
                 for tbl in [
+                    "journal_sync_runs", "journal_items", "blood_match_logs", "blood_requests", "blood_donors",
                     "audit_logs", "notifications", "feature_flags", "diagnostic_demo_orders", "diagnostic_tests",
                     "healthcare_plans", "facilities", "pediatric_vaccine_records", "pediatric_intake_cases",
                     "pcos_cycle_entries", "medication_events", "medication_plans", "ocr_fields", "ocr_jobs",
@@ -439,6 +563,7 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                 outcome="SUCCESS",
                 details={"synthetic": True},
             )
+            _seed_blood_and_journal(conn, now)
 
             conn.execute("COMMIT;")
         except Exception:

@@ -194,6 +194,8 @@
   "publicSite": {
     "nav": {
       "home": "হোম",
+      "bloodConnect": "ব্লাড কানেক্ট",
+      "findCare": "যত্ন ও ডাক্তার",
       "doctors": "ডাক্তার খুঁজুন",
       "careMap": "কেয়ার ম্যাপ",
       "pcosCare": "পিসিওএস",
@@ -201,8 +203,10 @@
       "pediatricRash": "শিশু ও র‍্যাশ",
       "consultations": "পরামর্শ",
       "services": "স্বাস্থ্য সেবা",
-      "research": "এআই গবেষণা",
-      "portals": "পোর্টাল ও লগইন",
+      "research": "এআই ও গবেষণা",
+      "journal": "স্বাস্থ্যবার্তা",
+      "portals": "লগইন",
+      "myDashboard": "ড্যাশবোর্ড",
       "about": "আমাদের সম্পর্কে",
       "login": "লগইন",
       "register": "নিবন্ধন",

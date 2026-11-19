@@ -48,39 +48,32 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
 
   const navItems = useMemo(
     () => [
-      { to: "/", label: t("publicSite.nav.home"), matchPrefix: false },
-      { to: "/doctors", label: t("publicSite.nav.doctors"), matchPrefix: true },
-      { to: "/consultations", label: t("publicSite.nav.consultations"), matchPrefix: true },
-      { to: "/services", label: t("publicSite.nav.services"), matchPrefix: true },
-      { to: "/research", label: t("publicSite.nav.research"), matchPrefix: true },
-      {
-        to: authenticated && user ? roleHomePath(user) : "/login",
-        label: authenticated && user ? t("publicSite.nav.dashboard") : t("publicSite.nav.portals"),
-        matchPrefix: true,
-      },
-      { to: "/about", label: t("publicSite.nav.about"), matchPrefix: true },
+      { to: "/", label: t("publicSite.nav.home"), matchPrefixes: ["/features/"] },
+      { to: "/blood-connect", label: t("publicSite.nav.bloodConnect"), matchPrefixes: ["/blood-connect"] },
+      { to: "/find-care", label: t("publicSite.nav.findCare"), matchPrefixes: ["/find-care", "/doctors", "/care-map"] },
+      { to: "/services", label: t("publicSite.nav.services"), matchPrefixes: ["/services", "/consultations"] },
+      { to: "/research", label: t("publicSite.nav.research"), matchPrefixes: ["/research"] },
+      { to: "/journal", label: t("publicSite.nav.journal"), matchPrefixes: ["/journal"] },
     ],
-    [authenticated, user, t]
+    [t]
   );
 
   const secondaryLinks = useMemo(
     () => [
+      { to: "/about", label: t("publicSite.nav.about") },
       { to: "/care-map", label: t("publicSite.nav.careMap") },
       { to: "/features/pcos", label: t("publicSite.nav.pcosCare") },
       { to: "/features/viral-rash", label: locale === "bn" ? "ভাইরাল র‍্যাশ" : "Viral Rash AI" },
       { to: "/features/prescription-ocr", label: t("publicSite.nav.safeOcr") },
-      { to: "/features/bangla-voice", label: locale === "bn" ? "বাংলা ভয়েস" : "Bangla Voice AI" },
       { to: "/features/pediatric-rash", label: t("publicSite.nav.pediatricRash") },
     ],
     [locale, t]
   );
 
   const activePath = useMemo(() => {
-    if (location.pathname.startsWith("/features/")) {
-      return "/";
-    }
+    if (location.pathname === "/") return "/";
     const found = navItems.find((item) =>
-      item.matchPrefix ? location.pathname.startsWith(item.to) : location.pathname === item.to
+      item.matchPrefixes.some((pfx) => location.pathname.startsWith(pfx))
     );
     return found?.to ?? null;
   }, [navItems, location.pathname]);
@@ -173,7 +166,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={!item.matchPrefix}
+                  end={item.to === "/"}
                   ref={(el) => {
                     linkRefs.current[item.to] = el;
                   }}
@@ -260,7 +253,35 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
 
               <NotificationsPopover darkOverlay={darkSurface} variant="capsule" />
 
-              {/* Settings + Account / Language / Motion Gear Trigger */}
+              {/* Right-Side Primary Account Pill: Login OR My Dashboard + Role */}
+              {authenticated && user ? (
+                <Link
+                  to={roleHomePath(user)}
+                  data-testid="header-account-pill"
+                  className="h-8 px-3 rounded-full bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 font-bold text-[11px] inline-flex items-center gap-1.5 shadow whitespace-nowrap transition hover:brightness-105"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden lg:inline">{t("publicSite.nav.myDashboard")}</span>
+                  <span className="font-mono text-[9.5px] px-1.5 py-0.2 rounded-full bg-black/20 text-slate-950">
+                    {user.primary_role}
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  data-testid="header-account-pill"
+                  className={`h-8 px-3 rounded-full inline-flex items-center gap-1.5 text-[11px] font-bold whitespace-nowrap transition ${
+                    darkSurface
+                      ? "bg-white text-slate-950 hover:bg-sky-50"
+                      : "bg-[var(--color-primary)] text-[var(--color-primary-contrast)] hover:opacity-95"
+                  }`}
+                >
+                  <LogIn className="w-3.5 h-3.5 shrink-0" />
+                  <span>{t("publicSite.nav.login")}</span>
+                </Link>
+              )}
+
+              {/* Settings + Language / Motion / Account Menu Trigger */}
               <div className="relative">
                 <button
                   type="button"
@@ -274,11 +295,6 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                   }`}
                 >
                   <Settings className={`w-3.5 h-3.5 ${authenticated ? "text-teal-400" : ""}`} />
-                  {authenticated && user && (
-                    <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-full bg-sky-400/20 text-sky-300">
-                      {user.primary_role}
-                    </span>
-                  )}
                 </button>
 
                 {settingsOpen && (
@@ -428,11 +444,11 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
         {/* Mobile Drawer */}
         {mobileMenuOpen && (
           <div className="xl:hidden pointer-events-auto mt-2 mx-4 rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] text-[var(--color-text)] p-3 shadow-2xl space-y-1.5">
-            {[...navItems, ...secondaryLinks.map((s) => ({ ...s, matchPrefix: true }))].map((item) => (
+            {[...navItems.map((n) => ({ to: n.to, label: n.label })), ...secondaryLinks].map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={!item.matchPrefix}
+                end={item.to === "/"}
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
                   `min-h-11 px-4 rounded-xl flex items-center text-sm font-medium ${
@@ -446,6 +462,13 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
               </NavLink>
             ))}
             <div className="pt-2 border-t border-[var(--color-border)] flex items-center gap-2">
+              <Link
+                to={authenticated && user ? roleHomePath(user) : "/login"}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 min-h-11 px-3 rounded-xl bg-[var(--color-primary)] text-[var(--color-primary-contrast)] text-xs font-bold inline-flex items-center justify-center gap-1.5"
+              >
+                {authenticated && user ? t("publicSite.nav.myDashboard") : t("publicSite.nav.login")}
+              </Link>
               <button
                 type="button"
                 onClick={() => setLocale(locale === "bn" ? "en" : "bn")}

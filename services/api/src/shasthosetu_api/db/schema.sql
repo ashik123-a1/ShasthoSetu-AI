@@ -594,3 +594,109 @@ CREATE TABLE IF NOT EXISTS ai_inference_drafts (
 );
 CREATE INDEX IF NOT EXISTS idx_ai_drafts_user_time ON ai_inference_drafts(submitted_by_user_id, created_at_utc);
 CREATE INDEX IF NOT EXISTS idx_ai_drafts_doctor_shared ON ai_inference_drafts(shared_with_doctor, doctor_review_status);
+
+-- =========================================================================
+-- 17. BLOOD CONNECT (GEO-PROXIMITY DONORS, REQUESTS & CONSENT MATCH LOGS)
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS blood_donors (
+    id TEXT PRIMARY KEY,
+    user_id TEXT UNIQUE REFERENCES users(id) ON DELETE SET NULL,
+    display_name TEXT NOT NULL,
+    blood_group TEXT NOT NULL CHECK (blood_group IN ('A+','A-','B+','B-','AB+','AB-','O+','O-')),
+    donation_type TEXT NOT NULL DEFAULT 'WHOLE_BLOOD' CHECK (donation_type IN ('WHOLE_BLOOD','PLATELETS','PLASMA')),
+    last_donation_date TEXT,
+    availability_status TEXT NOT NULL DEFAULT 'AVAILABLE' CHECK (availability_status IN ('AVAILABLE','PAUSED','RECENTLY_DONATED')),
+    division TEXT NOT NULL,
+    district TEXT NOT NULL,
+    area_name TEXT NOT NULL DEFAULT '',
+    lat REAL NOT NULL,
+    lng REAL NOT NULL,
+    contact_phone TEXT NOT NULL,
+    trust_score REAL NOT NULL DEFAULT 4.8 CHECK (trust_score >= 1.0 AND trust_score <= 5.0),
+    verified_donations_count INTEGER NOT NULL DEFAULT 0 CHECK (verified_donations_count >= 0),
+    no_show_count INTEGER NOT NULL DEFAULT 0 CHECK (no_show_count >= 0),
+    screening_policy_acknowledged INTEGER NOT NULL DEFAULT 1 CHECK (screening_policy_acknowledged IN (0, 1)),
+    is_synthetic INTEGER NOT NULL DEFAULT 0 CHECK (is_synthetic IN (0, 1)),
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_blood_donors_group_avail ON blood_donors(blood_group, availability_status);
+CREATE INDEX IF NOT EXISTS idx_blood_donors_division ON blood_donors(division, district);
+
+CREATE TABLE IF NOT EXISTS blood_requests (
+    id TEXT PRIMARY KEY,
+    requester_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    patient_ref_label TEXT NOT NULL,
+    blood_group TEXT NOT NULL CHECK (blood_group IN ('A+','A-','B+','B-','AB+','AB-','O+','O-')),
+    units_required INTEGER NOT NULL DEFAULT 1 CHECK (units_required >= 1 AND units_required <= 10),
+    units_fulfilled INTEGER NOT NULL DEFAULT 0 CHECK (units_fulfilled >= 0),
+    urgency_level TEXT NOT NULL DEFAULT 'URGENT' CHECK (urgency_level IN ('EMERGENCY','URGENT','SCHEDULED')),
+    hospital_name TEXT NOT NULL,
+    hospital_verified INTEGER NOT NULL DEFAULT 0 CHECK (hospital_verified IN (0, 1)),
+    division TEXT NOT NULL,
+    district TEXT NOT NULL,
+    lat REAL NOT NULL,
+    lng REAL NOT NULL,
+    search_radius_km REAL NOT NULL DEFAULT 5.0 CHECK (search_radius_km IN (5.0, 10.0, 20.0, 50.0)),
+    needed_by_utc TEXT,
+    notes TEXT DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN','MATCHED','FULFILLED','CANCELLED')),
+    is_synthetic INTEGER NOT NULL DEFAULT 0 CHECK (is_synthetic IN (0, 1)),
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_blood_requests_status_urg ON blood_requests(status, urgency_level, created_at_utc);
+
+CREATE TABLE IF NOT EXISTS blood_match_logs (
+    id TEXT PRIMARY KEY,
+    request_id TEXT NOT NULL REFERENCES blood_requests(id) ON DELETE CASCADE,
+    donor_id TEXT NOT NULL REFERENCES blood_donors(id) ON DELETE CASCADE,
+    notified_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    response_status TEXT NOT NULL DEFAULT 'NOTIFIED' CHECK (response_status IN ('NOTIFIED','ACCEPTED','DECLINED','COMPLETED','NO_SHOW')),
+    consent_phone_shared INTEGER NOT NULL DEFAULT 0 CHECK (consent_phone_shared IN (0, 1)),
+    requester_confirmed INTEGER NOT NULL DEFAULT 0 CHECK (requester_confirmed IN (0, 1)),
+    donor_confirmed INTEGER NOT NULL DEFAULT 0 CHECK (donor_confirmed IN (0, 1)),
+    feedback_rating INTEGER CHECK (feedback_rating IS NULL OR (feedback_rating >= 1 AND feedback_rating <= 5)),
+    feedback_note TEXT DEFAULT '',
+    responded_at_utc TEXT,
+    completed_at_utc TEXT,
+    UNIQUE (request_id, donor_id)
+);
+CREATE INDEX IF NOT EXISTS idx_blood_matches_req ON blood_match_logs(request_id, response_status);
+CREATE INDEX IF NOT EXISTS idx_blood_matches_donor ON blood_match_logs(donor_id, response_status);
+
+-- =========================================================================
+-- 18. HEALTH JOURNAL (CACHED OFFICIAL FEEDS, VIDEOS, PUBMED & BLOGS)
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS journal_items (
+    id TEXT PRIMARY KEY,
+    item_type TEXT NOT NULL CHECK (item_type IN ('NEWS','VIDEO','RESEARCH','BLOG')),
+    language TEXT NOT NULL CHECK (language IN ('bn','en','bilingual')),
+    category TEXT NOT NULL CHECK (category IN ('medical-news','research','womens-health','child-care','blood-donation','bangladesh-health')),
+    title TEXT NOT NULL,
+    title_bn TEXT DEFAULT '',
+    summary TEXT NOT NULL DEFAULT '',
+    summary_bn TEXT DEFAULT '',
+    source_name TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    video_id TEXT,
+    video_embed_url TEXT,
+    thumbnail_url TEXT,
+    published_at_utc TEXT NOT NULL,
+    fetched_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    editorial_status TEXT NOT NULL DEFAULT 'VERIFIED_OFFICIAL_FEED' CHECK (editorial_status IN ('VERIFIED_OFFICIAL_FEED','EDITORIAL_REVIEWED')),
+    citation_meta_json TEXT DEFAULT '{}',
+    UNIQUE (source_name, source_url)
+);
+CREATE INDEX IF NOT EXISTS idx_journal_items_filter ON journal_items(item_type, language, category, published_at_utc);
+
+CREATE TABLE IF NOT EXISTS journal_sync_runs (
+    id TEXT PRIMARY KEY,
+    started_at_utc TEXT NOT NULL,
+    completed_at_utc TEXT,
+    status TEXT NOT NULL CHECK (status IN ('RUNNING','SUCCESS','PARTIAL','FAILED')),
+    items_added INTEGER NOT NULL DEFAULT 0,
+    sources_json TEXT NOT NULL DEFAULT '{}'
+);

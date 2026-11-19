@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .db.sqlite import apply_schema
-from .routers import admin, ai_inference, auth, doctor, patient, public, support
+from .routers import admin, ai_inference, auth, blood_connect, doctor, journal, patient, public, support
 from .seeds.seed_demo import seed_database
 
 
@@ -41,6 +41,8 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(public.router)
     app.include_router(ai_inference.router)
+    app.include_router(blood_connect.router)
+    app.include_router(journal.router)
     app.include_router(patient.router)
     app.include_router(doctor.router)
     app.include_router(support.router)

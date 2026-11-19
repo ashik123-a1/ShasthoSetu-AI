@@ -31,25 +31,26 @@ export function PublicFooter() {
 
         <div className="space-y-2 text-sm">
           <h3 className="font-semibold text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
-            {locale === "bn" ? "পাবলিক রুট" : "Explore"}
+            {locale === "bn" ? "মূল প্ল্যাটফর্ম" : "Platform Pillars"}
           </h3>
           <ul className="space-y-1.5">
-            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/doctors">{t("publicSite.nav.doctors")}</Link></li>
-            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/consultations">{t("publicSite.nav.consultations")}</Link></li>
+            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1 text-rose-400 font-semibold" to="/blood-connect">{t("publicSite.nav.bloodConnect")}</Link></li>
+            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/find-care">{t("publicSite.nav.findCare")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/services">{t("publicSite.nav.services")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/research">{t("publicSite.nav.research")}</Link></li>
+            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/journal">{t("publicSite.nav.journal")}</Link></li>
           </ul>
         </div>
 
         <div className="space-y-2 text-sm">
           <h3 className="font-semibold text-xs uppercase tracking-wider text-[var(--color-text-muted)]">
-            {locale === "bn" ? "পোর্টাল ও ডকুমেন্টেশন" : "Portals & Docs"}
+            {locale === "bn" ? "পরিচিতি, পোর্টাল ও ডক্স" : "About, Team & Portals"}
           </h3>
           <ul className="space-y-1.5">
+            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1 font-medium" to="/about">{locale === "bn" ? "আমাদের সম্পর্কে, মিশন ও টিম" : "About · Team · Mission · Contact"}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/login">{t("publicSite.nav.login")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/register">{t("publicSite.nav.register")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/doctor-apply">{t("auth.doctorApplyLink")}</Link></li>
-            <li><Link className="hover:text-[var(--color-primary)] inline-block py-1" to="/about">{t("publicSite.nav.about")}</Link></li>
             <li><Link className="hover:text-[var(--color-primary)] inline-block py-1 font-mono text-xs" to="/dev/design-system">Dev Design System</Link></li>
           </ul>
         </div>

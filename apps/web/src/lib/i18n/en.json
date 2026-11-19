@@ -194,6 +194,8 @@
   "publicSite": {
     "nav": {
       "home": "Home",
+      "bloodConnect": "Blood Connect",
+      "findCare": "Find Care",
       "doctors": "Find Doctors",
       "careMap": "Care Map",
       "pcosCare": "PCOS Care",
@@ -201,12 +203,14 @@
       "pediatricRash": "Pediatric & Rash",
       "consultations": "Consultations",
       "services": "Health Services",
-      "research": "AI Research",
-      "portals": "Portals & Login",
-      "about": "About",
+      "research": "AI & Research",
+      "journal": "Health Journal",
+      "portals": "Login",
+      "myDashboard": "My Dashboard",
+      "about": "About & Team",
       "login": "Login",
       "register": "Register",
-      "dashboard": "Dashboard",
+      "dashboard": "My Dashboard",
       "logout": "Logout",
       "searchHint": "Search (Ctrl+K)"
     },

@@ -189,7 +189,39 @@ def global_search(q: str = Query(default="", max_length=100)):
             docs = rows_to_dicts(conn.execute("SELECT id, display_name, display_name_bn, specialty, district, consultation_fee_minor_poisha FROM doctor_profiles WHERE verification_status = 'APPROVED' LIMIT 4").fetchall())
             tests = rows_to_dicts(conn.execute("SELECT id, code, name_bn, name_en, category, fee_minor_poisha FROM diagnostic_tests WHERE is_active = 1 LIMIT 4").fetchall())
             facs = rows_to_dicts(conn.execute("SELECT id, name, facility_type, district FROM facilities LIMIT 3").fetchall())
-    return {"doctors": docs, "diagnostic_tests": tests, "facilities": facs}
+
+        if term:
+            like = f"%{term}%"
+            blood_reqs = rows_to_dicts(
+                conn.execute(
+                    "SELECT id, patient_ref_label, blood_group, urgency_level, hospital_name, district FROM blood_requests WHERE status IN ('OPEN','MATCHED') AND (lower(blood_group) LIKE ? OR lower(hospital_name) LIKE ? OR lower(district) LIKE ?) LIMIT 4",
+                    (like, like, like),
+                ).fetchall()
+            )
+            journal = rows_to_dicts(
+                conn.execute(
+                    "SELECT id, item_type, language, title, title_bn, source_name FROM journal_items WHERE lower(title) LIKE ? OR lower(title_bn) LIKE ? OR lower(summary) LIKE ? LIMIT 4",
+                    (like, like, like),
+                ).fetchall()
+            )
+        else:
+            blood_reqs = rows_to_dicts(
+                conn.execute(
+                    "SELECT id, patient_ref_label, blood_group, urgency_level, hospital_name, district FROM blood_requests WHERE status IN ('OPEN','MATCHED') LIMIT 3"
+                ).fetchall()
+            )
+            journal = rows_to_dicts(
+                conn.execute(
+                    "SELECT id, item_type, language, title, title_bn, source_name FROM journal_items ORDER BY published_at_utc DESC LIMIT 3"
+                ).fetchall()
+            )
+    return {
+        "doctors": docs,
+        "diagnostic_tests": tests,
+        "facilities": facs,
+        "blood_requests": blood_reqs,
+        "journal_items": journal,
+    }
 
 
 def _read_csv_rows(path) -> list[dict]:
@@ -214,6 +246,16 @@ def get_research_showcase():
             {"id": "AI-02", "name": "Bangla Clinical Voice Integration", "status": "DEFERRED", "reason": "Deferred post-RAG (human benchmark only: 39.09% WER on 26 FLEURS clips)"},
         ],
     }
+
+
+@router.get("/public/research/models/{slug}")
+def get_research_model_detail(slug: str):
+    from ..services.research_catalog import get_model_detail_dossier
+
+    dossier = get_model_detail_dossier(slug)
+    if not dossier:
+        raise HTTPException(status_code=404, detail=f"Research model '{slug}' not found.")
+    return dossier
 
 
 class PcosPreviewInput(BaseModel):
