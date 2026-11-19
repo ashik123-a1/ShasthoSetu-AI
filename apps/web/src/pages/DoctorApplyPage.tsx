@@ -5,6 +5,7 @@ import { ApiError } from "../lib/apiClient";
 import { useAuth } from "../lib/authContext";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 
 export function DoctorApplyPage() {
   const { locale } = useI18n();
@@ -46,9 +47,10 @@ export function DoctorApplyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 pb-12 px-4">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 pb-12 px-4 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-doctors-consult.jpg" mode="adaptive" />
       <PublicFloatingHeader />
-      <div className="max-w-xl mx-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-5">
+      <div className="relative z-10 max-w-xl mx-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-5">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Stethoscope className="w-6 h-6 text-[var(--color-primary)]" />

@@ -25,8 +25,15 @@ import { formatBdtFromPoisha } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { usePreferences } from "../lib/preferences";
 import { HomeSectionRail } from "../components/layout/HomeSectionRail";
+import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { HERO_DOCTOR_SLIDES, HeroDoctorShowcase } from "../components/home/HeroDoctorShowcase";
+import {
+  DigitalObservatoryDeck,
+  InteractiveBarGraph,
+  type TelemetryDeckCard,
+} from "../components/charts/AgriStyleTelemetry";
 import { BangladeshCareMap, type MapDoctor, type MapFacility } from "../components/map/BangladeshCareMap";
 import { StaticCareLatticeFallback } from "../components/three/StaticCareLatticeFallback";
 import { TrustBadge } from "../components/ui";
@@ -65,34 +72,6 @@ interface ResearchDatasetRow {
   limitations: string;
 }
 
-function DonutGaugeSvg({ pct, centerLabel, subLabel, color }: { pct: number; centerLabel: string; subLabel: string; color: string }) {
-  const r = 26;
-  const c = 2 * Math.PI * r;
-  const clamped = Math.max(0, Math.min(100, pct));
-  const dash = (clamped / 100) * c;
-  return (
-    <div className="relative w-16 h-16 shrink-0 flex items-center justify-center">
-      <svg viewBox="0 0 64 64" className="w-16 h-16 -rotate-90" aria-hidden="true">
-        <circle cx="32" cy="32" r={r} fill="none" stroke="currentColor" strokeOpacity="0.14" strokeWidth="5.5" />
-        <circle
-          cx="32"
-          cy="32"
-          r={r}
-          fill="none"
-          stroke={color}
-          strokeWidth="5.5"
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${c}`}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="font-mono text-[11px] font-bold leading-none">{centerLabel}</span>
-        <span className="font-mono text-[9px] text-[var(--color-text-muted)] mt-0.5">{subLabel}</span>
-      </div>
-    </div>
-  );
-}
-
 const FOCUS_PHRASES_EN = [
   "doctor discovery.",
   "human-verified OCR.",
@@ -125,6 +104,8 @@ export function PublicHomePage() {
 
   const [activeLayer, setActiveLayer] = useState(0);
   const [heroMode, setHeroMode] = useState<"SQLite" | "HTTP 422" | "Zero-PHI" | "Audit">("SQLite");
+  const [heroVisualMode, setHeroVisualMode] = useState<"doctors" | "lattice">("doctors");
+  const [heroSlideIdx, setHeroSlideIdx] = useState(0);
   const [autoRotate, setAutoRotate] = useState(true);
   const [heroSearch, setHeroSearch] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -273,14 +254,143 @@ export function PublicHomePage() {
     },
   ];
 
-  const impactMetrics = [
-    { label: "PCOS CLINICAL XGBOOST", value: "88.57%", pct: 88.6, sub: "CV BAL", color: "#38bdf8", desc: "Repeated stratified 5-fold CV on N=88 cleaned cohort; held-out 17/18 (94.44%)." },
-    { label: "PCOS ULTRASOUND RESNET18", value: "86.67%", pct: 86.7, sub: "TEST", color: "#2dd4bf", desc: "39/45 unique held-out ultrasound images; graded strictly as PCOM structural signal." },
-    { label: "VIRAL RASH GROUPED RESNET", value: "84.65%", pct: 84.7, sub: "VAL", color: "#818cf8", desc: "Grouped split across 755 independent visual families (zero leakage)." },
-    { label: "SQLITE 3 WAL NORMALIZED", value: "36", pct: 100, sub: "TABLES", color: "#f2c879", desc: "Foreign keys ON, partial unique indexes, CHECK gates & interval-overlap triggers." },
-    { label: "BILINGUAL KEY PARITY", value: "100%", pct: 100, sub: "BN/EN", color: "#38bdf8", desc: "Recursive Vitest check across every Bengali & English UI dictionary entry." },
-    { label: "SUPPORT PHI EXPOSURE", value: "0", pct: 100, sub: "ISOLATED", color: "#2dd4bf", desc: "Zero clinical prose columns selected in Support queries (403 PHI_ACCESS_DENIED)." },
-  ];
+  const observatoryCards = useMemo<TelemetryDeckCard[]>(
+    () => [
+      {
+        id: "pcos-m01",
+        tag: "M01 PCOS CLINICAL",
+        value: "94.44%",
+        sub: "17/18 Held-Out • 88.57% CV",
+        accent: "#38bdf8",
+        icon: CalendarHeart,
+        pieCenter: "94.4%",
+        pieSub: "BAL",
+        pieSegments: [
+          { label: "Held-out Balanced Acc", pct: 94.44, color: "#38bdf8" },
+          { label: "Uncertainty Margin", pct: 5.56, color: "#0e1d38" },
+        ],
+        barSegments: [
+          { label: "5-Fold CV", pct: 88.57, color: "#38bdf8" },
+          { label: "Test Lift", pct: 5.87, color: "#2dd4bf" },
+        ],
+        barFootnote: "N=88 clinical profiles • M02 Ultrasound 86.67% kept strictly separate",
+      },
+      {
+        id: "rash-m03",
+        tag: "M03 VIRAL RASH",
+        value: "84.65%",
+        sub: "755-Family Leak-Free Split",
+        accent: "#818cf8",
+        icon: Sparkles,
+        pieCenter: "84.7%",
+        pieSub: "VAL",
+        pieSegments: [
+          { label: "Val Image Acc", pct: 84.65, color: "#818cf8" },
+          { label: "Residual", pct: 15.35, color: "#0e1d38" },
+        ],
+        barSegments: [
+          { label: "Train Families (528)", pct: 70, color: "#818cf8" },
+          { label: "Val (113)", pct: 15, color: "#38bdf8" },
+          { label: "Test (114)", pct: 15, color: "#2dd4bf" },
+        ],
+        barFootnote: "0% cross-split family leakage • 84.22% Macro F1",
+      },
+      {
+        id: "ocr-m04",
+        tag: "M04 SAFE OCR GATE",
+        value: "1,000",
+        sub: "992 Admissible • 8 Quarantined",
+        accent: "#f2c879",
+        icon: ScanText,
+        pieCenter: "99.2%",
+        pieSub: "ADMIT",
+        pieSegments: [
+          { label: "Admissible Rows", pct: 99.2, color: "#f2c879" },
+          { label: "Quarantined (8)", pct: 0.8, color: "#fb7185" },
+        ],
+        barSegments: [
+          { label: "Train (697)", pct: 69.7, color: "#f2c879" },
+          { label: "Val (150)", pct: 15.0, color: "#38bdf8" },
+          { label: "Test (152)", pct: 15.3, color: "#2dd4bf" },
+        ],
+        barFootnote: "HTTP 422 mandatory human lock on all unverified Rx dosages",
+      },
+      {
+        id: "derm-m06",
+        tag: "M06 DERMOPED + VOICE",
+        value: "92.73%",
+        sub: "22 Patients • 98.37% BN Script",
+        accent: "#2dd4bf",
+        icon: Baby,
+        pieCenter: "92.7%",
+        pieSub: "TEST",
+        pieSegments: [
+          { label: "DermoPed EXP_B Test", pct: 92.73, color: "#2dd4bf" },
+          { label: "Remainder", pct: 7.27, color: "#0e1d38" },
+        ],
+        barSegments: [
+          { label: "Chickenpox (19 pts)", pct: 86.4, color: "#2dd4bf" },
+          { label: "Pediculosis (3 pts)", pct: 13.6, color: "#fbbf24" },
+        ],
+        barFootnote: "M05 FLEURS BN Unicode 98.37% (39.09% WER • Phase G Deferred)",
+      },
+    ],
+    []
+  );
+
+  const auditedTrackGraphItems = useMemo(
+    () => [
+      {
+        label: "M01 • PCOS Clinical XGBoost",
+        value: 94.44,
+        maxValue: 100,
+        displayValue: "94.44% Held-Out (88.57% CV)",
+        sublabel: "N=88 Cohort",
+        color: "#38bdf8",
+      },
+      {
+        label: "M06 • DermoPed Pediatric EXP_B",
+        value: 92.73,
+        maxValue: 100,
+        displayValue: "92.73% Test Image Acc",
+        sublabel: "22 Patients",
+        color: "#34d399",
+      },
+      {
+        label: "M02 • PCOS Ultrasound ResNet18",
+        value: 86.67,
+        maxValue: 100,
+        displayValue: "86.67% Test (39/45)",
+        sublabel: "299 Unique Scans",
+        color: "#2dd4bf",
+      },
+      {
+        label: "M03 • Viral Rash Grouped ResNet18",
+        value: 84.65,
+        maxValue: 100,
+        displayValue: "84.65% Val Acc (84.22% F1)",
+        sublabel: "755 Families • 0% Leak",
+        color: "#818cf8",
+      },
+      {
+        label: "M04 • Safe Prescription OCR Admission",
+        value: 99.2,
+        maxValue: 100,
+        displayValue: "99.20% Admissible (992/1,000)",
+        sublabel: "HTTP 422 Human Gate",
+        color: "#f2c879",
+      },
+      {
+        label: "M05 • Bangla Voice FLEURS Script Integrity (Phase G)",
+        value: 98.37,
+        maxValue: 100,
+        displayValue: "98.37% BN Unicode (39.09% WER)",
+        sublabel: "26 Clips • Deferred",
+        color: "#c084fc",
+      },
+    ],
+    []
+  );
 
   const faqs = [
     {
@@ -320,8 +430,32 @@ export function PublicHomePage() {
       <section
         id="hero"
         data-testid="public-hero-section"
-        className="relative min-h-screen pt-24 pb-10 px-4 sm:px-6 flex items-center overflow-hidden text-white border-b border-sky-400/20"
+        className="relative min-h-screen pt-20 pb-10 px-4 sm:px-6 flex flex-col justify-center gap-6 overflow-hidden text-white border-b border-sky-400/20"
       >
+        {/* Synced Atmospheric Crossfading Clinical Hero Backdrop */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          {HERO_DOCTOR_SLIDES.map((s, idx) => (
+            <img
+              key={s.id}
+              src={s.src}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000"
+              style={{ opacity: idx === heroSlideIdx ? 0.16 : 0 }}
+            />
+          ))}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(4,9,20,0.92) 0%, rgba(4,9,20,0.74) 48%, rgba(4,9,20,0.62) 100%), linear-gradient(180deg, rgba(4,9,20,0.75) 0%, transparent 25%, rgba(4,9,20,0.95) 100%)",
+            }}
+          />
+        </div>
+
+        {/* Home Tab Internal Sub-Navigation for All 5 Dedicated AI Feature Pages */}
+        <div className="relative z-10 max-w-[1440px] mx-auto w-full">
+          <HomeSubTabBar />
+        </div>
 
         <div className="relative z-10 max-w-[1440px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* LEFT EDITORIAL COLUMN */}
@@ -414,16 +548,58 @@ export function PublicHomePage() {
             </div>
           </div>
 
-          {/* RIGHT: 3D LATTICE + AGRISENSE VERTICAL CONTROL RAIL + LIVE TELEMETRY HUD */}
+          {/* RIGHT: ANIMATED BACK-TO-BACK DOCTOR SHOWCASE / 3D LATTICE + CONTROL RAIL + TELEMETRY HUD */}
           <div className="lg:col-span-6 min-w-0 relative flex flex-col justify-between min-h-[380px] lg:min-h-[540px]">
+            {/* Visual Stage Mode Switcher */}
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-sky-300">
+                {locale === "bn" ? "জীবন্ত ক্লিনিকাল প্রদর্শনী" : "LIVE CLINICAL SHOWCASE"}
+              </span>
+              <div className="inline-flex rounded-full bg-[#040a18]/85 border border-sky-400/30 p-1">
+                <button
+                  type="button"
+                  onClick={() => setHeroVisualMode("doctors")}
+                  className={`px-3 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
+                    heroVisualMode === "doctors"
+                      ? "bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950"
+                      : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  {locale === "bn" ? "চিকিৎসক স্লাইডশো" : "Doctors Showcase"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeroVisualMode("lattice")}
+                  className={`px-3 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
+                    heroVisualMode === "lattice"
+                      ? "bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950"
+                      : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  {locale === "bn" ? "৩ডি কেয়ার ল্যাটিস" : "3D Care Lattice"}
+                </button>
+              </div>
+            </div>
+
             <div className="flex-1 flex items-center gap-3 min-w-0">
-              <div className="flex-1 min-w-0 overflow-hidden h-[340px] sm:h-[420px] relative">
-                {mount3d ? (
-                  <Suspense fallback={<StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />}>
-                    <LazyHeroCareLattice activeLayer={activeLayer} autoRotate={autoRotate} />
-                  </Suspense>
+              <div className="flex-1 min-w-0 relative">
+                {heroVisualMode === "doctors" ? (
+                  <HeroDoctorShowcase
+                    motionPaused={motionPaused}
+                    locale={locale}
+                    activeIndex={heroSlideIdx}
+                    onChangeIndex={setHeroSlideIdx}
+                  />
                 ) : (
-                  <StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />
+                  <div className="w-full overflow-hidden h-[350px] sm:h-[420px] relative rounded-3xl border border-sky-400/25 bg-[#040a18]/75">
+                    {mount3d ? (
+                      <Suspense fallback={<StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />}>
+                        <LazyHeroCareLattice activeLayer={activeLayer} autoRotate={autoRotate} />
+                      </Suspense>
+                    ) : (
+                      <StaticCareLatticeFallback activeLayer={activeLayer} reducedMotion={motionPaused} />
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -600,17 +776,17 @@ export function PublicHomePage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link
-                  to="/research?module=pcos-clinical"
+                  to="/features/pcos?tab=clinical"
+                  data-testid="home-goto-pcos"
                   className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
                 >
-                  Try Research Demo <ArrowRight className="w-3.5 h-3.5" />
+                  Open PCOS Page <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
                 <Link
-                  to="/features/pcos"
-                  data-testid="home-goto-pcos"
+                  to="/research?module=pcos-clinical"
                   className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
                 >
-                  PCOS Page
+                  Lab
                 </Link>
               </div>
             </article>
@@ -630,13 +806,21 @@ export function PublicHomePage() {
                   Upload ovarian ultrasound scans with CyberScan inspection to classify PCOM / Dominant Follicle / Normal morphology (86.67% held-out test).
                 </p>
               </div>
-              <Link
-                to="/research?module=pcos-ultrasound"
-                className="min-h-11 px-4 rounded-full bg-gradient-to-r from-[#2dd4bf] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-between"
-              >
-                <span>Try Research Demo</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/features/pcos?tab=ultrasound"
+                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#2dd4bf] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
+                >
+                  <span>Open Ultrasound Page</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/research?module=pcos-ultrasound"
+                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
+                >
+                  Lab
+                </Link>
+              </div>
             </article>
 
             {/* 3. Viral Rash AI */}
@@ -656,13 +840,22 @@ export function PublicHomePage() {
                   Upload skin rash images for leak-free 6-class research softmax probabilities (Chickenpox, Measles, HFMD, Cowpox, Monkeypox, Healthy).
                 </p>
               </div>
-              <Link
-                to="/research?module=viral-rash"
-                className="min-h-11 px-4 rounded-full bg-gradient-to-r from-[#818cf8] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-between"
-              >
-                <span>Try Research Demo</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/features/viral-rash"
+                  data-testid="home-goto-viral-rash"
+                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#818cf8] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
+                >
+                  <span>Open Viral Rash Page</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/research?module=viral-rash"
+                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
+                >
+                  Lab
+                </Link>
+              </div>
             </article>
 
             {/* 4. Prescription OCR */}
@@ -682,17 +875,17 @@ export function PublicHomePage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link
-                  to="/research?module=prescription-ocr"
-                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#f2c879] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
-                >
-                  Try Research Demo <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <Link
                   to="/features/prescription-ocr"
                   data-testid="home-goto-ocr"
+                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#f2c879] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
+                >
+                  Open OCR Page <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  to="/research?module=prescription-ocr"
                   className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
                 >
-                  OCR Page
+                  Lab
                 </Link>
               </div>
             </article>
@@ -714,13 +907,22 @@ export function PublicHomePage() {
                   Audited on 26 human FLEURS clips (98.37% Bengali Unicode). Interactive mic/RAG flow activates in Phase G per project roadmap.
                 </p>
               </div>
-              <Link
-                to="/research?module=bangla-voice"
-                className="min-h-11 px-4 rounded-full border border-purple-400/40 bg-purple-500/15 hover:bg-purple-500/25 text-purple-200 font-bold text-xs inline-flex items-center justify-between"
-              >
-                <span>View Phase G Preview</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/features/bangla-voice"
+                  data-testid="home-goto-voice"
+                  className="flex-1 min-h-11 px-4 rounded-full border border-purple-400/45 bg-purple-500/20 hover:bg-purple-500/30 text-purple-100 font-bold text-xs inline-flex items-center justify-center gap-1.5"
+                >
+                  <span>Open Voice Studio</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/research?module=bangla-voice"
+                  className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
+                >
+                  Lab
+                </Link>
+              </div>
             </article>
 
             {/* 6. DermoPed AI */}
@@ -740,17 +942,17 @@ export function PublicHomePage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Link
-                  to="/research?module=dermoped"
-                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#34d399] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
-                >
-                  Try Research Demo <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <Link
                   to="/features/pediatric-rash"
                   data-testid="home-goto-pediatric"
+                  className="flex-1 min-h-11 px-4 rounded-full bg-gradient-to-r from-[#34d399] to-[#38bdf8] text-slate-950 font-bold text-xs inline-flex items-center justify-center gap-1.5"
+                >
+                  Open DermoPed Page <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <Link
+                  to="/research?module=dermoped"
                   className="min-h-11 px-3.5 rounded-full border border-white/20 text-xs text-slate-200 inline-flex items-center justify-center"
                 >
-                  Triage Page
+                  Lab
                 </Link>
               </div>
             </article>
@@ -1012,38 +1214,63 @@ export function PublicHomePage() {
       </section>
 
       {/* =================================================================
-          SECTION 07 · BY THE NUMBERS (AGRISENSE SVG DONUT + PROGRESS CARDS)
+          SECTION 07 · BY THE NUMBERS (AGRISENSE 60FPS DIGITAL DATA & GRAPH SYSTEM)
           ================================================================= */}
       <section id="impact" className="py-16 px-4 sm:px-6 border-b border-sky-400/20">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div>
-            <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-              07 • EMPIRICAL RIGOR &amp; VERIFIED TELEMETRY
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+              <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
+                07 • EMPIRICAL RIGOR &amp; AGRISENSE-STYLE DIGITAL TELEMETRY
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                {locale === "bn"
+                  ? "ডিজিটাল ডেটা ড্যাশবোর্ড ও নিরীক্ষিত ফলাফল গ্রাফ"
+                  : "Digital Telemetry Observatory & Audited Cross-Model Graph"}
+              </h2>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white">
-              {locale === "bn" ? "পরিসংখ্যান ও অডিটকৃত ফলাফল" : "By the Numbers: Audited Metrics & Engineering Parity"}
-            </h2>
+            <Link
+              to="/research"
+              className="min-h-11 px-4 rounded-full border border-sky-400/35 bg-sky-400/10 hover:bg-sky-400/20 text-sky-200 text-xs font-semibold inline-flex items-center gap-1.5"
+            >
+              {locale === "bn" ? "সব মডেলে গ্রাফ দেখুন" : "Inspect Live Models"} <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {impactMetrics.map((m) => (
-              <div key={m.label} className="ss-sapphire-card rounded-2xl p-5 space-y-3 text-white">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="font-mono text-[11px] font-bold tracking-wider" style={{ color: m.color }}>
-                      {m.label}
-                    </div>
-                    <div className="font-mono text-2xl sm:text-3xl font-bold mt-1">{m.value}</div>
-                  </div>
-                  <DonutGaugeSvg pct={m.pct} centerLabel={m.value} subLabel={m.sub} color={m.color} />
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${m.pct}%`, background: m.color }} />
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed">{m.desc}</p>
-              </div>
-            ))}
-          </div>
+          <DigitalObservatoryDeck
+            badgeLabel="SHASTHOSETU FINAL_LOCK • AUDITED 60FPS TELEMETRY"
+            statusLabel={overview.audit_lock_verdict}
+            cards={observatoryCards}
+            breakdownTitle={
+              locale === "bn"
+                ? "ক্লিনিকাল প্ল্যাটফর্ম ও গবেষণা সমতা বিভাজন"
+                : "Platform Integrity & Research Parity Breakdown"
+            }
+            breakdownBars={[
+              { name: "SQLite 3 WAL Schema", pct: 100, valueLabel: "37 Tables", color: "#f2c879", note: "BEGIN IMMEDIATE + FK + Triggers" },
+              { name: "Bilingual i18n Parity", pct: 100, valueLabel: "100% BN/EN", color: "#38bdf8", note: "Zero untranslated UI keys" },
+              { name: "Zero-PHI Support Guard", pct: 100, valueLabel: "403 Block", color: "#2dd4bf", note: "Clinical prose excluded" },
+              { name: "HTTP 422 OCR Lockout", pct: 100, valueLabel: "Human-Gated", color: "#818cf8", note: "No auto-scheduled Rx" },
+            ]}
+            pauseMotion={motionPaused}
+          />
+
+          <InteractiveBarGraph
+            title={
+              locale === "bn"
+                ? "৬টি অডিটকৃত এআই গবেষণা ট্র্যাকের তুলনামূলক গ্রাফ"
+                : "Audited Benchmark Comparison Across All 6 Research Modules"
+            }
+            subtitle={
+              locale === "bn"
+                ? "হোভার করে প্রতিটি মডেলের চূড়ান্ত অডিটেড ফলাফল ও ডেটাসেট পরিসর দেখুন (শুধুমাত্র গবেষণা-প্রোটোটাইপ)।"
+                : "Hover any bar to inspect exact final_lock benchmark metrics and sample scopes across all M01–M06 tracks."
+            }
+            items={auditedTrackGraphItems}
+            thresholdValue={85}
+            thresholdLabel="85% Reference Line"
+            pauseMotion={motionPaused}
+          />
         </div>
       </section>
 

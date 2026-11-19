@@ -5,6 +5,7 @@ import { apiGet, apiPost } from "../lib/apiClient";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { Skeleton, TrustBadge } from "../components/ui";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { type AiModuleKey } from "../components/three/AiModuleScene3D";
@@ -115,10 +116,11 @@ export function PublicResearchPage() {
   };
 
   return (
-    <div className="ss-sapphire-always min-h-screen flex flex-col pt-24">
+    <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-24 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-ai-research.jpg" />
       <PublicFloatingHeader transparentHero />
 
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-10 flex-1">
+      <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-10 flex-1">
         {/* Top Lab Banner + Interactive 3D Neural Diagnostic Stage */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-7 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           <div className="lg:col-span-7 space-y-3">

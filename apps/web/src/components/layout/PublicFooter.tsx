@@ -8,7 +8,7 @@ export function PublicFooter() {
   const { motionPaused, toggleMotionPaused } = usePreferences();
 
   return (
-    <footer className="border-t border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] py-12 px-4 sm:px-6">
+    <footer className="relative z-10 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md text-[var(--color-text)] py-12 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="md:col-span-2 space-y-3">
           <div className="flex items-center gap-2.5">

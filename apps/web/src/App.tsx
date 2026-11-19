@@ -15,7 +15,9 @@ import { PublicResearchPage } from "./pages/PublicResearchPage";
 import { PublicAboutPage } from "./pages/PublicAboutPage";
 import { PublicCareMapPage } from "./pages/PublicCareMapPage";
 import { PcosFeaturePage } from "./pages/PcosFeaturePage";
+import { ViralRashFeaturePage } from "./pages/ViralRashFeaturePage";
 import { PrescriptionOcrFeaturePage } from "./pages/PrescriptionOcrFeaturePage";
+import { BanglaVoiceFeaturePage } from "./pages/BanglaVoiceFeaturePage";
 import { PediatricRashFeaturePage } from "./pages/PediatricRashFeaturePage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -84,7 +86,9 @@ function AppRoutes() {
         <Route path="/doctors/:doctorId" element={<PublicDoctorsPage />} />
         <Route path="/care-map" element={<PublicCareMapPage />} />
         <Route path="/features/pcos" element={<PcosFeaturePage />} />
+        <Route path="/features/viral-rash" element={<ViralRashFeaturePage />} />
         <Route path="/features/prescription-ocr" element={<PrescriptionOcrFeaturePage />} />
+        <Route path="/features/bangla-voice" element={<BanglaVoiceFeaturePage />} />
         <Route path="/features/pediatric-rash" element={<PediatricRashFeaturePage />} />
         <Route path="/consultations" element={<PublicConsultationsPage />} />
         <Route path="/services" element={<PublicServicesPage />} />

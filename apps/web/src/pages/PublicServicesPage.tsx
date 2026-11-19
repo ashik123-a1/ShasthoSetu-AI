@@ -6,6 +6,7 @@ import { formatBdtFromPoisha } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { Skeleton } from "../components/ui";
 
 interface ServicesResponse {
@@ -35,10 +36,11 @@ export function PublicServicesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-services-lab.jpg" mode="adaptive" />
       <PublicFloatingHeader />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 space-y-10">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-16 space-y-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">

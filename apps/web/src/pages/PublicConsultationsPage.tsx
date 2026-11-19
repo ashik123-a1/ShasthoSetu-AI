@@ -4,6 +4,7 @@ import { Camera, CameraOff, CheckCircle2, Mic, MicOff, ShieldAlert, Video } from
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 
 export function PublicConsultationsPage() {
   const { locale } = useI18n();
@@ -58,10 +59,11 @@ export function PublicConsultationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-doctors-consult.jpg" mode="adaptive" />
       <PublicFloatingHeader />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pb-16 space-y-8">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-16 space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1 rounded-full bg-sky-500/15 text-sky-700 dark:text-sky-300 mb-2">

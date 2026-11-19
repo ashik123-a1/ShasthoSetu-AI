@@ -67,13 +67,18 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
     () => [
       { to: "/care-map", label: t("publicSite.nav.careMap") },
       { to: "/features/pcos", label: t("publicSite.nav.pcosCare") },
+      { to: "/features/viral-rash", label: locale === "bn" ? "ভাইরাল র‍্যাশ" : "Viral Rash AI" },
       { to: "/features/prescription-ocr", label: t("publicSite.nav.safeOcr") },
+      { to: "/features/bangla-voice", label: locale === "bn" ? "বাংলা ভয়েস" : "Bangla Voice AI" },
       { to: "/features/pediatric-rash", label: t("publicSite.nav.pediatricRash") },
     ],
-    [t]
+    [locale, t]
   );
 
   const activePath = useMemo(() => {
+    if (location.pathname.startsWith("/features/")) {
+      return "/";
+    }
     const found = navItems.find((item) =>
       item.matchPrefix ? location.pathname.startsWith(item.to) : location.pathname === item.to
     );

@@ -7,6 +7,7 @@ import { formatBdtFromPoisha, formatDhakaDateTime } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { EmptyState, Skeleton, TrustBadge } from "../components/ui";
 
 interface DoctorCard {
@@ -97,10 +98,11 @@ export function PublicDoctorsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-doctors-consult.jpg" mode="adaptive" />
       <PublicFloatingHeader />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pb-16 space-y-6">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-16 space-y-6">
         {doctorId ? (
           loading ? (
             <Skeleton className="h-64 w-full" />

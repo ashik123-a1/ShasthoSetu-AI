@@ -5,6 +5,7 @@ import { apiGet } from "../lib/apiClient";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { BangladeshCareMap, type MapDoctor, type MapFacility } from "../components/map/BangladeshCareMap";
 
 export function PublicCareMapPage() {
@@ -33,10 +34,11 @@ export function PublicCareMapPage() {
   }, []);
 
   return (
-    <div className="ss-sapphire-always min-h-screen flex flex-col pt-24" data-testid="care-map-page">
+    <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-24 overflow-x-clip" data-testid="care-map-page">
+      <PageBackdropLayer imageSrc="/images/backgrounds/dhaka-aerial-map-bg.jpg" opacity={0.22} />
       <PublicFloatingHeader transparentHero />
 
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
+      <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-1.5">
             <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-sky-300">

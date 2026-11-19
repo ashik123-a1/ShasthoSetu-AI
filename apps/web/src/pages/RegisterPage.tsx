@@ -5,6 +5,7 @@ import { ApiError } from "../lib/apiClient";
 import { useAuth } from "../lib/authContext";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 
 export function RegisterPage() {
   const { locale } = useI18n();
@@ -41,9 +42,10 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 pb-12 px-4">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 pb-12 px-4 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-ai-research.jpg" mode="adaptive" />
       <PublicFloatingHeader />
-      <div className="max-w-lg mx-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-5">
+      <div className="relative z-10 max-w-lg mx-auto rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-5">
         <div>
           <h1 className="text-2xl font-bold">
             {locale === "bn" ? "রোগী অ্যাকাউন্ট নিবন্ধন" : "Create Patient Account"}

@@ -6,6 +6,7 @@ import { useI18n } from "../../lib/i18n";
 import { FOUR_ROLE_NAV_CONFIG } from "../../lib/roleNavigation";
 import { LanguageSwitch, ThemeSwitch } from "../ui";
 import { NotificationsPopover } from "./NotificationsPopover";
+import { PageBackdropLayer } from "./PageBackdropLayer";
 
 export function PortalLayout({
   title,
@@ -30,7 +31,8 @@ export function PortalLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] flex flex-col">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] flex flex-col overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-ai-research.jpg" mode="adaptive" opacity={0.08} />
       {/* Authenticated Top Header */}
       <header
         data-testid="portal-header"
@@ -86,7 +88,7 @@ export function PortalLayout({
         </div>
       </header>
 
-      <div className="flex-1 flex min-w-0">
+      <div className="relative z-10 flex-1 flex min-w-0">
         {/* Desktop Role Sidebar */}
         <aside
           data-testid="portal-sidebar"

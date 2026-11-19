@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
@@ -9,13 +9,27 @@ import {
   Lock,
   ScanText,
   ShieldAlert,
+  ShieldCheck,
   Unlock,
 } from "lucide-react";
 import { apiGet } from "../lib/apiClient";
 import { useI18n } from "../lib/i18n";
+import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
+import {
+  DigitalObservatoryDeck,
+  InteractiveBarGraph,
+  type TelemetryDeckCard,
+} from "../components/charts/AgriStyleTelemetry";
+import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { TrustBadge } from "../components/ui";
+
+const LazyAiModuleScene3D = lazy(() =>
+  import("../components/three/AiModuleScene3D").then((m) => ({ default: m.AiModuleScene3D }))
+);
 
 interface ResearchDataset {
   module: string;
@@ -43,6 +57,9 @@ const INITIAL_FIELDS: DemoOcrField[] = [
 
 export function PrescriptionOcrFeaturePage() {
   const { locale } = useI18n();
+  const { motionPaused } = usePreferences();
+  const [scanning, setScanning] = useState(false);
+  const [lastConf, setLastConf] = useState<number | null>(null);
   const [ocrDataset, setOcrDataset] = useState<ResearchDataset | null>(null);
   const [fields, setFields] = useState<DemoOcrField[]>(INITIAL_FIELDS);
   const [gateStatus, setGateStatus] = useState<"IDLE" | "BLOCKED_422" | "ACTIVATED">("IDLE");
@@ -84,22 +101,131 @@ export function PrescriptionOcrFeaturePage() {
     setGateStatus("ACTIVATED");
   };
 
+  const telemetryCards: TelemetryDeckCard[] = [
+    {
+      id: "ocr-rows",
+      tag: "AUDITED CORPUS",
+      value: "1,000 Rx",
+      sub: "992 Admissible • 8 Quarantined",
+      accent: "#f2c879",
+      icon: ScanText,
+      pieCenter: "99.2%",
+      pieSub: "ADMIT",
+      pieSegments: [
+        { label: "Admissible (992)", pct: 99.2, color: "#f2c879" },
+        { label: "Quarantined (8)", pct: 0.8, color: "#fb7185" },
+      ],
+      barSegments: [
+        { label: "Train (697)", pct: 69.7, color: "#f2c879" },
+        { label: "Val (150)", pct: 15.0, color: "#38bdf8" },
+        { label: "Test (152)", pct: 15.3, color: "#2dd4bf" },
+      ],
+      barFootnote: "split_manifest.csv + QUARANTINE_MANIFEST_VERIFIED.json",
+    },
+    {
+      id: "ocr-gate",
+      tag: "HTTP 422 HUMAN GATE",
+      value: "100%",
+      sub: "Auto-Reminders Locked",
+      accent: "#2dd4bf",
+      icon: Lock,
+      pieCenter: "422",
+      pieSub: "LOCK",
+      pieSegments: [{ label: "Enforced DB CHECK + API Gate", pct: 100, color: "#2dd4bf" }],
+      barSegments: [{ label: "Verified Only Schedules", pct: 100, color: "#2dd4bf" }],
+      barFootnote: "CHECK(status NOT IN ('VERIFIED','ACTIVE') OR verified_by_user_id IS NOT NULL)",
+    },
+    {
+      id: "smoke-0052",
+      tag: "0052.JPG SMOKE PROOF",
+      value: "44 Tokens",
+      sub: "EasyOCR Bengali + English",
+      accent: "#38bdf8",
+      icon: FileCheck2,
+      pieCenter: "44",
+      pieSub: "TOK",
+      pieSegments: [
+        { label: "High-Conf Lines", pct: 68, color: "#38bdf8" },
+        { label: "Needs Review", pct: 32, color: "#fbbf24" },
+      ],
+      barSegments: [
+        { label: "Mean Token Conf", pct: 68, color: "#38bdf8" },
+        { label: "Flagged Dose Review", pct: 32, color: "#f2c879" },
+      ],
+      barFootnote: "CER/WER honestly marked NOT_VALIDATED on raw narrative distance",
+    },
+    {
+      id: "runtime-status",
+      tag: "REVIEW GOVERNANCE",
+      value: "REVIEW",
+      sub: "SIMULATED_REVIEW_ONLY",
+      accent: "#818cf8",
+      icon: ShieldCheck,
+      pieCenter: "SAFE",
+      pieSub: "MODE",
+      pieSegments: [{ label: "Clinician/Patient Sign-Off", pct: 100, color: "#818cf8" }],
+      barSegments: [{ label: "Live EasyOCR + pypdf Ready", pct: 100, color: "#818cf8" }],
+      barFootnote: "Real image & PDF extraction via POST /v1/ai/infer/prescription-ocr",
+    },
+  ];
+
+  const auditGraphItems = [
+    {
+      label: "Admissible Prescription Manifest Rows (992 / 1,000)",
+      value: 99.2,
+      displayValue: "99.20% (992 rows)",
+      sublabel: "QUARANTINE_MANIFEST_VERIFIED",
+      color: "#f2c879",
+    },
+    {
+      label: "Training Partition Share (697 / 1,000)",
+      value: 69.7,
+      displayValue: "69.70% (697 rows)",
+      sublabel: "split_manifest.csv",
+      color: "#38bdf8",
+    },
+    {
+      label: "Validation Partition Share (150 / 1,000)",
+      value: 15.0,
+      displayValue: "15.00% (150 rows)",
+      sublabel: "split_manifest.csv",
+      color: "#2dd4bf",
+    },
+    {
+      label: "Held-Out Test Partition Share (152 / 1,000 + 1 Unannotated 0747)",
+      value: 15.2,
+      displayValue: "15.20% (152 + 1 unannotated)",
+      sublabel: "Test 3 Verified",
+      color: "#818cf8",
+    },
+    {
+      label: "HTTP 422 Server Safety Lock Compliance",
+      value: 100,
+      displayValue: "100% Blocked Until Verified",
+      sublabel: "DB CHECK + API Gate",
+      color: "#34d399",
+    },
+  ];
+
   return (
-    <div className="ss-sapphire-always min-h-screen flex flex-col pt-24" data-testid="ocr-feature-page">
+    <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-20 overflow-x-clip" data-testid="ocr-feature-page">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-prescription-ocr.jpg" />
       <PublicFloatingHeader transparentHero />
 
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-10 flex-1">
-        {/* Header Hero */}
+      <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
+        <HomeSubTabBar />
+
+        {/* Header Hero + 3D Neural Scene */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-[#f2c879]">
-              <ScanText className="w-4 h-4" /> CORE MODULE 02 • FR-OCR-01..07 & FR-MED-01..06
+              <ScanText className="w-4 h-4" /> HOME MODULE 03 • FR-OCR-01..07 &amp; FR-MED-01..06
             </span>
             <TrustBadge kind="HUMAN_VERIFIED" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-8 space-y-3">
+            <div className="lg:col-span-7 space-y-4">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
                 {locale === "bn" ? (
                   <>
@@ -117,33 +243,86 @@ export function PrescriptionOcrFeaturePage() {
                   </>
                 )}
               </h1>
-              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-3xl">
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl">
                 {locale === "bn"
-                  ? "হাতের লেখার অস্পষ্টতায় ভুল ডোজ রোধ করতে প্রতিটি অসম্পূর্ণ বা কম-আত্মবিশ্বাসের OCR ক্ষেত্র রোগী নিজে যাচাই না করা পর্যন্ত সার্ভার রিমাইন্ডার লক করে রাখে (HTTP 422 Gate)।"
-                  : "Auto-guessed medication dosages can harm patients. ShasthoSetu physically blocks medication reminder scheduling with HTTP 422 UNVERIFIED_OCR_FIELDS until a human verifies every ambiguous field side-by-side."}
+                  ? "হাতের লেখার অস্পষ্টতায় ভুল ডোজ রোধ করতে বাস্তব EasyOCR (bn+en) ও pypdf লেজার স্ক্যানের পর প্রতিটি কম-আত্মবিশ্বাসের ক্ষেত্র রোগী বা ডাক্তার যাচাই না করলে রিমাইন্ডার লক থাকে (HTTP 422 Gate)।"
+                  : "Upload prescription photos or PDFs for real Land-Guard CyberScan laser bounding-box extraction via EasyOCR (bn+en) and pypdf. Unverified medicine fields stay locked behind HTTP 422 UNVERIFIED_OCR_FIELDS."}
               </p>
+
+              <div className="flex flex-wrap gap-2.5 pt-1">
+                <Link
+                  to="/patient/ocr-review"
+                  className="min-h-11 px-5 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 text-slate-950 font-bold text-xs inline-flex items-center gap-2"
+                >
+                  {locale === "bn" ? "SQLite লাইভ OCR কিউ খুলুন" : "Open Live SQLite OCR Queue"}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/patient/medicines"
+                  className="min-h-11 px-5 rounded-full border border-white/25 bg-white/5 hover:bg-white/10 text-white font-semibold text-xs inline-flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4 text-[#2dd4bf]" />
+                  {locale === "bn" ? "সক্রিয় ওষুধ রুটিন দেখুন" : "View Patient Medicine Routines"}
+                </Link>
+              </div>
             </div>
 
-            <div className="lg:col-span-4 flex flex-col gap-2.5">
-              <Link
-                to="/patient/ocr-review"
-                className="min-h-12 px-5 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 text-slate-950 font-bold text-sm inline-flex items-center justify-center gap-2"
-              >
-                {locale === "bn" ? "SQLite লাইভ OCR কিউ খুলুন" : "Open Live SQLite OCR Queue"}
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/patient/medicines"
-                className="min-h-12 px-5 rounded-full border border-white/25 bg-white/5 hover:bg-white/10 text-white font-semibold text-sm inline-flex items-center justify-center gap-2"
-              >
-                <Clock className="w-4 h-4 text-[#2dd4bf]" />
-                {locale === "bn" ? "সক্রিয় ওষুধ রুটিন দেখুন" : "View Patient Medicine Routines"}
-              </Link>
+            <div className="lg:col-span-5 h-[220px] sm:h-[245px]">
+              <Suspense fallback={<div className="w-full h-full rounded-2xl bg-[#040a18] border border-amber-400/20" />}>
+                <LazyAiModuleScene3D moduleKey="prescription-ocr" scanning={scanning} confidence={lastConf} />
+              </Suspense>
             </div>
           </div>
         </section>
 
-        {/* Interactive Safe-OCR Workbench Simulation */}
+        {/* Live CyberScan Real EasyOCR / PDF Upload Workbench */}
+        <section className="space-y-3">
+          <div>
+            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#f2c879]">
+              REAL BILINGUAL OCR • EASYOCR (BN+EN) + PYPDF + BOUNDING BOX OVERLAY
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              {locale === "bn"
+                ? "প্রেসক্রিপশন ছবি বা PDF আপলোড করে লাইভ টেক্সট উত্তোলন করুন"
+                : "Upload Prescription Photo / PDF for Live CyberScan OCR Extraction"}
+            </h2>
+          </div>
+
+          <CyberScanWorkbench
+            activeModule="prescription-ocr"
+            onScanStateChange={(sc, conf) => {
+              setScanning(sc);
+              if (conf !== null) setLastConf(conf);
+            }}
+          />
+        </section>
+
+        {/* AgriSense Telemetry Deck + 1,000-Row Audit Graph */}
+        <section className="space-y-5">
+          <DigitalObservatoryDeck
+            badgeLabel="M04 PRESCRIPTION OCR • 1,000-ROW QUARANTINE & HUMAN GATE"
+            cards={telemetryCards}
+            breakdownTitle="Dataset Partition & Safety Gate Breakdown"
+            breakdownBars={[
+              { name: "Admissible Rows", pct: 99.2, valueLabel: "992 / 1,000", color: "#f2c879", note: "Verified manifest" },
+              { name: "Train Partition", pct: 69.7, valueLabel: "697 Rx", color: "#38bdf8", note: "Grouped split" },
+              { name: "Val + Test Rows", pct: 30.2, valueLabel: "302 Rx", color: "#2dd4bf", note: "150 val + 152 test" },
+              { name: "HTTP 422 Gate", pct: 100, valueLabel: "ACTIVE", color: "#34d399", note: "Mandatory review" },
+            ]}
+            pauseMotion={motionPaused}
+          />
+
+          <InteractiveBarGraph
+            title="Prescription OCR Corpus Audit & Safety Gate Metrics"
+            subtitle="Verified by Test 3 (verify_final_lock.py). Note: raw string distance CER/WER remain marked NOT_VALIDATED."
+            items={auditGraphItems}
+            thresholdValue={99.2}
+            thresholdLabel="99.2% Admissible"
+            pauseMotion={motionPaused}
+          />
+        </section>
+
+        {/* Interactive Safe-OCR Workbench Simulation (Preserved with TestIDs) */}
         <section
           data-testid="ocr-demo-workbench"
           className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"

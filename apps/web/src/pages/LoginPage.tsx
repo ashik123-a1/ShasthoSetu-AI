@@ -5,6 +5,7 @@ import { ApiError } from "../lib/apiClient";
 import { roleHomePath, useAuth } from "../lib/authContext";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 
 const DEMO_ACCOUNTS = [
   { label: "Patient Demo (রহিমা বেগম)", id: "patient", email: "patient.demo@shasthosetu.local", pass: "PatientDemo#2026" },
@@ -62,10 +63,11 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 pb-12 px-4">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 pb-12 px-4 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-ai-research.jpg" mode="adaptive" />
       <PublicFloatingHeader />
 
-      <div className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="relative z-10 max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <div className="lg:col-span-7 rounded-3xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 sm:p-8 shadow-[var(--shadow-card)] space-y-5">
           <div className="space-y-1.5">
             <span className="inline-flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">

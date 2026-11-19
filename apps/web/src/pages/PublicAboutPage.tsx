@@ -3,13 +3,15 @@ import { ShieldCheck, Lock, HeartHandshake } from "lucide-react";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 
 export function PublicAboutPage() {
   const { locale } = useI18n();
   return (
-    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24">
+    <div className="relative min-h-screen bg-[var(--color-canvas)] text-[var(--color-text)] pt-24 overflow-x-clip">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-ai-research.jpg" mode="adaptive" />
       <PublicFloatingHeader />
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pb-16 space-y-8">
+      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pb-16 space-y-8">
         <div className="space-y-3">
           <h1 className="text-3xl font-bold">
             {locale === "bn" ? "স্বাস্থ্যসেতু এআই সম্পর্কে" : "About ShasthoSetu AI"}

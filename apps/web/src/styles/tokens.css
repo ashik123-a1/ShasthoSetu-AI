@@ -507,6 +507,114 @@ html[data-theme="light"] .ss-card::after {
   animation: ss-map-pulse 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+/* Land-Guard Exact Cyber-Dark Leaflet & Radar Pulse Pin System */
+#bd-leaflet-map {
+  background-color: #070b16 !important;
+  font-family: inherit;
+}
+
+#bd-leaflet-map .leaflet-bar {
+  border: 1px solid rgba(56, 189, 248, 0.32) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.55) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+}
+
+#bd-leaflet-map .leaflet-bar a {
+  background-color: rgba(11, 19, 43, 0.92) !important;
+  color: #38bdf8 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#bd-leaflet-map .leaflet-bar a:hover {
+  background-color: #06b6d4 !important;
+  color: #040914 !important;
+}
+
+#bd-leaflet-map .leaflet-popup-content-wrapper {
+  background: rgba(9, 17, 38, 0.96) !important;
+  backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(56, 189, 248, 0.42) !important;
+  color: #f1f5f9 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.72), 0 0 22px rgba(6, 182, 212, 0.22) !important;
+}
+
+#bd-leaflet-map .leaflet-popup-tip {
+  background: #091126 !important;
+}
+
+#bd-leaflet-map .leaflet-control-attribution {
+  display: none !important;
+}
+
+.radar-pin-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.radar-pulse-ring {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: rgba(6, 182, 212, 0.36);
+  animation: ss-radar-ping 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.radar-pulse-ring-pilot {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.42);
+  animation: ss-radar-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ss-radar-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  80%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+.radar-core-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #22d3ee;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px #06b6d4;
+  cursor: pointer;
+}
+
+.radar-core-dot-pilot {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #f59e0b;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 12px #f59e0b;
+  cursor: pointer;
+}
+
+html.reduce-motion .radar-pulse-ring,
+html.reduce-motion .radar-pulse-ring-pilot {
+  animation: none !important;
+}
+
 /* Land-Guard CyberScan Upload, Vortex, Laser Scanner & OCR Bounding Box Animations */
 .hud-corner {
   position: absolute;

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
@@ -8,14 +8,29 @@ import {
   CheckSquare,
   ClipboardCopy,
   FlaskConical,
+  ScanText,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
 } from "lucide-react";
 import { apiGet, apiPost } from "../lib/apiClient";
 import { useI18n } from "../lib/i18n";
+import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { HomeSubTabBar } from "../components/layout/HomeSubTabBar";
+import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
+import {
+  DigitalObservatoryDeck,
+  InteractiveBarGraph,
+  type TelemetryDeckCard,
+} from "../components/charts/AgriStyleTelemetry";
+import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { TrustBadge } from "../components/ui";
+
+const LazyAiModuleScene3D = lazy(() =>
+  import("../components/three/AiModuleScene3D").then((m) => ({ default: m.AiModuleScene3D }))
+);
 
 interface ResearchDataset {
   module: string;
@@ -43,6 +58,12 @@ const SYMPTOM_CHECKLIST = [
 
 export function PcosFeaturePage() {
   const { locale } = useI18n();
+  const { motionPaused } = usePreferences();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") === "ultrasound" ? "pcos-ultrasound" : "pcos-clinical";
+
+  const [scanning, setScanning] = useState(false);
+  const [lastConf, setLastConf] = useState<number | null>(null);
   const [datasets, setDatasets] = useState<ResearchDataset[]>([]);
   const [age, setAge] = useState(25);
   const [bmi, setBmi] = useState(26.4);
@@ -121,72 +142,279 @@ export function PcosFeaturePage() {
     }
   };
 
+  const telemetryCards: TelemetryDeckCard[] = [
+    {
+      id: "m01-bal",
+      tag: "M01 HELD-OUT BAL ACC",
+      value: "94.44%",
+      sub: "17 / 18 Clinical Holdout",
+      accent: "#38bdf8",
+      icon: Activity,
+      pieCenter: "94.4%",
+      pieSub: "BAL",
+      pieSegments: [
+        { label: "Held-Out Bal Acc", pct: 94.44, color: "#38bdf8" },
+        { label: "Error Rate", pct: 5.56, color: "#0e1d38" },
+      ],
+      barSegments: [
+        { label: "5-Fold CV (88.57%)", pct: 88.57, color: "#38bdf8" },
+        { label: "Holdout Margin", pct: 5.87, color: "#2dd4bf" },
+      ],
+      barFootnote: "N=88 Mendeley PCOS cleaned profiles • model_best.joblib",
+    },
+    {
+      id: "m02-usg",
+      tag: "M02 ULTRASOUND RESNET18",
+      value: "86.67%",
+      sub: "39 / 45 Unique Scans",
+      accent: "#2dd4bf",
+      icon: ScanText,
+      pieCenter: "86.7%",
+      pieSub: "TEST",
+      pieSegments: [
+        { label: "Correct Morphology", pct: 86.67, color: "#2dd4bf" },
+        { label: "Residual", pct: 13.33, color: "#0e1d38" },
+      ],
+      barSegments: [
+        { label: "Dominant (142)", pct: 47.5, color: "#2dd4bf" },
+        { label: "PCO (116)", pct: 38.8, color: "#38bdf8" },
+        { label: "Normal (41)", pct: 13.7, color: "#818cf8" },
+      ],
+      barFootnote: "299 deduplicated pelvic ultrasound frames (pHash clustered)",
+    },
+    {
+      id: "cohort-n",
+      tag: "CLINICAL FEATURES",
+      value: "20 Vars",
+      sub: "SimpleImputer + XGBoost",
+      accent: "#818cf8",
+      icon: FlaskConical,
+      pieCenter: "88",
+      pieSub: "ROWS",
+      pieSegments: [
+        { label: "Train Split (70)", pct: 79.5, color: "#818cf8" },
+        { label: "Test Split (18)", pct: 20.5, color: "#f2c879" },
+      ],
+      barSegments: [
+        { label: "Anthropometric + Hormonal", pct: 65, color: "#818cf8" },
+        { label: "Metabolic Lipids", pct: 35, color: "#38bdf8" },
+      ],
+      barFootnote: "Rotterdam criteria notice: ultrasound & lab tracks stay separate",
+    },
+    {
+      id: "safety-boundary",
+      tag: "DIAGNOSTIC GUARD",
+      value: "100%",
+      sub: "Research-Only Disclosure",
+      accent: "#f2c879",
+      icon: ShieldCheck,
+      pieCenter: "SAFE",
+      pieSub: "GATE",
+      pieSegments: [{ label: "Non-Diagnostic Isolation", pct: 100, color: "#f2c879" }],
+      barSegments: [
+        { label: "Clinician Review Required", pct: 100, color: "#f2c879" },
+      ],
+      barFootnote: "PCOM morphology alone != clinical PCOS diagnosis",
+    },
+  ];
+
+  const morphologyGraphItems = [
+    {
+      label: "M01 • Held-Out Balanced Accuracy (XGBoost)",
+      value: 94.44,
+      displayValue: "94.44% (17/18)",
+      sublabel: "N=88 Cleaned Cohort",
+      color: "#38bdf8",
+    },
+    {
+      label: "M01 • Stratified 5-Fold Cross Validation",
+      value: 88.57,
+      displayValue: "88.57% ± CV",
+      sublabel: "20 Structured Clinical Features",
+      color: "#818cf8",
+    },
+    {
+      label: "M02 • Ovarian Ultrasound Test Accuracy (ResNet18)",
+      value: 86.67,
+      displayValue: "86.67% (39/45)",
+      sublabel: "Normal / Dominant / PCO",
+      color: "#2dd4bf",
+    },
+    {
+      label: "M02 • Deduplicated Class Share: Dominant Follicle",
+      value: 47.49,
+      displayValue: "142 / 299 Scans (47.5%)",
+      sublabel: "pHash Grouped",
+      color: "#f2c879",
+    },
+    {
+      label: "M02 • Deduplicated Class Share: PCO Morphology",
+      value: 38.8,
+      displayValue: "116 / 299 Scans (38.8%)",
+      sublabel: "Sonographic Pattern",
+      color: "#34d399",
+    },
+    {
+      label: "M02 • Deduplicated Class Share: Normal",
+      value: 13.71,
+      displayValue: "41 / 299 Scans (13.7%)",
+      sublabel: "Baseline Control",
+      color: "#c084fc",
+    },
+  ];
+
   return (
-    <div className="ss-sapphire-always min-h-screen flex flex-col pt-24" data-testid="pcos-feature-page">
+    <div className="ss-sapphire-always relative min-h-screen flex flex-col pt-20 overflow-x-clip" data-testid="pcos-feature-page">
+      <PageBackdropLayer imageSrc="/images/backgrounds/bg-pcos-lab.jpg" />
       <PublicFloatingHeader transparentHero />
 
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-10 flex-1">
-        {/* Hero Banner */}
+      <main className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-8 flex-1">
+        <HomeSubTabBar />
+
+        {/* Hero Banner + 3D Neural Scene */}
         <section className="ss-sapphire-card rounded-3xl p-6 sm:p-8 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-[#818cf8]">
-              <CalendarHeart className="w-4 h-4" /> CORE MODULE 01 • FR-PCOS-01..08 & UJ-03
+              <CalendarHeart className="w-4 h-4" /> HOME MODULE 01 • PCOS CLINICAL (M01) + ULTRASOUND PCOM (M02)
             </span>
             <TrustBadge kind="RESEARCH_ONLY" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-8 space-y-3">
+            <div className="lg:col-span-7 space-y-4">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
                 {locale === "bn" ? (
                   <>
-                    পিসিওএস যত্ন, সাইকেল ট্র্যাকিং ও{" "}
+                    পিসিওএস ক্লিনিকাল ও{" "}
                     <span className="bg-gradient-to-r from-[#38bdf8] via-[#2dd4bf] to-[#f2c879] bg-clip-text text-transparent">
-                      নন-ডায়াগনস্টিক গবেষণা স্টুডিও
+                      আল্ট্রাসাউন্ড গবেষণা স্টুডিও
                     </span>
                   </>
                 ) : (
                   <>
-                    Women&apos;s PCOS Care Journal &amp;{" "}
+                    PCOS Clinical AI &amp;{" "}
                     <span className="bg-gradient-to-r from-[#38bdf8] via-[#2dd4bf] to-[#f2c879] bg-clip-text text-transparent">
-                      Non-Diagnostic ML Studio
+                      Ovarian Ultrasound Lab
                     </span>
                   </>
                 )}
               </h1>
-              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-3xl">
+              <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-2xl">
                 {locale === "bn"
-                  ? "মাসিক চক্র লগ, চিকিৎসকের পরামর্শ প্রস্তুতি সারাংশ এবং নিরীক্ষিত M01 ক্লিনিকাল XGBoost ও M02 PCOM আল্ট্রাসাউন্ড গবেষণা মডেল সম্পূর্ণ পৃথক ও স্বচ্ছ সীমাবদ্ধতাসহ প্রদর্শিত।"
-                  : "Separates personal menstrual tracking and appointment prep checklists from frozen research benchmarks (M01 Clinical XGBoost & M02 Ovarian PCOM Morphology) with strict non-diagnostic safety boundaries."}
+                  ? "এই পৃষ্ঠায় ১. PCOS Clinical AI (২০-ফিচার ফর্ম + XGBoost) এবং ২. PCOS Ultrasound AI (আল্ট্রাসাউন্ড ছবি + ResNet18) উভয় মডেল লাইভ চালানো যাবে, সাথে সাইকেল প্রস্তুতি জার্নাল ও ৬০fps টেলিমেট্রি গ্রাফ।"
+                  : "Unified dedicated workspace pairing Module 1 (PCOS Clinical XGBoost 20-feature pipeline) and Module 2 (Ovarian PCOM ResNet18 ultrasound classifier) with AgriSense-style digital telemetry graphs and private visit-prep logs."}
               </p>
+
+              <div className="flex flex-wrap gap-2.5 pt-1">
+                <Link
+                  to="/patient/pcos"
+                  className="min-h-11 px-5 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 text-slate-950 font-bold text-xs inline-flex items-center gap-2"
+                >
+                  {locale === "bn" ? "ব্যক্তিগত PCOS লগ খুলুন" : "Open My Private PCOS Log"}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/doctors?q=pcos"
+                  className="min-h-11 px-5 rounded-full border border-white/25 bg-white/5 hover:bg-white/10 text-white font-semibold text-xs inline-flex items-center gap-2"
+                >
+                  <Stethoscope className="w-4 h-4 text-[#f2c879]" />
+                  {locale === "bn" ? "স্ত্রীরোগ বিশেষজ্ঞ খুঁজুন" : "Find Gynecology / PCOS Doctors"}
+                </Link>
+              </div>
             </div>
-            <div className="lg:col-span-4 flex flex-col gap-2.5">
-              <Link
-                to="/patient/pcos"
-                className="min-h-12 px-5 rounded-full bg-gradient-to-r from-sky-400 to-teal-400 text-slate-950 font-bold text-sm inline-flex items-center justify-center gap-2"
-              >
-                {locale === "bn" ? "আমার ব্যক্তিগত PCOS লগ খুলুন" : "Open My Private PCOS Log"}
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                to="/doctors?q=pcos"
-                className="min-h-12 px-5 rounded-full border border-white/25 bg-white/5 hover:bg-white/10 text-white font-semibold text-sm inline-flex items-center justify-center gap-2"
-              >
-                <Stethoscope className="w-4 h-4 text-[#f2c879]" />
-                {locale === "bn" ? "স্ত্রীরোগ বিশেষজ্ঞ খুঁজুন" : "Find Gynecology / PCOS Doctors"}
-              </Link>
+
+            <div className="lg:col-span-5 h-[220px] sm:h-[245px]">
+              <Suspense fallback={<div className="w-full h-full rounded-2xl bg-[#040a18] border border-sky-400/20" />}>
+                <LazyAiModuleScene3D moduleKey={activeTab} scanning={scanning} confidence={lastConf} />
+              </Suspense>
             </div>
           </div>
         </section>
 
+        {/* Live Dual-Mode Real Checkpoint Runner (M01 Clinical + M02 Ultrasound) */}
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#38bdf8]">
+                REAL CHECKPOINT INFERENCE • M01 JOBLIB &amp; M02 RESNET18
+              </span>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">
+                {locale === "bn"
+                  ? "মডেল নির্বাচন করে লাইভ ইনফারেন্স চালান"
+                  : "Switch Between PCOS Clinical Form (M01) & Ultrasound Scan (M02)"}
+              </h2>
+            </div>
+
+            <div className="inline-flex rounded-full bg-[#040a18]/85 border border-sky-400/30 p-1">
+              <button
+                type="button"
+                onClick={() => setSearchParams({ tab: "clinical" })}
+                className={`min-h-10 px-4 rounded-full text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition ${
+                  activeTab === "pcos-clinical"
+                    ? "bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <CalendarHeart className="w-3.5 h-3.5" />
+                <span>1. PCOS Clinical (M01)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSearchParams({ tab: "ultrasound" })}
+                className={`min-h-10 px-4 rounded-full text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition ${
+                  activeTab === "pcos-ultrasound"
+                    ? "bg-gradient-to-r from-[#2dd4bf] to-[#38bdf8] text-slate-950"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>2. Ultrasound AI (M02)</span>
+              </button>
+            </div>
+          </div>
+
+          <CyberScanWorkbench
+            activeModule={activeTab}
+            onScanStateChange={(sc, conf) => {
+              setScanning(sc);
+              if (conf !== null) setLastConf(conf);
+            }}
+          />
+        </section>
+
+        {/* AgriSense Digital Observatory + Benchmark Graphs */}
+        <section className="space-y-5">
+          <DigitalObservatoryDeck
+            badgeLabel="M01 CLINICAL XGBOOST & M02 ULTRASOUND TELEMETRY"
+            cards={telemetryCards}
+            breakdownTitle="PCOS Clinical vs Ultrasound Cohort Split & Feature Composition"
+            breakdownBars={[
+              { name: "M01 Held-Out Acc", pct: 94.44, valueLabel: "94.44%", color: "#38bdf8", note: "17 / 18 profiles" },
+              { name: "M01 5-Fold CV Acc", pct: 88.57, valueLabel: "88.57%", color: "#818cf8", note: "N=88 cohort" },
+              { name: "M02 Ultrasound Acc", pct: 86.67, valueLabel: "86.67%", color: "#2dd4bf", note: "39 / 45 scans" },
+              { name: "Deduplicated Unique", pct: 100, valueLabel: "299 Scans", color: "#f2c879", note: "pHash clustered" },
+            ]}
+            pauseMotion={motionPaused}
+          />
+
+          <InteractiveBarGraph
+            title="PCOS Clinical & Ovarian Ultrasound Quantitative Graph (Audited FINAL_LOCK)"
+            subtitle="Separates metabolic/clinical classification from ultrasound PCOM morphology per Rotterdam criteria boundaries."
+            items={morphologyGraphItems}
+            thresholdValue={85}
+            thresholdLabel="85% Validation Threshold"
+            pauseMotion={motionPaused}
+          />
+        </section>
+
         {/* Interactive Non-Diagnostic Calculator + Clinical Prep Builder */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left: Calculator */}
+          {/* Left: Quick Indicator Preview */}
           <div className="lg:col-span-7 ss-sapphire-card rounded-3xl p-6 space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <div className="font-mono text-[11px] uppercase tracking-wider text-sky-300">
-                  M01-XGB-01 RESEARCH PREVIEW (NON-DIAGNOSTIC)
+                  QUICK PRE-CONSULTATION SCREENING INDEX (NON-DIAGNOSTIC)
                 </div>
                 <h2 className="text-xl font-bold mt-0.5">
                   {locale === "bn"
