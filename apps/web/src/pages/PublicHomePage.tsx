@@ -32,6 +32,7 @@ import { useI18n } from "../lib/i18n";
 import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
+import { DepartmentSectorGrid } from "../components/doctors/DepartmentSectorGrid";
 import { HERO_DOCTOR_SLIDES } from "../components/home/HeroDoctorShowcase";
 import {
   DigitalObservatoryDeck,
@@ -1237,10 +1238,10 @@ export function PublicHomePage() {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div>
                 <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#38bdf8] mb-1">
-                  09 • CLINICIAN DISCOVERY &amp; INSTANT SYMPTOM SEARCH
+                  09 • CLINICAL DEPARTMENTS &amp; SYMPTOM SEARCH
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                  {locale === "bn" ? "অনুমোদিত ডেমো চিকিৎসক ও উপসর্গ অনুসন্ধান" : "Verified Demo Clinicians & Instant Symptom Filter"}
+                  {locale === "bn" ? "ক্লিনিক্যাল বিভাগ ও উপসর্গ অনুযায়ী ডাক্তার খুঁজুন" : "Clinical Departments & Instant Symptom Filter"}
                 </h2>
               </div>
               <Link to="/find-care" className="min-h-11 inline-flex items-center gap-1.5 text-sm font-semibold text-[#38bdf8] hover:underline">
@@ -1257,8 +1258,8 @@ export function PublicHomePage() {
                   onChange={(e) => setHeroSearch(e.target.value)}
                   placeholder={
                     locale === "bn"
-                      ? "উপসর্গ, বিশেষজ্ঞ বা ডাক্তারের নাম লিখুন..."
-                      : "Search specialty, symptom (PCOS, fever, rash), or doctor..."
+                      ? "উপসর্গ বা ডিপার্টমেন্ট লিখুন (যেমন: PCOS, জ্বর, চর্মরোগ)..."
+                      : "Search specialty or symptom (PCOS, fever, rash)..."
                   }
                   className="w-full bg-transparent text-white placeholder:text-slate-300/80 text-sm focus:outline-none"
                   data-testid="hero-search-input"
@@ -1286,51 +1287,14 @@ export function PublicHomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5" data-testid="home-doctors-grid">
-            {doctors.map((doc) => (
-              <article
-                key={doc.id}
-                className="ss-sapphire-card rounded-2xl p-5 flex flex-col justify-between gap-4 hover:border-sky-400/60 transition text-white"
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-bold text-lg">
-                        {locale === "bn" && doc.display_name_bn ? doc.display_name_bn : doc.display_name}
-                      </h3>
-                      <p className="text-xs font-semibold text-sky-300">{doc.degrees}</p>
-                    </div>
-                    <span
-                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
-                        doc.is_online_now
-                          ? "bg-teal-400/15 text-teal-300 border border-teal-400/30"
-                          : "bg-white/10 text-slate-300"
-                      }`}
-                    >
-                      {doc.is_online_now ? (locale === "bn" ? "অনলাইন" : "Online Now") : (locale === "bn" ? "নির্ধারিত" : "Scheduled")}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-300">{doc.specialty} • {doc.district}</p>
-                  <div className="flex items-center justify-between text-xs pt-2 border-t border-white/10">
-                    <span className="text-slate-300">{doc.experience_years} {locale === "bn" ? "বছরের অভিজ্ঞতা" : "yrs exp"}</span>
-                    <span className="font-mono font-bold text-sm text-[#f2c879]">
-                      {formatBdtFromPoisha(doc.consultation_fee_minor_poisha, locale)}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-slate-300">
-                    {doc.open_slots_count} {locale === "bn" ? "টি স্লট খালি" : "open slots"}
-                  </span>
-                  <Link
-                    to={`/doctors/${doc.id}`}
-                    className="min-h-11 px-4 rounded-xl bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 text-sm font-bold inline-flex items-center gap-1.5"
-                  >
-                    {locale === "bn" ? "স্লট ও বুকিং" : "Book Slot"} <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </article>
-            ))}
+          <div data-testid="home-doctors-grid" className="pt-2">
+            <DepartmentSectorGrid
+              doctors={doctors}
+              locale={locale}
+              showAllButton
+              onSelectSector={(key) => navigate(`/find-care?specialty=${encodeURIComponent(key)}`)}
+              onToggleShowAll={() => navigate("/find-care?showAll=1")}
+            />
           </div>
         </div>
       </section>

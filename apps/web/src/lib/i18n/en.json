@@ -46,8 +46,10 @@
       "appointments": "My Appointments",
       "payments": "Demo Payments & Receipts",
       "records": "Health Record Vault",
+      "aiAssistant": "Bilingual AI Assistant",
       "ocr": "Prescription OCR Review",
       "medicines": "Medication Routine",
+      "epharma": "ePharma Store",
       "pcos": "PCOS Cycle Tracker",
       "pediatric": "Child Care & Vaccines",
       "support": "Support Tickets"
@@ -58,6 +60,7 @@
       "availability": "Weekly Availability",
       "calendar": "Schedule Calendar",
       "appointments": "Patient Queue",
+      "aiAssistant": "Doctor AI Assistant",
       "referrals": "Referral Review",
       "profile": "Doctor Profile"
     },
@@ -68,6 +71,7 @@
       "appointments": "Global Schedule Override",
       "payments": "Demo Payment Ledger",
       "config": "Fee Bounds & Flags",
+      "rag": "RAG Knowledge Governance",
       "support": "Escalated Tickets",
       "audit": "Immutable Audit Logs",
       "registry": "Research Model Registry"
@@ -76,6 +80,7 @@
       "dashboard": "Helpdesk Overview",
       "tickets": "Ticket Queue",
       "macros": "Approved FAQ Macros",
+      "aiFaq": "Zero-PHI AI Helpdesk",
       "profile": "Staff Profile"
     }
   },
@@ -203,6 +208,8 @@
       "pediatricRash": "Pediatric & Rash",
       "consultations": "Consultations",
       "services": "Health Services",
+      "aiAssistant": "AI Health Assistant",
+      "prescriptionOcr": "Prescription OCR",
       "research": "AI & Research",
       "journal": "Health Journal",
       "portals": "Login",

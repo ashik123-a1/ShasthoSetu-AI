@@ -17,12 +17,12 @@ import { PublicFooter } from "../components/layout/PublicFooter";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { BangladeshCareMap, type MapDoctor, type MapFacility } from "../components/map/BangladeshCareMap";
 import {
-  DEPARTMENT_FILTERS,
   DoctorInstantCallModal,
   DoctorPortraitCard,
   SYMPTOM_CHIPS,
   type RichDoctorCard,
 } from "../components/doctors/DoctorPortraitCard";
+import { DepartmentSectorGrid } from "../components/doctors/DepartmentSectorGrid";
 import { EmptyState, Skeleton } from "../components/ui";
 
 interface FindCareDoctor extends MapDoctor, Omit<RichDoctorCard, "open_slots_count"> {
@@ -61,6 +61,7 @@ export function FindCarePage() {
 
   const [query, setQuery] = useState(searchParams.get("q") || "");
   const [selectedDept, setSelectedDept] = useState(searchParams.get("specialty") || "");
+  const [showAllDoctors, setShowAllDoctors] = useState(searchParams.get("showAll") === "1");
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [facType, setFacType] = useState<"ALL" | "HOSPITAL" | "CLINIC" | "DIAGNOSTIC" | "PHARMACY">("ALL");
   const [callTarget, setCallTarget] = useState<{ doc: RichDoctorCard; mode: "VIDEO" | "AUDIO" } | null>(null);
@@ -226,32 +227,27 @@ export function FindCarePage() {
             <span className="font-mono text-xs text-cyan-300">{doctors.length} clinicians matched</span>
           </div>
 
-          {/* 8 Clinical Department Cards with Live Counts */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-2.5">
-            {DEPARTMENT_FILTERS.map((dept) => {
-              const count = dept.key
-                ? allDoctors.filter((d) => d.specialty.toLowerCase().includes(dept.key.toLowerCase())).length
-                : allDoctors.length;
-              const isSelected = selectedDept === dept.key;
-              return (
-                <button
-                  key={dept.key || "all"}
-                  type="button"
-                  onClick={() => setSelectedDept(dept.key)}
-                  className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
-                    isSelected
-                      ? "bg-cyan-500/20 border-cyan-400 text-white shadow-lg shadow-cyan-500/15"
-                      : "bg-[#09142c]/90 border-white/10 hover:border-cyan-400/50 text-slate-300"
-                  }`}
-                >
-                  <div className="text-[11px] font-bold truncate">
-                    {locale === "bn" ? dept.labelBn : dept.label}
-                  </div>
-                  <div className="text-[10px] font-mono text-cyan-300 mt-1">{count || "—"} active</div>
-                </button>
-              );
-            })}
-          </div>
+          {/* 8 Clinical Department Sector Cards (Click a Sector or View All to Reveal Doctor Profiles) */}
+          <DepartmentSectorGrid
+            doctors={allDoctors}
+            selectedKey={selectedDept}
+            locale={locale}
+            showingAll={showAllDoctors}
+            onSelectSector={(key) => {
+              setSelectedDept(key);
+              setShowAllDoctors(true);
+            }}
+            onToggleShowAll={() => {
+              if (showAllDoctors || selectedDept) {
+                setSelectedDept("");
+                setQuery("");
+                setOnlineOnly(false);
+                setShowAllDoctors(false);
+              } else {
+                setShowAllDoctors(true);
+              }
+            }}
+          />
 
           {/* 8 Symptom Quick-Select Chips */}
           <div className="flex flex-wrap items-center gap-2">
@@ -274,7 +270,27 @@ export function FindCarePage() {
             ))}
           </div>
 
-          {loading ? (
+          {!selectedDept && !query.trim() && !onlineOnly && !showAllDoctors ? (
+            <div className="bento-card rounded-2xl p-5 flex flex-wrap items-center justify-between gap-3 border-cyan-500/25">
+              <div className="space-y-0.5">
+                <div className="text-sm font-bold text-white">
+                  {locale === "bn"
+                    ? "উপরে যেকোনো ডিপার্টমেন্ট বা উপসর্গে ক্লিক করে বিশেষজ্ঞ ডাক্তার দেখুন"
+                    : "Select any department card or symptom above to explore specialist profiles"}
+                </div>
+                <p className="text-xs text-slate-400">
+                  {allDoctors.length || 43} verified demo doctors ready with instant Video/Audio consultation rooms.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAllDoctors(true)}
+                className="min-h-10 px-4 rounded-xl bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 font-bold text-xs cursor-pointer"
+              >
+                {locale === "bn" ? "সব ডাক্তার দেখুন (৪৩ জন)" : `Browse All ${allDoctors.length || 43} Doctors →`}
+              </button>
+            </div>
+          ) : loading ? (
             <Skeleton className="h-56 w-full" />
           ) : doctors.length === 0 ? (
             <EmptyState
@@ -285,18 +301,36 @@ export function FindCarePage() {
                 setQuery("");
                 setSelectedDept("");
                 setOnlineOnly(false);
+                setShowAllDoctors(false);
               }}
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {doctors.map((doc) => (
-                <DoctorPortraitCard
-                  key={doc.id}
-                  doc={doc}
-                  locale={locale}
-                  onStartCall={(d, mode) => setCallTarget({ doc: d, mode })}
-                />
-              ))}
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDept("");
+                    setQuery("");
+                    setOnlineOnly(false);
+                    setShowAllDoctors(false);
+                  }}
+                  className="text-xs font-bold text-cyan-300 hover:underline cursor-pointer"
+                >
+                  ← {locale === "bn" ? "সকল ডিপার্টমেন্টে ফিরুন" : "Back to Department Grid"}
+                </button>
+                <span className="text-xs font-mono text-slate-400">Showing {doctors.length} specialist(s)</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {doctors.map((doc) => (
+                  <DoctorPortraitCard
+                    key={doc.id}
+                    doc={doc}
+                    locale={locale}
+                    onStartCall={(d, mode) => setCallTarget({ doc: d, mode })}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </section>

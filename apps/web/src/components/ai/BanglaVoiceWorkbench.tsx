@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   AlertTriangle,
+  ArrowRight,
   CheckCircle2,
   Loader2,
+  MessageSquare,
   Mic,
   Send,
   ShieldAlert,
@@ -12,11 +15,18 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { apiPost, apiPostForm } from "../../lib/apiClient";
+import { apiGet, apiPost, apiPostForm } from "../../lib/apiClient";
 import { useI18n } from "../../lib/i18n";
 import { usePreferences } from "../../lib/preferences";
 import { TrustBadge } from "../ui";
 import { LandGuardVoiceOrb3D, type VoiceOrbState } from "../three/LandGuardVoiceOrb3D";
+import {
+  VoiceInputControls,
+  detectReplyVoiceLanguage,
+  speakVoiceReply,
+  stopGlobalVoiceReply,
+  type TtsCapabilities,
+} from "./VoiceInputControls";
 
 interface TranscribeResult {
   asr_job_id: string;
@@ -118,6 +128,22 @@ export function BanglaVoiceWorkbench({
   const [transcribing, setTranscribing] = useState(false);
   const [askingAi, setAskingAi] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+  const [ttsCaps, setTtsCaps] = useState<TtsCapabilities | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    apiGet<TtsCapabilities>("/v1/ai/voice/tts-status")
+      .then((res) => {
+        if (active) setTtsCaps(res);
+      })
+      .catch(() => {
+        // Browser Web Speech fallback still works cleanly
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const [asrResult, setAsrResult] = useState<TranscribeResult | null>(null);
   const [editableText, setEditableText] = useState("");
@@ -237,6 +263,7 @@ export function BanglaVoiceWorkbench({
   };
 
   const stopPlayback = () => {
+    stopGlobalVoiceReply();
     if (playbackAudioRef.current) {
       playbackAudioRef.current.pause();
       playbackAudioRef.current = null;
@@ -304,6 +331,9 @@ export function BanglaVoiceWorkbench({
       streamRef.current = stream;
       const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const ctx = new Ctx();
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
       audioCtxRef.current = ctx;
 
       const src = ctx.createMediaStreamSource(stream);
@@ -318,8 +348,11 @@ export function BanglaVoiceWorkbench({
         const ch = ev.inputBuffer.getChannelData(0);
         pcmChunksRef.current.push(new Float32Array(ch));
       };
+      const silentGain = ctx.createGain();
+      silentGain.gain.value = 0;
       src.connect(proc);
-      proc.connect(ctx.destination);
+      proc.connect(silentGain);
+      silentGain.connect(ctx.destination);
       procRef.current = proc;
 
       setRecordSeconds(0);
@@ -358,19 +391,24 @@ export function BanglaVoiceWorkbench({
     void runTranscribeBlob(wavBlob, "voice_mic_16k.wav");
   };
 
-  const handleConfirmAndAsk = async (queryOverride?: string, langOverride?: "auto" | "bn" | "en") => {
+  const handleConfirmAndAsk = async (
+    queryOverride?: string,
+    langOverride?: "auto" | "bn" | "en",
+    opts?: { inputModality?: "VOICE" | "TEXT"; asrJobId?: string; autoSpeakReply?: boolean }
+  ) => {
     const queryToSend = (queryOverride ?? (asrResult ? editableText : manualQuery)).trim();
     if (!queryToSend) return;
 
     stopPlayback();
+    setManualQuery(queryToSend);
     setAskingAi(true);
     setOrbState("PROCESSING");
     onScanStateChange?.(true, null);
     setErrorMsg(null);
 
     try {
-      let confirmedJobId: string | undefined;
-      if (asrResult && !queryOverride) {
+      let confirmedJobId: string | undefined = opts?.asrJobId;
+      if (asrResult && !queryOverride && !confirmedJobId) {
         const conf = await apiPost<{ asr_job_id: string; confirmed_transcript: string }>(
           `/v1/ai/voice/jobs/${encodeURIComponent(asrResult.asr_job_id)}/confirm`,
           { confirmed_transcript: queryToSend }
@@ -378,16 +416,24 @@ export function BanglaVoiceWorkbench({
         confirmedJobId = conf.asr_job_id;
       }
 
+      const effectiveLang = langOverride ?? languageMode;
       const res = await apiPost<ChatResponse>("/v1/ai/chat", {
         query: queryToSend,
-        language_mode: langOverride ?? languageMode,
-        input_modality: confirmedJobId ? "VOICE" : "TEXT",
+        language_mode: effectiveLang,
+        input_modality: opts?.inputModality ?? (confirmedJobId ? "VOICE" : "TEXT"),
         asr_job_id: confirmedJobId,
       });
       setChatReply(res);
       playChime("reply");
       setOrbState("IDLE");
       onScanStateChange?.(false, 0.92);
+
+      const shouldAutoSpeak =
+        opts?.autoSpeakReply ?? (autoSpeak && (opts?.inputModality === "VOICE" || Boolean(confirmedJobId)));
+      if (shouldAutoSpeak) {
+        const speakLang = detectReplyVoiceLanguage(res.answer_text);
+        void handleSpeakReply(res.answer_text, speakLang);
+      }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Voice medical RAG query failed.");
       setOrbState("ERROR");
@@ -404,43 +450,28 @@ export function BanglaVoiceWorkbench({
     setOrbState("SPEAKING");
     onScanStateChange?.(true, 0.95);
 
-    try {
-      const resp = await fetch("/v1/ai/voice/speak", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: textToSpeak.slice(0, 1400), language: lang }),
-      });
+    const detectedLang = detectReplyVoiceLanguage(textToSpeak);
+    const resolvedLang: "bn" | "en" = lang === "auto" ? detectedLang : lang;
+    const baseCaps: TtsCapabilities =
+      ttsCaps ?? { english: { available: true, engine: "sapi5" }, bengali: { available: true, engine: "mms" } };
 
-      const ct = resp.headers.get("content-type") || "";
-      if (resp.ok && ct.includes("audio")) {
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        playbackUrlRef.current = url;
-        const audio = new Audio(url);
-        playbackAudioRef.current = audio;
-        audio.onended = () => {
-          stopPlayback();
-        };
-        audio.onerror = () => {
-          stopPlayback();
-        };
-        await audio.play();
-        return;
-      }
-    } catch {
-      // Fallback cleanly to browser SpeechSynthesis below
-    }
+    // Only hit backend MMS-TTS / SAPI5 when the reply text contains matching script; otherwise Web Speech handles it cleanly
+    const hasBnChars = /[\u0980-\u09FF]/.test(textToSpeak);
+    const hasEnChars = /[A-Za-z]/.test(textToSpeak);
+    const effectiveCaps: TtsCapabilities = {
+      english: {
+        ...baseCaps.english,
+        available: baseCaps.english.available && hasEnChars,
+      },
+      bengali: {
+        ...baseCaps.bengali,
+        available: baseCaps.bengali.available && hasBnChars,
+      },
+    };
 
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      const utter = new SpeechSynthesisUtterance(textToSpeak);
-      utter.lang = lang === "en" ? "en-US" : "bn-BD";
-      utter.onend = () => stopPlayback();
-      utter.onerror = () => stopPlayback();
-      window.speechSynthesis.speak(utter);
-    } else {
+    await speakVoiceReply(textToSpeak, resolvedLang, effectiveCaps, () => {
       stopPlayback();
-    }
+    });
   };
 
   return (
@@ -455,26 +486,55 @@ export function BanglaVoiceWorkbench({
           <TrustBadge kind="RESEARCH_ONLY" />
         </div>
 
-        {/* Language Mode Pills */}
-        <div className="inline-flex rounded-full border border-white/15 bg-black/50 p-1 font-mono text-[11px]">
-          {(
-            [
-              ["auto", "Auto (BN/EN)"],
-              ["bn", "বাংলা"],
-              ["en", "English"],
-            ] as const
-          ).map(([code, label]) => (
-            <button
-              key={code}
-              type="button"
-              onClick={() => setLanguageMode(code)}
-              className={`min-h-8 px-3 rounded-full cursor-pointer transition font-bold ${
-                languageMode === code ? "bg-gradient-to-r from-[#22d3ee] to-[#c084fc] text-slate-950" : "text-slate-300 hover:text-white"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Language Mode Pills + Full Bilingual AI Chat CTA (Works Logged Out) */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-full border border-white/15 bg-black/50 p-1 font-mono text-[11px]">
+            {(
+              [
+                ["auto", "Auto (BN/EN)"],
+                ["bn", "বাংলা"],
+                ["en", "English"],
+              ] as const
+            ).map(([code, label]) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLanguageMode(code)}
+                className={`min-h-8 px-3 rounded-full cursor-pointer transition font-bold ${
+                  languageMode === code ? "bg-gradient-to-r from-[#22d3ee] to-[#c084fc] text-slate-950" : "text-slate-300 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setAutoSpeak((v) => !v)}
+            className={`min-h-9 px-3 rounded-full border text-[11px] font-bold inline-flex items-center gap-1.5 cursor-pointer transition ${
+              autoSpeak
+                ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-200"
+                : "border-white/15 bg-black/40 text-slate-400 hover:text-white"
+            }`}
+          >
+            {autoSpeak ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            {autoSpeak ? (locale === "bn" ? "অটো-স্পিক চালু" : "Auto-Speak ON") : (locale === "bn" ? "অটো-স্পিক বন্ধ" : "Auto-Speak OFF")}
+          </button>
+
+          <Link
+            to="/services/ai-assistant"
+            data-testid="open-full-ai-chat-link"
+            className="min-h-9 px-3.5 rounded-full bg-gradient-to-r from-cyan-400 to-teal-300 text-slate-950 text-[11px] font-bold inline-flex items-center gap-1.5 hover:brightness-105 transition shadow-md"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>
+              {locale === "bn"
+                ? "পূর্ণ দ্বিভাষিক AI চ্যাট খুলুন (লগইন ছাড়াই)"
+                : "Open Full Bilingual AI Chat (No Login Needed)"}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
 
@@ -543,7 +603,32 @@ export function BanglaVoiceWorkbench({
               </span>
             </div>
 
-            {/* Mic + Upload Controls */}
+            {/* 2-Mode Voice Conversation Panel (Direct Real-Time Voice + Normal Record & Edit) */}
+            <VoiceInputControls
+              locale={locale}
+              languageMode={languageMode}
+              onChangeLanguageMode={setLanguageMode}
+              autoSpeak={autoSpeak}
+              onToggleAutoSpeak={() => setAutoSpeak((v) => !v)}
+              disabled={askingAi || transcribing}
+              onSubmitDirect={(transcript, asrJobId) =>
+                void handleConfirmAndAsk(transcript, languageMode, {
+                  inputModality: "VOICE",
+                  asrJobId,
+                  autoSpeakReply: autoSpeak,
+                })
+              }
+              onSubmitConfirmed={(confirmedText, asrJobId) => {
+                setEditableText(confirmedText);
+                void handleConfirmAndAsk(confirmedText, languageMode, {
+                  inputModality: "VOICE",
+                  asrJobId,
+                  autoSpeakReply: autoSpeak,
+                });
+              }}
+            />
+
+            {/* Mic + Upload Controls (Synced with 3D Particle Orb) */}
             <div className="flex flex-wrap items-center gap-2.5">
               {!recording ? (
                 <button
@@ -695,15 +780,34 @@ export function BanglaVoiceWorkbench({
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
+                    onClick={() => void handleSpeakReply(chatReply.answer_text, "auto")}
+                    data-testid="live-voice-auto-speak-btn"
+                    className="min-h-8 px-3 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/50 text-emerald-200 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />{" "}
+                    {detectReplyVoiceLanguage(chatReply.answer_text) === "bn"
+                      ? "Auto Listen (বাংলা)"
+                      : "Auto Listen (EN)"}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => void handleSpeakReply(chatReply.answer_text, "bn")}
-                    className="min-h-8 px-3 rounded-full bg-pink-500/20 hover:bg-pink-500/30 border border-pink-400/40 text-pink-200 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                    className={`min-h-8 px-3 rounded-full border text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer transition ${
+                      detectReplyVoiceLanguage(chatReply.answer_text) === "bn"
+                        ? "bg-pink-500/30 border-pink-300 text-white"
+                        : "bg-pink-500/15 hover:bg-pink-500/25 border-pink-400/40 text-pink-200"
+                    }`}
                   >
                     <Volume2 className="w-3.5 h-3.5" /> বাংলা শুনুন (TTS)
                   </button>
                   <button
                     type="button"
                     onClick={() => void handleSpeakReply(chatReply.answer_text, "en")}
-                    className="min-h-8 px-3 rounded-full bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-200 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                    className={`min-h-8 px-3 rounded-full border text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer transition ${
+                      detectReplyVoiceLanguage(chatReply.answer_text) === "en"
+                        ? "bg-sky-500/30 border-sky-300 text-white"
+                        : "bg-sky-500/15 hover:bg-sky-500/25 border-sky-400/40 text-sky-200"
+                    }`}
                   >
                     <Volume2 className="w-3.5 h-3.5" /> Listen EN
                   </button>

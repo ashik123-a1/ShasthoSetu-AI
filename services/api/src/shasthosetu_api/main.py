@@ -7,7 +7,20 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .db.sqlite import apply_schema
-from .routers import admin, ai_inference, auth, blood_connect, doctor, journal, patient, public, support
+from .routers import (
+    admin,
+    admin_rag,
+    ai_assistant,
+    ai_inference,
+    ai_ocr,
+    auth,
+    blood_connect,
+    doctor,
+    journal,
+    patient,
+    public,
+    support,
+)
 from .seeds.seed_demo import seed_database
 
 
@@ -15,6 +28,12 @@ from .seeds.seed_demo import seed_database
 async def lifespan(_app: FastAPI):
     apply_schema()
     seed_database()
+    try:
+        from .services.rag_ingestion import seed_curated_corpus
+        seed_curated_corpus(force_reindex=False)
+    except Exception:
+        # Resilient startup even if Ollama runtime is offline
+        pass
     yield
 
 
@@ -41,12 +60,15 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(public.router)
     app.include_router(ai_inference.router)
+    app.include_router(ai_assistant.router)
+    app.include_router(ai_ocr.router)
     app.include_router(blood_connect.router)
     app.include_router(journal.router)
     app.include_router(patient.router)
     app.include_router(doctor.router)
     app.include_router(support.router)
     app.include_router(admin.router)
+    app.include_router(admin_rag.router)
     return app
 
 

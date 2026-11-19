@@ -60,6 +60,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
 
   const secondaryLinks = useMemo(
     () => [
+      { to: "/services/ai-assistant", label: locale === "bn" ? "এআই ভয়েস ও চ্যাট" : "AI Voice & Chat" },
       { to: "/about", label: t("publicSite.nav.about") },
       { to: "/care-map", label: t("publicSite.nav.careMap") },
       { to: "/features/pcos", label: t("publicSite.nav.pcosCare") },

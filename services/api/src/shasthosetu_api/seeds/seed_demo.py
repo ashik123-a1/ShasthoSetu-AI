@@ -140,6 +140,28 @@ def _seed_blood_and_journal(conn, now: str) -> None:
             )
 
 
+def _seed_ai_feature_flags(conn, now: str) -> None:
+    """Ensure AI-RAG-VOICE-OCR-01 feature flags are registered and active (idempotent)."""
+    ai_flags = [
+        ("ai_chatbot_enabled", 1, "Bilingual Medical Information RAG Chatbot (Ollama + Hybrid Retrieval, AI-RAG-VOICE-OCR-01)"),
+        ("voice_ai_enabled", 1, "Bengali + English Voice ASR & Tested Local TTS Controls (AI-RAG-VOICE-OCR-01)"),
+        ("deferred_rag_chatbot", 1, "Authorized under AI-RAG-VOICE-OCR-01: Bilingual Medical RAG Chatbot active"),
+        ("deferred_voice_asr", 1, "Authorized under AI-RAG-VOICE-OCR-01: Voice ASR + Editable Confirmation active"),
+    ]
+    for fk, enb, desc in ai_flags:
+        conn.execute(
+            """
+            INSERT INTO feature_flags (flag_key, enabled, description, updated_at_utc)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(flag_key) DO UPDATE SET
+                enabled = excluded.enabled,
+                description = excluded.description,
+                updated_at_utc = excluded.updated_at_utc
+            """,
+            (fk, enb, desc, now),
+        )
+
+
 def _seed_expanded_doctors_and_catalog(conn, now: str) -> None:
     """Idempotently add rich doctor profile columns, 40 additional demo clinicians (43 total across 8 specialties), slots & 12 diagnostic tests."""
     existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(doctor_profiles)").fetchall()}
@@ -390,6 +412,7 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
             conn.execute("BEGIN IMMEDIATE;")
             try:
                 _seed_blood_and_journal(conn, now)
+                _seed_ai_feature_flags(conn, now)
                 _seed_expanded_doctors_and_catalog(conn, now)
                 conn.execute("COMMIT;")
             except Exception:
@@ -765,6 +788,7 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                     "INSERT OR IGNORE INTO feature_flags (flag_key, enabled, description) VALUES (?, ?, ?)",
                     (fk, enb, desc),
                 )
+            _seed_ai_feature_flags(conn, now)
 
             # 12. Real Notifications & Audit Log Seed
             notify_user(

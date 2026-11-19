@@ -25,6 +25,8 @@ import { ViralRashFeaturePage } from "./pages/ViralRashFeaturePage";
 import { PrescriptionOcrFeaturePage } from "./pages/PrescriptionOcrFeaturePage";
 import { BanglaVoiceFeaturePage } from "./pages/BanglaVoiceFeaturePage";
 import { PediatricRashFeaturePage } from "./pages/PediatricRashFeaturePage";
+import { AiAssistantPage } from "./pages/AiAssistantPage";
+import { PrescriptionOcrStudioPage } from "./pages/PrescriptionOcrStudioPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { DoctorApplyPage } from "./pages/DoctorApplyPage";
@@ -102,6 +104,8 @@ function AppRoutes() {
         <Route path="/features/pediatric-rash" element={<PediatricRashFeaturePage />} />
         <Route path="/consultations" element={<PublicConsultationsPage />} />
         <Route path="/services" element={<PublicServicesPage />} />
+        <Route path="/services/ai-assistant" element={<AiAssistantPage />} />
+        <Route path="/services/prescription-ocr" element={<PrescriptionOcrStudioPage />} />
         <Route path="/research" element={<PublicResearchPage />} />
         <Route path="/research/:modelSlug" element={<ResearchModelDetailPage />} />
         <Route path="/journal" element={<HealthJournalPage />} />
@@ -122,8 +126,11 @@ function AppRoutes() {
         <Route path="/patient/payments" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="payments" /></RequireRole>} />
         <Route path="/patient/receipts/:paymentId" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="receipt" /></RequireRole>} />
         <Route path="/patient/records" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="records" /></RequireRole>} />
+        <Route path="/patient/ai-assistant" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="ai-assistant" /></RequireRole>} />
         <Route path="/patient/ocr-review" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="ocr" /></RequireRole>} />
+        <Route path="/patient/prescriptions" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="ocr" /></RequireRole>} />
         <Route path="/patient/medicines" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="medicines" /></RequireRole>} />
+        <Route path="/patient/epharma" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="epharma" /></RequireRole>} />
         <Route path="/patient/pcos" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="pcos" /></RequireRole>} />
         <Route path="/patient/pediatric" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="pediatric" /></RequireRole>} />
         <Route path="/patient/diagnostics" element={<RequireRole allowedRoles={["PATIENT"]}><PatientPortalPage section="diagnostics" /></RequireRole>} />
@@ -137,6 +144,7 @@ function AppRoutes() {
         <Route path="/doctor/calendar" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="calendar" /></RequireRole>} />
         <Route path="/doctor/appointments" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="appointments" /></RequireRole>} />
         <Route path="/doctor/consultations/:appointmentId" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="workspace" /></RequireRole>} />
+        <Route path="/doctor/ai-assistant" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="ai-assistant" /></RequireRole>} />
         <Route path="/doctor/referrals" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="referrals" /></RequireRole>} />
         <Route path="/doctor/profile" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="profile" /></RequireRole>} />
 
@@ -148,6 +156,8 @@ function AppRoutes() {
         <Route path="/admin/appointments" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="appointments" /></RequireRole>} />
         <Route path="/admin/payments" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="payments" /></RequireRole>} />
         <Route path="/admin/config" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="config" /></RequireRole>} />
+        <Route path="/admin/rag" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="rag" /></RequireRole>} />
+        <Route path="/admin/rag-governance" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="rag" /></RequireRole>} />
         <Route path="/admin/support" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="support" /></RequireRole>} />
         <Route path="/admin/audit-logs" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="audit" /></RequireRole>} />
         <Route path="/admin/research-registry" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="research" /></RequireRole>} />
@@ -157,6 +167,7 @@ function AppRoutes() {
         <Route path="/support/dashboard" element={<RequireRole allowedRoles={["SUPPORT"]}><SupportPortalPage section="dashboard" /></RequireRole>} />
         <Route path="/support/tickets" element={<RequireRole allowedRoles={["SUPPORT"]}><SupportPortalPage section="tickets" /></RequireRole>} />
         <Route path="/support/faq" element={<RequireRole allowedRoles={["SUPPORT"]}><SupportPortalPage section="faq" /></RequireRole>} />
+        <Route path="/support/ai-assistant" element={<RequireRole allowedRoles={["SUPPORT"]}><SupportPortalPage section="ai-assistant" /></RequireRole>} />
         <Route path="/support/profile" element={<RequireRole allowedRoles={["SUPPORT"]}><SupportPortalPage section="tickets" /></RequireRole>} />
 
         {/* Isolated Developer Design System Gallery */}

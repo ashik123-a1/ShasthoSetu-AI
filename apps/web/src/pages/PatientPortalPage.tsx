@@ -2,30 +2,36 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Activity,
-  AlertTriangle,
   Baby,
-  CalendarCheck,
-  CheckCircle2,
   CreditCard,
   FilePlus2,
   FlaskConical,
   FolderHeart,
+  HeartPulse,
   LifeBuoy,
+  PhoneCall,
   Pill,
   Printer,
-  ScanText,
-  Stethoscope,
+  Search,
+  Sparkles,
+  Star,
+  Video,
 } from "lucide-react";
-import { HeartPulse, Search, Sparkles, Video } from "lucide-react";
-import { ApiError, apiGet, apiPatch, apiPost } from "../lib/apiClient";
+import { ApiError, apiGet, apiPost } from "../lib/apiClient";
 import { useAuth } from "../lib/authContext";
 import { formatBdtFromPoisha, formatDhakaDateTime } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { PortalLayout } from "../components/layout/PortalLayout";
-import { Skeleton, StatusBadge, StatCard, TrustBadge, useToast } from "../components/ui";
+import { Skeleton, StatusBadge, TrustBadge, useToast } from "../components/ui";
 import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
+import { PatientBentoAnalytics } from "../components/portal/PatientBentoAnalytics";
+import { DepartmentSectorGrid } from "../components/doctors/DepartmentSectorGrid";
+import { DoctorInstantCallModal, type RichDoctorCard } from "../components/doctors/DoctorPortraitCard";
+import { EpharmaStoreWidget } from "../components/pharmacy/EpharmaStoreWidget";
 import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
+import { AiHealthAssistant } from "../components/ai/AiHealthAssistant";
+import { PrescriptionOcrStudio } from "../components/ai/PrescriptionOcrStudio";
 
 interface PatientDashboardData {
   profiles: Array<{ id: string; display_name: string; relationship_type: string; date_of_birth?: string; blood_group?: string; district?: string }>;
@@ -96,7 +102,7 @@ interface PatientDashboardData {
   }>;
 }
 
-interface DoctorItem {
+interface DoctorItem extends RichDoctorCard {
   id: string;
   display_name: string;
   display_name_bn?: string;
@@ -107,36 +113,18 @@ interface DoctorItem {
   open_slots_count: number;
 }
 
-interface OcrPayload {
-  documents: Array<{ id: string; doc_type: string; original_filename: string; mime_type: string; created_at_utc: string }>;
-  ocr_jobs: Array<{
-    id: string;
-    document_id: string;
-    original_filename: string;
-    patient_profile_id: string;
-    status: string;
-    mean_confidence: number;
-    fields: Array<{
-      id: string;
-      field_type: string;
-      raw_ocr_text: string;
-      verified_value?: string | null;
-      confidence: number;
-      is_critical: number;
-      is_verified: number;
-    }>;
-  }>;
-}
-
 export function PatientPortalPage({ section = "dashboard" }: { section?: string }) {
   const { paymentId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { locale } = useI18n();
+  const { pushToast } = useToast();
   const [activeFamilyId, setActiveFamilyId] = useState<string>("");
   const [quickCareQuery, setQuickCareQuery] = useState<string>("");
-  const { pushToast } = useToast();
+  const [selectedDoctorDept, setSelectedDoctorDept] = useState<string>("");
+  const [showAllPortalDocs, setShowAllPortalDocs] = useState<boolean>(Boolean(searchParams.get("doctorId")));
+  const [callTarget, setCallTarget] = useState<{ doc: RichDoctorCard; mode: "VIDEO" | "AUDIO" } | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [dash, setDash] = useState<PatientDashboardData | null>(null);
@@ -149,8 +137,6 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
   const [checkoutMethod, setCheckoutMethod] = useState<"DEMO_BKASH" | "DEMO_NAGAD" | "DEMO_CARD">("DEMO_BKASH");
   const [receiptData, setReceiptData] = useState<Record<string, unknown> | null>(null);
 
-  const [ocrData, setOcrData] = useState<OcrPayload | null>(null);
-  const [ocrDraftEdits, setOcrDraftEdits] = useState<Record<string, string>>({});
   const [pcosEntries, setPcosEntries] = useState<Array<{ id: string; start_date: string; cycle_length_days?: number; user_notes?: string; symptoms_json: string }>>([]);
   const [pediatricData, setPediatricData] = useState<{ vaccines: Array<Record<string, string>>; cases: Array<Record<string, string>> } | null>(null);
   const [aiDrafts, setAiDrafts] = useState<Array<{ id: string; module_key: string; model_id: string; input_summary: string; doctor_review_status: string; doctor_notes?: string; reviewed_doctor_name?: string; created_at_utc: string }>>([]);
@@ -185,7 +171,6 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
         const docsRes = await apiGet<{ doctors: DoctorItem[] }>("/v1/public/doctors");
         setDoctors(docsRes.doctors || []);
       } else if (section === "records" || section === "ocr") {
-        setOcrData(await apiGet<OcrPayload>("/v1/patient/documents"));
         const dRes = await apiGet<{ drafts: typeof aiDrafts }>("/v1/ai/drafts/mine");
         setAiDrafts(dRes.drafts || []);
       } else if (section === "pcos") {
@@ -290,31 +275,6 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
     }
   };
 
-  const verifySingleField = async (fieldId: string, fallbackValue: string) => {
-    try {
-      const val = (ocrDraftEdits[fieldId] ?? fallbackValue).trim();
-      await apiPatch(`/v1/patient/ocr-fields/${fieldId}/verify`, { verified_value: val });
-      pushToast({ title: "OCR Field Verified", tone: "success" });
-      await loadAll();
-    } catch (err) {
-      pushToast({ title: "Verification failed", description: err instanceof ApiError ? err.detail : "Error", tone: "danger" });
-    }
-  };
-
-  const activateOcrPlan = async (jobId: string, patientProfileId: string) => {
-    try {
-      await apiPost(`/v1/patient/ocr-jobs/${jobId}/activate-plan`, { patient_profile_id: patientProfileId });
-      pushToast({ title: "Verified Medication Plan Activated", tone: "success" });
-      await loadAll();
-    } catch (err) {
-      pushToast({
-        title: "Activation Blocked (Human Safety Gate)",
-        description: err instanceof ApiError ? err.detail : "Error",
-        tone: "danger",
-      });
-    }
-  };
-
   const logMedication = async (planId: string, actionStatus: "TAKEN" | "SKIPPED" | "SNOOZED") => {
     try {
       await apiPost(`/v1/patient/medications/${planId}/log`, { action_status: actionStatus });
@@ -343,6 +303,7 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
     records: locale === "bn" ? "স্বাস্থ্য নথি ও পরিবার প্রোফাইল" : "Health Vault & Family Dependents",
     ocr: locale === "bn" ? "মানব-যাচাইকৃত প্রেসক্রিপশন OCR" : "Safe-OCR Verification Workbench",
     medicines: locale === "bn" ? "সক্রিয় ওষুধ ও ই-প্রেসক্রিপশন" : "Medication Routine & Signed e-Rx",
+    epharma: locale === "bn" ? "ই-ফার্মা মেডিসিন শপ ও কার্ট" : "ShasthoSetu ePharma Store & Demo Cart",
     pcos: locale === "bn" ? "PCOS সাইকেল ও উপসর্গ জার্নাল" : "Women's Health & PCOS Tracker",
     pediatric: locale === "bn" ? "শিশু স্বাস্থ্য ও জরুরি সতর্কতা" : "Pediatric Care, Vaccines & Triage",
     diagnostics: locale === "bn" ? "ডায়াগনস্টিক টেস্ট অর্ডার (ডেমো)" : "Diagnostic Lab Demo Orders",
@@ -362,7 +323,6 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
         </div>
       ) : (
         <div className="space-y-6">
-
           {/* OVERVIEW SECTION */}
           {section === "dashboard" && dash && (() => {
             const activeProfile =
@@ -370,7 +330,49 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
             const latestRx = dash.eprescriptions[0];
             return (
               <div className="space-y-6">
-                {/* Land-Guard Top Grid: 3D Flippable Health ID (5 cols) + 4 Bento KPIs & Quick Search (7 cols) */}
+                {/* Land-Guard Interactive Patient Bento Analytics Deck */}
+                <PatientBentoAnalytics
+                  appointmentsCount={dash.appointments.length}
+                  activeMedsCount={dash.medications.filter((m) => m.status === "ACTIVE").length}
+                  prescriptionsCount={dash.eprescriptions.length}
+                  labsAndPcosCount={dash.diagnostic_orders.length + pcosEntries.length}
+                  familyCount={dash.profiles.length}
+                  bloodGroup={activeProfile?.blood_group || "O+"}
+                  onNavigate={(path) => navigate(path)}
+                  onQuickSearch={(qVal) => navigate(`/patient/doctors?q=${encodeURIComponent(qVal)}`)}
+                  quickActions={[
+                    ...(dash.appointments[0]
+                      ? [
+                          {
+                            id: `apt-${dash.appointments[0].id}`,
+                            label: dash.appointments[0].doctor_name,
+                            subtitle: `${dash.appointments[0].booking_reference} • ${formatDhakaDateTime(dash.appointments[0].slot_start_utc, locale)}`,
+                            status: dash.appointments[0].status,
+                            actionLabel: "Join Call",
+                            onAction: () => navigate("/patient/consultations"),
+                          },
+                        ]
+                      : []),
+                    {
+                      id: "act-epharma",
+                      label: locale === "bn" ? "ই-ফার্মা অনলাইন মেডিসিন শপ" : "ShasthoSetu ePharma Store",
+                      subtitle: "24 medicines across 8 categories + Demo Cart",
+                      status: "ONLINE",
+                      actionLabel: "Shop Now",
+                      onAction: () => navigate("/patient/epharma"),
+                    },
+                    {
+                      id: "act-doctors",
+                      label: locale === "bn" ? "বিভাগ অনুযায়ী ডাক্তার খুঁজুন" : "Browse 8 Clinical Departments",
+                      subtitle: "43 verified specialists • Instant Video/Audio Call",
+                      status: "READY",
+                      actionLabel: "Explore",
+                      onAction: () => navigate("/patient/doctors"),
+                    },
+                  ]}
+                />
+
+                {/* Land-Guard Top Grid: 3D Flippable Health ID (5 cols) + Quick Care Controls (7 cols) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                   <div className="lg:col-span-5 flex flex-col justify-center">
                     <SmartHealthIdCard
@@ -485,7 +487,7 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                   {[
                     { icon: Video, label: locale === "bn" ? "ভিডিও কনসাল্ট" : "Video & Audio Call", to: "/patient/consultations", accent: "text-emerald-400", border: "hover:border-emerald-400/60" },
                     { icon: FolderHeart, label: locale === "bn" ? "হেলথ রেকর্ড (EHR)" : "Medical Records", to: "/patient/records", accent: "text-cyan-400", border: "hover:border-cyan-400/60" },
-                    { icon: Pill, label: locale === "bn" ? "ওষুধ ও রিমাইন্ডার" : "Meds & ePharma", to: "/patient/medicines", accent: "text-amber-300", border: "hover:border-amber-400/60" },
+                    { icon: Pill, label: locale === "bn" ? "ই-ফার্মা মেডিসিন শপ" : "ePharma Medicine Store", to: "/patient/epharma", accent: "text-amber-300", border: "hover:border-amber-400/60" },
                     { icon: FlaskConical, label: locale === "bn" ? "ডায়াগনস্টিক ল্যাব" : "Diagnostic Tests", to: "/patient/diagnostics", accent: "text-indigo-300", border: "hover:border-indigo-400/60" },
                     { icon: Sparkles, label: locale === "bn" ? "পিসিওএস ও শিশু এআই" : "PCOS & Child AI", to: "/patient/pcos", accent: "text-pink-400", border: "hover:border-pink-400/60" },
                     { icon: LifeBuoy, label: locale === "bn" ? "২৪/৭ সাপোর্ট" : "Support & Bills", to: "/patient/support", accent: "text-sky-300", border: "hover:border-sky-400/60" },
@@ -604,95 +606,197 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
             );
           })()}
 
-          {/* BOOK DOCTOR SECTION */}
-          {section === "doctors" && dash && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-6 space-y-3">
-                <h2 className="font-bold text-base">{locale === "bn" ? "১. চিকিৎসক বাছাই করুন" : "1. Select Approved Doctor"}</h2>
-                {doctors.map((d) => (
-                  <button
-                    key={d.id}
-                    type="button"
-                    data-testid={`select-doctor-${d.id}`}
-                    onClick={() => {
-                      setBookingDoctorId(d.id);
-                      setBookingSlotId("");
-                    }}
-                    className={`w-full p-4 rounded-2xl border text-left transition cursor-pointer ${
-                      bookingDoctorId === d.id
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                        : "border-[var(--color-border)] bg-[var(--color-surface)]"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm">{locale === "bn" && d.display_name_bn ? d.display_name_bn : d.display_name}</span>
-                      <span className="font-mono font-bold text-sm">{formatBdtFromPoisha(d.consultation_fee_minor_poisha, locale)}</span>
-                    </div>
-                    <p className="text-xs text-[var(--color-text-muted)]">{d.degrees} • {d.specialty} ({d.open_slots_count} open slots)</p>
-                  </button>
-                ))}
-              </div>
+          {/* BOOK DOCTOR SECTION (SECTOR-FIRST FLOW + ATOMIC SLOT BOOKING) */}
+          {section === "doctors" && dash && (() => {
+            const filteredPortalDocs = doctors.filter((d) => {
+              if (selectedDoctorDept) {
+                return d.specialty.toLowerCase().includes(selectedDoctorDept.toLowerCase());
+              }
+              return true;
+            });
+            return (
+              <div className="space-y-6">
+                <DepartmentSectorGrid
+                  doctors={doctors}
+                  selectedKey={selectedDoctorDept}
+                  locale={locale}
+                  showingAll={showAllPortalDocs}
+                  onSelectSector={(key) => {
+                    setSelectedDoctorDept(key);
+                    setShowAllPortalDocs(true);
+                  }}
+                  onToggleShowAll={() => {
+                    if (showAllPortalDocs || selectedDoctorDept) {
+                      setSelectedDoctorDept("");
+                      setShowAllPortalDocs(false);
+                    } else {
+                      setShowAllPortalDocs(true);
+                    }
+                  }}
+                />
 
-              <form onSubmit={(e) => void runBookAppointment(e)} className="lg:col-span-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-4">
-                <h2 className="font-bold text-base">{locale === "bn" ? "২. স্লট ও রোগী নির্ধারণ করুন" : "2. Select Open Slot & Confirm Reservation"}</h2>
-                <label className="block space-y-1 text-xs font-semibold">
-                  <span>{locale === "bn" ? "রোগী নির্বাচন" : "Patient Profile"}</span>
-                  <select
-                    value={bookingProfileId}
-                    onChange={(e) => setBookingProfileId(e.target.value)}
-                    className="w-full min-h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] px-3 text-sm"
-                  >
-                    {dash.profiles.map((p) => (
-                      <option key={p.id} value={p.id}>{p.display_name} ({p.relationship_type})</option>
-                    ))}
-                  </select>
-                </label>
-
-                <div className="space-y-1.5">
-                  <span className="text-xs font-semibold block">{locale === "bn" ? "সময়সূচী" : "Available Slots"}</span>
-                  {selectedDoctorSlots.length === 0 ? (
-                    <p className="text-xs text-[var(--color-text-muted)]">Select a doctor on the left to inspect available slots.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto">
-                      {selectedDoctorSlots.map((sl) => (
+                {(selectedDoctorDept || showAllPortalDocs) ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <div className="lg:col-span-6 space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <h2 className="font-bold text-base text-white">
+                          {locale === "bn" ? "১. চিকিৎসক বাছাই করুন" : "1. Select Approved Doctor"} ({filteredPortalDocs.length})
+                        </h2>
                         <button
-                          key={sl.id}
                           type="button"
-                          onClick={() => setBookingSlotId(sl.id)}
-                          data-testid={`choose-slot-${sl.id}`}
-                          className={`min-h-11 px-3 py-2 rounded-xl border text-xs text-left cursor-pointer ${
-                            bookingSlotId === sl.id
-                              ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-contrast)] font-bold"
-                              : "border-[var(--color-border)] bg-[var(--color-canvas)]"
-                          }`}
+                          onClick={() => {
+                            setSelectedDoctorDept("");
+                            setShowAllPortalDocs(false);
+                          }}
+                          className="text-xs font-semibold text-cyan-300 hover:underline cursor-pointer"
                         >
-                          {formatDhakaDateTime(sl.start_utc, locale)}
+                          ← All Sectors
                         </button>
-                      ))}
+                      </div>
+                      <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
+                        {filteredPortalDocs.map((d) => (
+                          <div
+                            key={d.id}
+                            className={`p-4 rounded-2xl border transition ${
+                              bookingDoctorId === d.id
+                                ? "border-cyan-400 bg-cyan-500/15"
+                                : "border-slate-800 bg-slate-900/90 hover:border-cyan-500/40"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <img
+                                src={d.avatar_url || "/images/doctors/doc-m-01.jpg"}
+                                alt={d.display_name}
+                                className="w-14 h-14 rounded-xl object-cover border border-cyan-400/40 shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-bold text-sm text-white truncate">
+                                    {locale === "bn" && d.display_name_bn ? d.display_name_bn : d.display_name}
+                                  </span>
+                                  <span className="font-mono font-bold text-sm text-amber-300 shrink-0">
+                                    {formatBdtFromPoisha(d.consultation_fee_minor_poisha, locale)}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-cyan-300 truncate">
+                                  {d.degrees} • {d.specialty}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400 mt-1">
+                                  <span className="inline-flex items-center gap-1 text-amber-300">
+                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                    {d.rating ?? 4.9} ({d.reviews_count ?? 140})
+                                  </span>
+                                  <span>•</span>
+                                  <span>{d.open_slots_count} open slots</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2 mt-3 pt-2.5 border-t border-slate-800">
+                              <button
+                                type="button"
+                                data-testid={`select-doctor-${d.id}`}
+                                onClick={() => {
+                                  setBookingDoctorId(d.id);
+                                  setBookingSlotId("");
+                                }}
+                                className={`min-h-9 px-3.5 rounded-xl text-xs font-bold cursor-pointer ${
+                                  bookingDoctorId === d.id
+                                    ? "bg-cyan-400 text-slate-950"
+                                    : "bg-slate-800 hover:bg-cyan-500/25 text-white"
+                                }`}
+                              >
+                                {bookingDoctorId === d.id ? "✓ Selected for Booking" : "Select & Pick Slot"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setCallTarget({ doc: d, mode: "VIDEO" })}
+                                className="min-h-9 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+                              >
+                                <Video className="w-3.5 h-3.5" /> Video Call
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setCallTarget({ doc: d, mode: "AUDIO" })}
+                                className="min-h-9 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+                              >
+                                <PhoneCall className="w-3.5 h-3.5" /> Audio
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                <label className="block space-y-1 text-xs font-semibold">
-                  <span>{locale === "bn" ? "পরামর্শের কারণ" : "Visit Reason Summary"}</span>
-                  <input
-                    type="text"
-                    required
-                    value={visitReason}
-                    onChange={(e) => setVisitReason(e.target.value)}
-                    className="w-full min-h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] px-3 text-sm"
-                  />
-                </label>
+                    <form onSubmit={(e) => void runBookAppointment(e)} className="lg:col-span-6 bento-card rounded-2xl p-5 space-y-4 sticky top-24">
+                      <h2 className="font-bold text-base text-white">{locale === "bn" ? "২. স্লট ও রোগী নির্ধারণ করুন" : "2. Select Open Slot & Confirm Reservation"}</h2>
+                      <label className="block space-y-1 text-xs font-semibold">
+                        <span>{locale === "bn" ? "রোগী নির্বাচন" : "Patient Profile"}</span>
+                        <select
+                          value={bookingProfileId}
+                          onChange={(e) => setBookingProfileId(e.target.value)}
+                          className="w-full min-h-11 rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white"
+                        >
+                          {dash.profiles.map((p) => (
+                            <option key={p.id} value={p.id}>{p.display_name} ({p.relationship_type})</option>
+                          ))}
+                        </select>
+                      </label>
 
-                <button
-                  type="submit"
-                  data-testid="confirm-booking-btn"
-                  className="w-full min-h-12 rounded-xl bg-[var(--color-primary)] text-[var(--color-primary-contrast)] font-semibold text-sm cursor-pointer"
-                >
-                  {locale === "bn" ? "অ্যাটমিক স্লট সংরক্ষণ করুন" : "Lock Slot & Proceed to Demo Checkout"}
-                </button>
-              </form>
-            </div>
+                      <div className="space-y-1.5">
+                        <span className="text-xs font-semibold block">{locale === "bn" ? "সময়সূচী" : "Available Slots"}</span>
+                        {selectedDoctorSlots.length === 0 ? (
+                          <p className="text-xs text-slate-400">Select a doctor on the left to inspect available slots.</p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto">
+                            {selectedDoctorSlots.map((sl) => (
+                              <button
+                                key={sl.id}
+                                type="button"
+                                onClick={() => setBookingSlotId(sl.id)}
+                                data-testid={`choose-slot-${sl.id}`}
+                                className={`min-h-11 px-3 py-2 rounded-xl border text-xs text-left cursor-pointer ${
+                                  bookingSlotId === sl.id
+                                    ? "border-cyan-400 bg-cyan-400 text-slate-950 font-bold"
+                                    : "border-slate-700 bg-slate-900 text-white"
+                                }`}
+                              >
+                                {formatDhakaDateTime(sl.start_utc, locale)}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <label className="block space-y-1 text-xs font-semibold">
+                        <span>{locale === "bn" ? "পরামর্শের কারণ" : "Visit Reason Summary"}</span>
+                        <input
+                          type="text"
+                          required
+                          value={visitReason}
+                          onChange={(e) => setVisitReason(e.target.value)}
+                          className="w-full min-h-11 rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-white"
+                        />
+                      </label>
+
+                      <button
+                        type="submit"
+                        data-testid="confirm-booking-btn"
+                        className="w-full min-h-12 rounded-xl bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 font-extrabold text-sm cursor-pointer"
+                      >
+                        {locale === "bn" ? "অ্যাটমিক স্লট সংরক্ষণ করুন" : "Lock Slot & Proceed to Demo Checkout"}
+                      </button>
+                    </form>
+                  </div>
+                ) : null}
+
+                <DoctorInstantCallModal callTarget={callTarget} onClose={() => setCallTarget(null)} />
+              </div>
+            );
+          })()}
+
+          {/* PATIENT DEDICATED E-PHARMA STORE & DEMO CART */}
+          {section === "epharma" && (
+            <EpharmaStoreWidget autoFetch />
           )}
 
           {/* APPOINTMENTS & CONSULTATIONS */}
@@ -707,6 +811,7 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                   initialMode="VIDEO"
                 />
               )}
+
               <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 p-3.5 text-xs flex flex-wrap items-center justify-between gap-2">
                 <span>SIMULATED / DEMO CHECKOUT: Select bKash, Nagad, or Card Demo method below when settling pending bookings (zero PIN/OTP/CVV).</span>
                 <select
@@ -882,78 +987,17 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
             </div>
           )}
 
+          {/* PATIENT BILINGUAL RAG & VOICE ASSISTANT */}
+          {section === "ai-assistant" && (
+            <div className="space-y-4">
+              <AiHealthAssistant portalMode="patient" />
+            </div>
+          )}
+
           {/* SAFE-OCR REVIEW WORKBENCH */}
-          {section === "ocr" && ocrData && (
+          {section === "ocr" && (
             <div className="space-y-6">
-              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-xs flex items-start gap-2.5">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
-                <div>
-                  <strong>Mandatory Human Safety Gate (HTTP 422):</strong> Upload any JPG/PNG/PDF prescription below to execute real bilingual EasyOCR and queue extracted fields into your human-gated verification workflow.
-                </div>
-              </div>
-
-              <div className="ss-sapphire-always rounded-3xl p-4 sm:p-5">
-                <CyberScanWorkbench
-                  activeModule="prescription-ocr"
-                  persistOcrToQueue
-                  compact
-                  onDraftSaved={() => void loadAll()}
-                />
-              </div>
-
-              {ocrData.ocr_jobs.map((job) => (
-                <div key={job.id} data-testid={`ocr-job-card-${job.id}`} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <h3 className="font-bold text-base flex items-center gap-2">
-                        <ScanText className="w-4 h-4 text-[var(--color-primary)]" /> {job.original_filename}
-                      </h3>
-                      <p className="text-xs text-[var(--color-text-muted)]">
-                        Job: {job.id} • Status: <strong>{job.status}</strong> • Mean Conf: {Math.round((job.mean_confidence || 0) * 100)}%
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      data-testid={`activate-ocr-btn-${job.id}`}
-                      onClick={() => void activateOcrPlan(job.id, job.patient_profile_id)}
-                      className="min-h-11 px-4 rounded-xl bg-[var(--color-primary)] text-[var(--color-primary-contrast)] font-semibold text-xs cursor-pointer"
-                    >
-                      Activate Medication Schedule
-                    </button>
-                  </div>
-
-                  <div className="space-y-2.5">
-                    {job.fields.map((f) => (
-                      <div key={f.id} className="p-3 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex-1 space-y-1">
-                          <div className="text-[11px] font-mono text-[var(--color-text-muted)]">
-                            {f.field_type} • Conf: {Math.round(f.confidence * 100)}% • {f.is_verified ? "VERIFIED BY HUMAN" : "NEEDS VERIFICATION"}
-                          </div>
-                          <input
-                            type="text"
-                            value={ocrDraftEdits[f.id] ?? f.verified_value ?? f.raw_ocr_text}
-                            onChange={(e) => setOcrDraftEdits((prev) => ({ ...prev, [f.id]: e.target.value }))}
-                            className="w-full min-h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          data-testid={`verify-field-btn-${f.id}`}
-                          onClick={() => void verifySingleField(f.id, f.raw_ocr_text)}
-                          className={`min-h-11 px-4 rounded-xl text-xs font-semibold shrink-0 cursor-pointer inline-flex items-center gap-1.5 ${
-                            f.is_verified
-                              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
-                              : "bg-amber-500 text-slate-950"
-                          }`}
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                          {f.is_verified ? "Verified" : "Verify Field"}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <PrescriptionOcrStudio onPlanActivated={() => void loadAll()} />
             </div>
           )}
 

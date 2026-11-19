@@ -54,10 +54,37 @@ def begin_immediate(conn: sqlite3.Connection) -> Iterator[sqlite3.Connection]:
         raise
 
 
+def ensure_ocr_authorization_columns(conn: sqlite3.Connection) -> None:
+    """Idempotently add 5-stage OCR clinical authorization columns on existing SQLite DBs."""
+    art_cols = {r[1] for r in conn.execute("PRAGMA table_info(ocr_job_artifacts)").fetchall()}
+    if art_cols:
+        art_additions = {
+            "authorization_state": "ALTER TABLE ocr_job_artifacts ADD COLUMN authorization_state TEXT NOT NULL DEFAULT 'RAW_OCR'",
+            "patient_acknowledged_by_user_id": "ALTER TABLE ocr_job_artifacts ADD COLUMN patient_acknowledged_by_user_id TEXT REFERENCES users(id)",
+            "patient_acknowledged_at_utc": "ALTER TABLE ocr_job_artifacts ADD COLUMN patient_acknowledged_at_utc TEXT",
+            "clinician_verified_by_user_id": "ALTER TABLE ocr_job_artifacts ADD COLUMN clinician_verified_by_user_id TEXT REFERENCES users(id)",
+            "clinician_verified_at_utc": "ALTER TABLE ocr_job_artifacts ADD COLUMN clinician_verified_at_utc TEXT",
+        }
+        for col, ddl in art_additions.items():
+            if col not in art_cols:
+                conn.execute(ddl)
+
+    med_cols = {r[1] for r in conn.execute("PRAGMA table_info(medication_plans)").fetchall()}
+    if med_cols:
+        med_additions = {
+            "authorization_type": "ALTER TABLE medication_plans ADD COLUMN authorization_type TEXT NOT NULL DEFAULT 'PATIENT_ACKNOWLEDGED_REMINDER'",
+            "clinician_verified_by_user_id": "ALTER TABLE medication_plans ADD COLUMN clinician_verified_by_user_id TEXT REFERENCES users(id)",
+        }
+        for col, ddl in med_additions.items():
+            if col not in med_cols:
+                conn.execute(ddl)
+
+
 def apply_schema(db_path: Path | None = None) -> None:
     sql = SCHEMA_SQL_PATH.read_text(encoding="utf-8")
     with get_db_conn(db_path) as conn:
         conn.executescript(sql)
+        ensure_ocr_authorization_columns(conn)
         configure_sqlite_connection(conn)
 
 

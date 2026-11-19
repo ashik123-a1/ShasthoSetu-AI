@@ -7,6 +7,7 @@ import { PortalLayout } from "../components/layout/PortalLayout";
 import { Skeleton, StatusBadge, useToast } from "../components/ui";
 import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
 import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
+import { AiHealthAssistant } from "../components/ai/AiHealthAssistant";
 
 export function SupportPortalPage({ section = "dashboard" }: { section?: string }) {
   const { user } = useAuth();
@@ -179,6 +180,12 @@ export function SupportPortalPage({ section = "dashboard" }: { section?: string 
                   initialMode="AUDIO"
                 />
               )}
+            </div>
+          )}
+
+          {section === "ai-assistant" && (
+            <div className="space-y-4">
+              <AiHealthAssistant portalMode="support" />
             </div>
           )}
 

@@ -416,7 +416,7 @@ CREATE TABLE IF NOT EXISTS ocr_fields (
     updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
--- FIX ISS-005: verified_by_user_id nullable for DRAFT, enforced non-null for VERIFIED/ACTIVE
+-- FIX ISS-005 & AI-QA-FIX-01: verified_by_user_id nullable for DRAFT, separate PATIENT_ACKNOWLEDGED_REMINDER vs CLINICIAN_AUTHORIZED_PLAN
 CREATE TABLE IF NOT EXISTS medication_plans (
     id TEXT PRIMARY KEY,
     patient_profile_id TEXT NOT NULL REFERENCES patient_profiles(id) ON DELETE CASCADE,
@@ -428,11 +428,14 @@ CREATE TABLE IF NOT EXISTS medication_plans (
     frequency_rule TEXT NOT NULL,
     timezone TEXT NOT NULL DEFAULT 'Asia/Dhaka',
     status TEXT NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'VERIFIED', 'ACTIVE', 'PAUSED', 'COMPLETED', 'CANCELLED')),
+    authorization_type TEXT NOT NULL DEFAULT 'PATIENT_ACKNOWLEDGED_REMINDER' CHECK (authorization_type IN ('PATIENT_ACKNOWLEDGED_REMINDER', 'CLINICIAN_AUTHORIZED_PLAN')),
     verified_by_user_id TEXT REFERENCES users(id),
+    clinician_verified_by_user_id TEXT REFERENCES users(id),
     version INTEGER NOT NULL DEFAULT 1,
     created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    CHECK (status NOT IN ('VERIFIED', 'ACTIVE') OR verified_by_user_id IS NOT NULL)
+    CHECK (status NOT IN ('VERIFIED', 'ACTIVE') OR verified_by_user_id IS NOT NULL),
+    CHECK (authorization_type != 'CLINICIAN_AUTHORIZED_PLAN' OR clinician_verified_by_user_id IS NOT NULL)
 );
 
 CREATE TABLE IF NOT EXISTS medication_events (
@@ -699,4 +702,200 @@ CREATE TABLE IF NOT EXISTS journal_sync_runs (
     status TEXT NOT NULL CHECK (status IN ('RUNNING','SUCCESS','PARTIAL','FAILED')),
     items_added INTEGER NOT NULL DEFAULT 0,
     sources_json TEXT NOT NULL DEFAULT '{}'
+);
+
+-- =========================================================================
+-- 19. BILINGUAL RAG KNOWLEDGE BASE, VOICE ASR/TTS & OCR ARTIFACTS (AI-RAG-VOICE-OCR-01)
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS rag_sources (
+    id TEXT PRIMARY KEY,
+    slug TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    title_bn TEXT NOT NULL DEFAULT '',
+    publisher TEXT NOT NULL,
+    source_url TEXT NOT NULL DEFAULT '',
+    local_file_ref TEXT NOT NULL DEFAULT '',
+    category TEXT NOT NULL,
+    audience_scope TEXT NOT NULL DEFAULT 'PUBLIC_MEDICAL' CHECK (audience_scope IN ('PUBLIC_MEDICAL', 'SUPPORT_FAQ', 'CLINICAL_REFERENCE')),
+    language TEXT NOT NULL DEFAULT 'bilingual' CHECK (language IN ('bn', 'en', 'bilingual')),
+    publication_date TEXT,
+    retrieval_date TEXT NOT NULL,
+    license_basis TEXT NOT NULL,
+    current_version_id TEXT,
+    review_status TEXT NOT NULL DEFAULT 'PENDING_REVIEW' CHECK (review_status IN ('PENDING_REVIEW', 'APPROVED', 'DEPRECATED', 'REJECTED')),
+    approved_by_admin_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+    approved_at_utc TEXT,
+    created_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_rag_sources_status_scope ON rag_sources(review_status, audience_scope, category);
+
+CREATE TABLE IF NOT EXISTS rag_source_versions (
+    id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL REFERENCES rag_sources(id) ON DELETE CASCADE,
+    version_number INTEGER NOT NULL DEFAULT 1,
+    content_sha256 TEXT NOT NULL,
+    mime_type TEXT NOT NULL DEFAULT 'text/markdown',
+    original_filename TEXT NOT NULL DEFAULT '',
+    clean_text TEXT NOT NULL,
+    word_count INTEGER NOT NULL DEFAULT 0,
+    chunk_count INTEGER NOT NULL DEFAULT 0,
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    UNIQUE (source_id, version_number)
+);
+CREATE INDEX IF NOT EXISTS idx_rag_versions_hash ON rag_source_versions(content_sha256);
+
+CREATE TABLE IF NOT EXISTS rag_chunks (
+    id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL REFERENCES rag_sources(id) ON DELETE CASCADE,
+    version_id TEXT NOT NULL REFERENCES rag_source_versions(id) ON DELETE CASCADE,
+    chunk_index INTEGER NOT NULL,
+    section_heading TEXT NOT NULL DEFAULT '',
+    page_or_section_ref TEXT NOT NULL DEFAULT '',
+    language TEXT NOT NULL DEFAULT 'bilingual',
+    chunk_text TEXT NOT NULL,
+    chunk_sha256 TEXT NOT NULL,
+    token_estimate INTEGER NOT NULL DEFAULT 0,
+    vector_row_idx INTEGER,
+    is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_rag_chunks_source_active ON rag_chunks(source_id, is_active, chunk_index);
+
+CREATE TABLE IF NOT EXISTS rag_ingestion_jobs (
+    id TEXT PRIMARY KEY,
+    source_id TEXT REFERENCES rag_sources(id) ON DELETE CASCADE,
+    triggered_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+    job_type TEXT NOT NULL CHECK (job_type IN ('SEED_CORPUS', 'ADMIN_UPLOAD', 'ADMIN_REINDEX')),
+    status TEXT NOT NULL CHECK (status IN ('RUNNING', 'COMPLETED', 'FAILED')),
+    embedding_model TEXT NOT NULL DEFAULT 'bge-m3',
+    index_version TEXT NOT NULL DEFAULT '',
+    chunks_processed INTEGER NOT NULL DEFAULT 0,
+    duration_ms INTEGER NOT NULL DEFAULT 0,
+    error_summary TEXT NOT NULL DEFAULT '',
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    completed_at_utc TEXT
+);
+
+CREATE TABLE IF NOT EXISTS ai_voice_consents (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    consent_scope TEXT NOT NULL DEFAULT 'LOCAL_ASR_TRANSCRIPTION' CHECK (consent_scope IN ('LOCAL_ASR_TRANSCRIPTION', 'LOCAL_TTS_PLAYBACK')),
+    consented INTEGER NOT NULL DEFAULT 1 CHECK (consented IN (0, 1)),
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    revoked_at_utc TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ai_voice_consents_user ON ai_voice_consents(user_id, consent_scope, revoked_at_utc);
+
+CREATE TABLE IF NOT EXISTS ai_asr_jobs (
+    id TEXT PRIMARY KEY,
+    user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+    language_mode TEXT NOT NULL DEFAULT 'auto' CHECK (language_mode IN ('auto', 'bn', 'en')),
+    detected_language TEXT NOT NULL DEFAULT 'unknown',
+    model_id TEXT NOT NULL,
+    audio_format TEXT NOT NULL DEFAULT 'wav',
+    duration_sec REAL NOT NULL DEFAULT 0.0,
+    byte_size INTEGER NOT NULL DEFAULT 0,
+    raw_transcript TEXT NOT NULL DEFAULT '',
+    confirmed_transcript TEXT,
+    was_edited INTEGER NOT NULL DEFAULT 0 CHECK (was_edited IN (0, 1)),
+    is_confirmed INTEGER NOT NULL DEFAULT 0 CHECK (is_confirmed IN (0, 1)),
+    latency_ms INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'TRANSCRIBED' CHECK (status IN ('TRANSCRIBED', 'CONFIRMED', 'FAILED', 'MODEL_UNAVAILABLE')),
+    limitation_note TEXT NOT NULL DEFAULT '',
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    confirmed_at_utc TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ai_asr_jobs_user ON ai_asr_jobs(user_id, created_at_utc);
+
+CREATE TABLE IF NOT EXISTS ai_chat_sessions (
+    id TEXT PRIMARY KEY,
+    owner_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    owner_role TEXT NOT NULL CHECK (owner_role IN ('PATIENT', 'DOCTOR', 'ADMIN', 'SUPPORT')),
+    patient_profile_id TEXT REFERENCES patient_profiles(id) ON DELETE SET NULL,
+    title TEXT NOT NULL DEFAULT 'New Health Assistant Chat',
+    language_mode TEXT NOT NULL DEFAULT 'auto' CHECK (language_mode IN ('auto', 'bn', 'en')),
+    scope TEXT NOT NULL DEFAULT 'MEDICAL_INFO' CHECK (scope IN ('MEDICAL_INFO', 'SUPPORT_FAQ', 'CLINICAL_REF', 'OCR_EXPLAIN')),
+    is_deleted INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_ai_chat_sessions_owner ON ai_chat_sessions(owner_user_id, is_deleted, updated_at_utc);
+
+CREATE TABLE IF NOT EXISTS ai_chat_messages (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES ai_chat_sessions(id) ON DELETE CASCADE,
+    role TEXT NOT NULL CHECK (role IN ('USER', 'ASSISTANT', 'SYSTEM_NOTICE')),
+    input_modality TEXT NOT NULL DEFAULT 'TEXT' CHECK (input_modality IN ('TEXT', 'VOICE', 'OCR_EXPLAIN')),
+    language_detected TEXT NOT NULL DEFAULT 'en',
+    content_text TEXT NOT NULL,
+    grounded_status TEXT NOT NULL DEFAULT 'GROUNDED' CHECK (grounded_status IN ('GROUNDED', 'ABSTAINED', 'EMERGENCY_ESCALATION', 'SAFETY_REFUSAL', 'MODEL_UNAVAILABLE', 'USER_INPUT')),
+    model_id TEXT NOT NULL DEFAULT '',
+    index_version TEXT NOT NULL DEFAULT '',
+    latency_ms INTEGER NOT NULL DEFAULT 0,
+    safety_flags_json TEXT NOT NULL DEFAULT '[]',
+    asr_job_id TEXT REFERENCES ai_asr_jobs(id) ON DELETE SET NULL,
+    ocr_job_id TEXT REFERENCES ocr_jobs(id) ON DELETE SET NULL,
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_ai_chat_messages_session ON ai_chat_messages(session_id, created_at_utc);
+
+CREATE TABLE IF NOT EXISTS ai_message_citations (
+    id TEXT PRIMARY KEY,
+    message_id TEXT NOT NULL REFERENCES ai_chat_messages(id) ON DELETE CASCADE,
+    citation_num INTEGER NOT NULL,
+    source_id TEXT NOT NULL REFERENCES rag_sources(id) ON DELETE CASCADE,
+    chunk_id TEXT REFERENCES rag_chunks(id) ON DELETE SET NULL,
+    source_title TEXT NOT NULL,
+    publisher TEXT NOT NULL,
+    page_or_section_ref TEXT NOT NULL DEFAULT '',
+    source_url TEXT NOT NULL DEFAULT '',
+    snippet_text TEXT NOT NULL,
+    score REAL NOT NULL DEFAULT 0.0
+);
+CREATE INDEX IF NOT EXISTS idx_ai_citations_msg ON ai_message_citations(message_id, citation_num);
+
+CREATE TABLE IF NOT EXISTS ai_feedback (
+    id TEXT PRIMARY KEY,
+    message_id TEXT NOT NULL REFERENCES ai_chat_messages(id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    rating TEXT NOT NULL CHECK (rating IN ('HELPFUL', 'NOT_HELPFUL')),
+    comment_text TEXT NOT NULL DEFAULT '',
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    UNIQUE (message_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS ocr_job_artifacts (
+    id TEXT PRIMARY KEY,
+    ocr_job_id TEXT NOT NULL UNIQUE REFERENCES ocr_jobs(id) ON DELETE CASCADE,
+    stored_file_path TEXT NOT NULL DEFAULT '',
+    source_mime_type TEXT NOT NULL DEFAULT 'image/jpeg',
+    page_count INTEGER NOT NULL DEFAULT 1,
+    raw_full_text TEXT NOT NULL DEFAULT '',
+    corrected_full_text TEXT,
+    bounding_boxes_json TEXT NOT NULL DEFAULT '[]',
+    page_previews_json TEXT NOT NULL DEFAULT '[]',
+    uncertain_fields_count INTEGER NOT NULL DEFAULT 0,
+    review_action TEXT NOT NULL DEFAULT 'DRAFT' CHECK (review_action IN ('DRAFT', 'SAVED_DRAFT', 'VERIFIED', 'DISCARDED')),
+    authorization_state TEXT NOT NULL DEFAULT 'RAW_OCR' CHECK (authorization_state IN ('RAW_OCR', 'PATIENT_CORRECTED', 'PATIENT_ACKNOWLEDGED', 'DOCTOR_VERIFIED', 'AUTHORIZED_MEDICATION_PLAN')),
+    patient_acknowledged_by_user_id TEXT REFERENCES users(id),
+    patient_acknowledged_at_utc TEXT,
+    clinician_verified_by_user_id TEXT REFERENCES users(id),
+    clinician_verified_at_utc TEXT,
+    last_explained_at_utc TEXT,
+    updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE TABLE IF NOT EXISTS ai_runtime_snapshots (
+    id TEXT PRIMARY KEY,
+    component_key TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL CHECK (status IN ('READY', 'LOADING', 'UNAVAILABLE', 'PROCESSING', 'FAILED')),
+    model_id TEXT NOT NULL DEFAULT '',
+    device_label TEXT NOT NULL DEFAULT 'cpu',
+    vram_used_mb REAL DEFAULT 0.0,
+    detail_json TEXT NOT NULL DEFAULT '{}',
+    updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );

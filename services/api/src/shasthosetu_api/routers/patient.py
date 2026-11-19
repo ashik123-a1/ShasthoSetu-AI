@@ -68,6 +68,7 @@ class VerifyOcrFieldRequest(BaseModel):
 
 class ActivateOcrPlanRequest(BaseModel):
     patient_profile_id: str
+    activation_mode: str = Field(default="PATIENT_REMINDER_DRAFT", pattern="^(PATIENT_REMINDER_DRAFT|CLINICIAN_AUTHORIZED_PLAN)$")
 
 
 class MedLogRequest(BaseModel):
@@ -717,46 +718,149 @@ def verify_ocr_field(field_id: str, payload: VerifyOcrFieldRequest, user: dict =
         )
         if not row or row["patient_profile_id"] not in pids:
             raise HTTPException(status_code=403, detail="Access denied.")
+        now = utc_now_iso()
         conn.execute("BEGIN IMMEDIATE;")
         conn.execute(
             "UPDATE ocr_fields SET verified_value = ?, is_verified = 1, verified_by_user_id = ?, updated_at_utc = ? WHERE id = ?",
-            (payload.verified_value.strip(), user["id"], utc_now_iso(), field_id),
+            (payload.verified_value.strip(), user["id"], now, field_id),
         )
-        # Update job status if all critical fields verified
+        # Update job status if all critical fields acknowledged by patient (NOT clinician verified)
         unverified = conn.execute(
             "SELECT COUNT(*) FROM ocr_fields WHERE ocr_job_id = ? AND is_critical = 1 AND is_verified = 0",
             (row["ocr_job_id"],),
         ).fetchone()[0]
+        auth_state = "PATIENT_ACKNOWLEDGED" if unverified == 0 else "PATIENT_CORRECTED"
         if unverified == 0:
             conn.execute(
                 "UPDATE ocr_jobs SET status = 'VERIFIED', verified_by_user_id = ?, verified_at_utc = ? WHERE id = ?",
-                (user["id"], utc_now_iso(), row["ocr_job_id"]),
+                (user["id"], now, row["ocr_job_id"]),
             )
+        conn.execute(
+            """
+            INSERT INTO ocr_job_artifacts (
+                id, ocr_job_id, raw_full_text, review_action, authorization_state,
+                patient_acknowledged_by_user_id, patient_acknowledged_at_utc, updated_at_utc
+            ) VALUES (?, ?, '', ?, ?, ?, ?, ?)
+            ON CONFLICT(ocr_job_id) DO UPDATE SET
+                review_action = excluded.review_action,
+                authorization_state = CASE
+                    WHEN ocr_job_artifacts.authorization_state IN ('DOCTOR_VERIFIED', 'AUTHORIZED_MEDICATION_PLAN')
+                    THEN ocr_job_artifacts.authorization_state
+                    ELSE excluded.authorization_state
+                END,
+                patient_acknowledged_by_user_id = excluded.patient_acknowledged_by_user_id,
+                patient_acknowledged_at_utc = excluded.patient_acknowledged_at_utc,
+                updated_at_utc = excluded.updated_at_utc
+            """,
+            (
+                new_id("ocra"),
+                row["ocr_job_id"],
+                "VERIFIED" if unverified == 0 else "SAVED_DRAFT",
+                auth_state,
+                user["id"],
+                now,
+                now,
+            ),
+        )
         conn.execute("COMMIT;")
-    return {"verified": True, "remaining_unverified_critical": unverified}
+    return {
+        "verified": True,
+        "remaining_unverified_critical": unverified,
+        "authorization_state": auth_state,
+        "clinician_verified": False,
+    }
 
 
 @router.post("/patient/ocr-jobs/{job_id}/activate-plan")
 def activate_medication_plan_from_ocr(job_id: str, payload: ActivateOcrPlanRequest, user: dict = Depends(require_role("PATIENT"))):
-    """Hard SRS V2-T-031 Gate: rejects activating reminders unless EVERY critical OCR field is verified."""
+    """Hard SRS V2-T-031 + Clinical Authorization Gate: rejects IDOR (403), unverified fields (422), and patient self-authorization of clinician plans (403)."""
     with get_db_conn() as conn:
         _assert_profile_owned(conn, user["id"], payload.patient_profile_id)
+        job_row = row_to_dict(
+            conn.execute(
+                """
+                SELECT j.id, j.status, m.patient_profile_id,
+                       COALESCE(a.authorization_state, 'RAW_OCR') AS authorization_state,
+                       a.clinician_verified_by_user_id
+                  FROM ocr_jobs j
+                  JOIN medical_documents m ON m.id = j.document_id
+                  LEFT JOIN ocr_job_artifacts a ON a.ocr_job_id = j.id
+                 WHERE j.id = ?
+                """,
+                (job_id,),
+            ).fetchone()
+        )
+        if not job_row:
+            raise HTTPException(status_code=404, detail="OCR job not found.")
+        pids = _owned_profile_ids(conn, user["id"])
+        if job_row["patient_profile_id"] not in pids:
+            conn.execute("BEGIN IMMEDIATE;")
+            record_audit(
+                conn,
+                actor_user_id=user["id"],
+                actor_role="PATIENT",
+                action_type="OCR_JOB_CROSS_PATIENT_BLOCKED",
+                target_resource="ocr_jobs",
+                target_id=job_id,
+                outcome="DENIED",
+            )
+            conn.execute("COMMIT;")
+            raise HTTPException(status_code=403, detail="Access denied: OCR job does not belong to your family profiles.")
         fields = rows_to_dicts(conn.execute("SELECT * FROM ocr_fields WHERE ocr_job_id = ? ORDER BY group_index ASC", (job_id,)).fetchall())
         if not fields:
-            raise HTTPException(status_code=404, detail="OCR job not found.")
+            raise HTTPException(status_code=404, detail="OCR job fields not found.")
         unverified = [f for f in fields if f["is_critical"] == 1 and f["is_verified"] == 0]
         if unverified:
             raise HTTPException(
                 status_code=422,
                 detail=f"UNVERIFIED_OCR_FIELDS: Cannot activate medication reminders while {len(unverified)} critical OCR field(s) remain unverified.",
             )
+
+        clinician_id = job_row.get("clinician_verified_by_user_id")
+        auth_state = job_row.get("authorization_state") or "RAW_OCR"
+        is_clinician_verified = (auth_state in ("DOCTOR_VERIFIED", "AUTHORIZED_MEDICATION_PLAN")) and bool(clinician_id)
+
+        if payload.activation_mode == "CLINICIAN_AUTHORIZED_PLAN" and not is_clinician_verified:
+            conn.execute("BEGIN IMMEDIATE;")
+            record_audit(
+                conn,
+                actor_user_id=user["id"],
+                actor_role="PATIENT",
+                action_type="OCR_UNAUTHORIZED_PLAN_ACTIVATION",
+                target_resource="ocr_jobs",
+                target_id=job_id,
+                outcome="DENIED",
+                details={"authorization_state": auth_state},
+            )
+            conn.execute("COMMIT;")
+            raise HTTPException(
+                status_code=403,
+                detail="CLINICIAN_VERIFICATION_REQUIRED: Patient-edited OCR cannot activate a clinician-authorized medication plan without approved doctor verification.",
+            )
+
         by_type = {f["field_type"]: (f["verified_value"] or f["raw_ocr_text"]) for f in fields if f["group_index"] == 0}
         plan_id = new_id("medp")
+        now = utc_now_iso()
+        if payload.activation_mode == "CLINICIAN_AUTHORIZED_PLAN":
+            auth_type = "CLINICIAN_AUTHORIZED_PLAN"
+            plan_status = "ACTIVE"
+            clinician_authorized = True
+            next_art_state = "AUTHORIZED_MEDICATION_PLAN"
+        else:
+            auth_type = "PATIENT_ACKNOWLEDGED_REMINDER"
+            plan_status = "VERIFIED"
+            clinician_authorized = False
+            clinician_id = None
+            next_art_state = "PATIENT_ACKNOWLEDGED"
+
         conn.execute("BEGIN IMMEDIATE;")
         conn.execute(
             """
-            INSERT INTO medication_plans (id, patient_profile_id, source_ocr_job_id, medicine_name, dose_text, frequency_rule, status, verified_by_user_id)
-            VALUES (?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
+            INSERT INTO medication_plans (
+                id, patient_profile_id, source_ocr_job_id, medicine_name, dose_text, frequency_rule,
+                status, authorization_type, verified_by_user_id, clinician_verified_by_user_id
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 plan_id,
@@ -765,12 +869,35 @@ def activate_medication_plan_from_ocr(job_id: str, payload: ActivateOcrPlanReque
                 by_type.get("MEDICINE_NAME", "Verified Medicine"),
                 by_type.get("DOSE", "1 unit"),
                 by_type.get("FREQUENCY", "1+0+0"),
+                plan_status,
+                auth_type,
                 user["id"],
+                clinician_id,
             ),
         )
         conn.execute("UPDATE ocr_jobs SET status = 'SCHEDULED' WHERE id = ?", (job_id,))
+        conn.execute(
+            "UPDATE ocr_job_artifacts SET authorization_state = ?, updated_at_utc = ? WHERE ocr_job_id = ?",
+            (next_art_state, now, job_id),
+        )
+        record_audit(
+            conn,
+            actor_user_id=user["id"],
+            actor_role="PATIENT",
+            action_type=f"MEDICATION_PLAN_{auth_type}",
+            target_resource="medication_plans",
+            target_id=plan_id,
+            details={"authorization_type": auth_type, "clinician_authorized": clinician_authorized},
+        )
         conn.execute("COMMIT;")
-    return {"activated": True, "plan_id": plan_id}
+    return {
+        "activated": True,
+        "plan_id": plan_id,
+        "authorization_type": auth_type,
+        "plan_status": plan_status,
+        "clinician_authorized": clinician_authorized,
+        "warning": None if clinician_authorized else "Patient-acknowledged personal reminder draft only — not clinician prescribing authorization.",
+    }
 
 
 @router.post("/patient/medications/{plan_id}/log")

@@ -13,6 +13,7 @@ import { PortalLayout } from "../components/layout/PortalLayout";
 import { Skeleton, StatusBadge, useToast } from "../components/ui";
 import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
 import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
+import { AiHealthAssistant } from "../components/ai/AiHealthAssistant";
 
 interface DoctorAiDraft {
   id: string;
@@ -340,6 +341,13 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
               {/* Patient-Consented AI Research Draft Review Queue */}
               {renderAiDraftsPanel()}
             </>
+          )}
+
+          {/* DOCTOR CLINICAL AI ASSISTANT */}
+          {section === "ai-assistant" && (
+            <div className="space-y-4">
+              <AiHealthAssistant portalMode="doctor" />
+            </div>
           )}
 
           {/* AVAILABILITY & SLOT GENERATOR */}
