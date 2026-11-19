@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -30,6 +30,12 @@ import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader"
 import { PublicFooter } from "../components/layout/PublicFooter";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { Skeleton } from "../components/ui";
+
+const LazyBeatingHeart3D = lazy(() =>
+  import("../components/three/HolographicBodyScanner3D").then((m) => ({
+    default: m.BeatingHeart3D,
+  }))
+);
 
 const BLOOD_GROUPS = ["ALL", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 const DONOR_HUBS = [
@@ -523,26 +529,32 @@ export function BloodConnectPage() {
               </p>
             </div>
 
-            {overview && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
-                <div className="rounded-2xl bg-[#040a18]/85 border border-rose-500/30 px-3.5 py-2.5 text-center">
-                  <div className="text-xl font-bold font-mono text-rose-400">{overview.stats.available_donors}</div>
-                  <div className="text-[10px] text-slate-300">Available Donors</div>
+            <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end gap-3 shrink-0">
+              <Suspense fallback={<div className="w-full sm:w-52 h-40 rounded-2xl bg-[#030916]/80 border border-rose-400/25" />}>
+                <LazyBeatingHeart3D compact bpm={76} className="w-full sm:w-52 shrink-0" />
+              </Suspense>
+
+              {overview && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
+                  <div className="rounded-2xl bg-[#040a18]/85 border border-rose-500/30 px-3.5 py-2.5 text-center">
+                    <div className="text-xl font-bold font-mono text-rose-400">{overview.stats.available_donors}</div>
+                    <div className="text-[10px] text-slate-300">Available Donors</div>
+                  </div>
+                  <div className="rounded-2xl bg-[#040a18]/85 border border-amber-400/30 px-3.5 py-2.5 text-center">
+                    <div className="text-xl font-bold font-mono text-[#f2c879]">{overview.stats.open_requests}</div>
+                    <div className="text-[10px] text-slate-300">Active Requests</div>
+                  </div>
+                  <div className="rounded-2xl bg-[#040a18]/85 border border-emerald-400/30 px-3.5 py-2.5 text-center">
+                    <div className="text-xl font-bold font-mono text-emerald-300">{overview.stats.verified_emergencies}</div>
+                    <div className="text-[10px] text-slate-300">Hospital Verified</div>
+                  </div>
+                  <div className="rounded-2xl bg-[#040a18]/85 border border-sky-400/30 px-3.5 py-2.5 text-center">
+                    <div className="text-xl font-bold font-mono text-sky-300">{overview.stats.divisions_covered}</div>
+                    <div className="text-[10px] text-slate-300">Divisions</div>
+                  </div>
                 </div>
-                <div className="rounded-2xl bg-[#040a18]/85 border border-amber-400/30 px-3.5 py-2.5 text-center">
-                  <div className="text-xl font-bold font-mono text-[#f2c879]">{overview.stats.open_requests}</div>
-                  <div className="text-[10px] text-slate-300">Active Requests</div>
-                </div>
-                <div className="rounded-2xl bg-[#040a18]/85 border border-emerald-400/30 px-3.5 py-2.5 text-center">
-                  <div className="text-xl font-bold font-mono text-emerald-300">{overview.stats.verified_emergencies}</div>
-                  <div className="text-[10px] text-slate-300">Hospital Verified</div>
-                </div>
-                <div className="rounded-2xl bg-[#040a18]/85 border border-sky-400/30 px-3.5 py-2.5 text-center">
-                  <div className="text-xl font-bold font-mono text-sky-300">{overview.stats.divisions_covered}</div>
-                  <div className="text-[10px] text-slate-300">Divisions</div>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Non-Dismissible Medical Screening & Compatibility Disclaimer (Critical Refinement) */}
