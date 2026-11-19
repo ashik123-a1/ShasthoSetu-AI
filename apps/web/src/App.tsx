@@ -3,6 +3,7 @@ import { MotionConfig } from "motion/react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell, GlobalCursorGlow, ToastProvider, useToast, type PillTabItem } from "./components/ui";
 import { HomeSectionRail } from "./components/layout/HomeSectionRail";
+import { FloatingSupportWidget } from "./components/support/FloatingSupportWidget";
 import { AuthProvider } from "./lib/authContext";
 import { I18nProvider, useI18n } from "./lib/i18n";
 import { PreferencesProvider, usePreferences } from "./lib/preferences";
@@ -85,6 +86,7 @@ function AppRoutes() {
     <MotionConfig reducedMotion={motionPaused ? "always" : "user"}>
       <HomeSectionRail />
       <GlobalCursorGlow />
+      <FloatingSupportWidget />
       <Routes>
         {/* Public Routes (Home & /features/* untouched) */}
         <Route path="/" element={<PublicHomePage />} />

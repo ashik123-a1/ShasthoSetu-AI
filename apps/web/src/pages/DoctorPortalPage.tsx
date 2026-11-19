@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CalendarClock, CheckCircle2, ClipboardCheck, FileSignature, Pill, ShieldAlert, Stethoscope } from "lucide-react";
+import {
+  FileSignature,
+  Pill,
+  ShieldAlert,
+  Video,
+} from "lucide-react";
 import { ApiError, apiDelete, apiGet, apiPatch, apiPost } from "../lib/apiClient";
 import { formatBdtFromPoisha, formatDhakaDateTime } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { PortalLayout } from "../components/layout/PortalLayout";
-import { Skeleton, StatCard, StatusBadge, useToast } from "../components/ui";
+import { Skeleton, StatusBadge, useToast } from "../components/ui";
+import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
+import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
 
 interface DoctorAiDraft {
   id: string;
@@ -234,36 +241,85 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
           {/* OVERVIEW */}
           {section === "dashboard" && dash?.kpis && (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-                <div>
-                  <span className="text-xs font-mono text-emerald-600 dark:text-emerald-300 font-bold">STATUS: APPROVED</span>
-                  <h2 className="font-bold text-lg">{String(dash.doctor_profile.display_name)}</h2>
+              {/* Land-Guard Top Grid: 3D Clinician ID Card + 4 Bento KPIs + Live Room Controls */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <div className="lg:col-span-5 flex flex-col justify-center">
+                  <SmartHealthIdCard
+                    role="DOCTOR"
+                    fullName={String(dash.doctor_profile.display_name || "Dr. Farhana Rahman")}
+                    idCode={String(dash.doctor_profile.bmdc_demo_reg || "BMDC-DEMO-91044")}
+                    subtitle={`${String(dash.doctor_profile.specialty || "OB-GYN & PCOS Specialist")} • ${String(dash.doctor_profile.degrees || "MBBS, FCPS")}`}
+                    locationLabel={String(dash.doctor_profile.practice_location || "Dhaka Medical College")}
+                    bloodGroup="A+"
+                    avatarUrl={String(dash.doctor_profile.avatar_url || "/images/doctors/doc-f-01.jpg")}
+                  />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void toggleOnline()}
-                  className={`min-h-11 px-4 rounded-xl font-semibold text-xs cursor-pointer ${
-                    dash.doctor_profile.is_online_now ? "bg-emerald-600 text-white" : "border border-[var(--color-border)]"
-                  }`}
-                >
-                  {dash.doctor_profile.is_online_now ? "Online Now (Active)" : "Go Online Now"}
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Active Patient Queue" value={String(dash.kpis.active_queue)} icon={ClipboardCheck} />
-                <StatCard label="Completed Visits" value={String(dash.kpis.completed_consultations)} icon={CheckCircle2} />
-                <StatCard label="Open Future Slots" value={String(dash.kpis.open_slots)} icon={CalendarClock} />
-                <StatCard label="Simulated Gross Fee" value={formatBdtFromPoisha(dash.kpis.simulated_gross_poisha, locale)} icon={Stethoscope} />
-              </div>
+                <div className="lg:col-span-7 flex flex-col justify-between gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bento-card p-4 rounded-2xl">
+                      <div className="text-[11px] font-medium text-slate-400">Active Queue</div>
+                      <div className="text-2xl font-black font-mono text-white mt-1">{dash.kpis.active_queue}</div>
+                      <div className="text-[10px] font-mono text-cyan-400 mt-1">Ready patients</div>
+                    </div>
+                    <div className="bento-card p-4 rounded-2xl">
+                      <div className="text-[11px] font-medium text-slate-400">Completed</div>
+                      <div className="text-2xl font-black font-mono text-emerald-400 mt-1">{dash.kpis.completed_consultations}</div>
+                      <div className="text-[10px] font-mono text-emerald-400 mt-1">Signed e-Rx</div>
+                    </div>
+                    <div className="bento-card p-4 rounded-2xl">
+                      <div className="text-[11px] font-medium text-slate-400">Open Slots</div>
+                      <div className="text-2xl font-black font-mono text-indigo-300 mt-1">{dash.kpis.open_slots}</div>
+                      <div className="text-[10px] font-mono text-indigo-300 mt-1">Upcoming availability</div>
+                    </div>
+                    <div className="bento-card p-4 rounded-2xl">
+                      <div className="text-[11px] font-medium text-slate-400">Simulated Gross</div>
+                      <div className="text-xl font-black font-mono text-amber-300 mt-1">
+                        {formatBdtFromPoisha(dash.kpis.simulated_gross_poisha, locale)}
+                      </div>
+                      <div className="text-[10px] font-mono text-amber-300 mt-1">Demo ledger</div>
+                    </div>
+                  </div>
 
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
-                <h2 className="font-bold text-base">Assigned Patient Queue</h2>
-                {(dash.upcoming_queue || []).map((item) => (
-                  <div key={String(item.id)} className="p-3.5 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] flex flex-wrap items-center justify-between gap-3">
+                  <div className="bento-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <div className="font-bold text-sm">{String(item.patient_name)} ({String(item.booking_reference)})</div>
-                      <div className="text-xs text-[var(--color-text-muted)]">
+                      <span className="text-xs font-mono text-emerald-400 font-bold">STATUS: APPROVED • VIDEO/AUDIO DESK</span>
+                      <h2 className="font-bold text-lg text-white">{String(dash.doctor_profile.display_name)}</h2>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void toggleOnline()}
+                        className={`min-h-11 px-4 rounded-xl font-semibold text-xs cursor-pointer ${
+                          dash.doctor_profile.is_online_now
+                            ? "bg-emerald-500 text-slate-950 font-bold"
+                            : "border border-slate-700 bg-slate-900 text-slate-200"
+                        }`}
+                      >
+                        {dash.doctor_profile.is_online_now ? "Online Now (Active)" : "Go Online Now"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const firstApt = dash.upcoming_queue?.[0]?.id;
+                          navigate(firstApt ? `/doctor/consultations/${String(firstApt)}` : "/doctor/appointments");
+                        }}
+                        className="min-h-11 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Video className="w-4 h-4" /> Open Live Video/Audio Room
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bento-card rounded-2xl p-5 space-y-3">
+                <h2 className="font-bold text-base text-white">Assigned Patient Queue</h2>
+                {(dash.upcoming_queue || []).map((item) => (
+                  <div key={String(item.id)} className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="font-bold text-sm text-white">{String(item.patient_name)} ({String(item.booking_reference)})</div>
+                      <div className="text-xs text-slate-400">
                         {formatDhakaDateTime(String(item.start_utc), locale)} • {String(item.visit_reason_summary || "")}
                       </div>
                     </div>
@@ -272,9 +328,9 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
                       <button
                         type="button"
                         onClick={() => navigate(`/doctor/consultations/${String(item.id)}`)}
-                        className="min-h-11 px-3.5 rounded-xl bg-[var(--color-primary)] text-[var(--color-primary-contrast)] text-xs font-semibold cursor-pointer"
+                        className="min-h-11 px-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
                       >
-                        Open Workspace
+                        <Video className="w-3.5 h-3.5" /> Open Consultation Room
                       </button>
                     </div>
                   </div>
@@ -357,7 +413,15 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
 
           {/* CONSULTATION WORKSPACE */}
           {section === "workspace" && workspace && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="space-y-6">
+              <LiveConsultationCallStudio
+                roomId={appointmentId || "doctor-desk"}
+                counterpartyName={String(workspace.patient_name || "রহিমা বেগম")}
+                counterpartyRole="Patient Consultation • Clinical Call"
+                counterpartyAvatar="/images/doctors/doc-f-02.jpg"
+                initialMode="VIDEO"
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-4">
                 <h2 className="font-bold text-base flex items-center gap-2"><FileSignature className="w-4 h-4 text-[var(--color-primary)]" /> Clinical Consultation Note</h2>
                 <textarea rows={3} value={subjective} onChange={(e) => setSubjective(e.target.value)} placeholder="Subjective complaints..." className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] p-3 text-sm" data-testid="doc-note-subjective" />
@@ -400,6 +464,7 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
                 </div>
               </form>
               <div className="lg:col-span-12">{renderAiDraftsPanel()}</div>
+            </div>
             </div>
           )}
 

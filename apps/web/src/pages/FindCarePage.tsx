@@ -2,25 +2,30 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Building2,
-  CalendarCheck,
   Compass,
   Hospital,
-  MapPin,
   Phone,
   Pill,
   Search,
+  Sparkles,
   Stethoscope,
 } from "lucide-react";
 import { apiGet } from "../lib/apiClient";
-import { formatBdtFromPoisha } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { BangladeshCareMap, type MapDoctor, type MapFacility } from "../components/map/BangladeshCareMap";
+import {
+  DEPARTMENT_FILTERS,
+  DoctorInstantCallModal,
+  DoctorPortraitCard,
+  SYMPTOM_CHIPS,
+  type RichDoctorCard,
+} from "../components/doctors/DoctorPortraitCard";
 import { EmptyState, Skeleton } from "../components/ui";
 
-interface FindCareDoctor extends MapDoctor {
+interface FindCareDoctor extends MapDoctor, Omit<RichDoctorCard, "open_slots_count"> {
   degrees: string;
   experience_years: number;
   practice_location: string;
@@ -50,12 +55,15 @@ export function FindCarePage() {
   );
 
   const [doctors, setDoctors] = useState<FindCareDoctor[]>([]);
+  const [allDoctors, setAllDoctors] = useState<FindCareDoctor[]>([]);
   const [facilities, setFacilities] = useState<MapFacility[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [query, setQuery] = useState(searchParams.get("q") || "");
+  const [selectedDept, setSelectedDept] = useState(searchParams.get("specialty") || "");
   const [onlineOnly, setOnlineOnly] = useState(false);
   const [facType, setFacType] = useState<"ALL" | "HOSPITAL" | "CLINIC" | "DIAGNOSTIC" | "PHARMACY">("ALL");
+  const [callTarget, setCallTarget] = useState<{ doc: RichDoctorCard; mode: "VIDEO" | "AUDIO" } | null>(null);
 
   useEffect(() => {
     const tParam = searchParams.get("tab") as JumpTarget | null;
@@ -74,13 +82,16 @@ export function FindCarePage() {
       try {
         const qs = new URLSearchParams();
         if (query.trim()) qs.set("q", query.trim());
+        if (selectedDept) qs.set("specialty", selectedDept);
         if (onlineOnly) qs.set("online_only", "true");
-        const [docRes, svcRes] = await Promise.all([
+        const [docRes, allDocRes, svcRes] = await Promise.all([
           apiGet<{ doctors: FindCareDoctor[] }>(`/v1/public/doctors?${qs.toString()}`),
+          apiGet<{ doctors: FindCareDoctor[] }>("/v1/public/doctors"),
           apiGet<{ facilities: MapFacility[] }>("/v1/public/services"),
         ]);
         if (!active) return;
         setDoctors(docRes.doctors || []);
+        setAllDoctors(allDocRes.doctors || []);
         setFacilities(svcRes.facilities || []);
       } catch {
         if (active) {
@@ -94,7 +105,7 @@ export function FindCarePage() {
     return () => {
       active = false;
     };
-  }, [query, onlineOnly]);
+  }, [query, selectedDept, onlineOnly]);
 
   const handleJump = (target: JumpTarget) => {
     setActiveJump(target);
@@ -205,14 +216,62 @@ export function FindCarePage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#38bdf8]">
-                01 • APPROVED CLINICIANS &amp; ATOMIC SLOT BOOKING
+                01 • APPROVED CLINICIANS (43 DOCTORS • 8 DEPARTMENTS) &amp; LIVE CALLS
               </span>
               <h2 className="text-2xl font-bold text-white flex items-center gap-2 mt-0.5">
                 <Stethoscope className="w-5 h-5 text-[#38bdf8]" />
                 {locale === "bn" ? "যাচাইকৃত ডাক্তারদের তালিকা" : "Verified Demo Doctors Directory"}
               </h2>
             </div>
-            <span className="font-mono text-xs text-slate-300">{doctors.length} clinicians matched</span>
+            <span className="font-mono text-xs text-cyan-300">{doctors.length} clinicians matched</span>
+          </div>
+
+          {/* 8 Clinical Department Cards with Live Counts */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 gap-2.5">
+            {DEPARTMENT_FILTERS.map((dept) => {
+              const count = dept.key
+                ? allDoctors.filter((d) => d.specialty.toLowerCase().includes(dept.key.toLowerCase())).length
+                : allDoctors.length;
+              const isSelected = selectedDept === dept.key;
+              return (
+                <button
+                  key={dept.key || "all"}
+                  type="button"
+                  onClick={() => setSelectedDept(dept.key)}
+                  className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                    isSelected
+                      ? "bg-cyan-500/20 border-cyan-400 text-white shadow-lg shadow-cyan-500/15"
+                      : "bg-[#09142c]/90 border-white/10 hover:border-cyan-400/50 text-slate-300"
+                  }`}
+                >
+                  <div className="text-[11px] font-bold truncate">
+                    {locale === "bn" ? dept.labelBn : dept.label}
+                  </div>
+                  <div className="text-[10px] font-mono text-cyan-300 mt-1">{count || "—"} active</div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 8 Symptom Quick-Select Chips */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-mono text-slate-400 inline-flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" /> Quick Symptoms:
+            </span>
+            {SYMPTOM_CHIPS.map((chip) => (
+              <button
+                key={chip.q}
+                type="button"
+                onClick={() => setQuery(chip.q)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition cursor-pointer ${
+                  query.toLowerCase() === chip.q
+                    ? "bg-amber-400 text-slate-950 border-amber-300 font-bold"
+                    : "bg-slate-900/90 border-slate-700 text-slate-300 hover:border-cyan-400/50"
+                }`}
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
 
           {loading ? (
@@ -224,65 +283,25 @@ export function FindCarePage() {
               actionLabel={locale === "bn" ? "সব দেখুন" : "Reset Filter"}
               onAction={() => {
                 setQuery("");
+                setSelectedDept("");
                 setOnlineOnly(false);
               }}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {doctors.map((doc) => (
-                <article
+                <DoctorPortraitCard
                   key={doc.id}
-                  className="ss-sapphire-card rounded-3xl p-6 flex flex-col justify-between gap-4 hover:border-sky-400/60 transition"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-bold text-lg text-white">
-                          {locale === "bn" && doc.display_name_bn ? doc.display_name_bn : doc.display_name}
-                        </h3>
-                        <p className="text-xs font-semibold text-sky-300">{doc.degrees}</p>
-                      </div>
-                      <span
-                        className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full ${
-                          doc.is_online_now
-                            ? "bg-teal-400/20 text-teal-200 border border-teal-400/35"
-                            : "bg-white/10 text-slate-300"
-                        }`}
-                      >
-                        {doc.is_online_now ? "ONLINE DEMO" : "SCHEDULED"}
-                      </span>
-                    </div>
-                    <div className="space-y-1 text-xs text-slate-300">
-                      <div className="flex items-center gap-1.5">
-                        <Stethoscope className="w-3.5 h-3.5 text-[#38bdf8]" /> {doc.specialty} ({doc.experience_years} yrs)
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-[#2dd4bf]" /> {doc.practice_location}, {doc.district}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
-                    <div>
-                      <div className="font-mono font-bold text-base text-[#f2c879]">
-                        {formatBdtFromPoisha(doc.consultation_fee_minor_poisha, locale)}
-                      </div>
-                      <div className="text-[10px] font-mono text-slate-400">
-                        {doc.open_slots_count ?? 0} open slots
-                      </div>
-                    </div>
-                    <Link
-                      to={`/doctors/${doc.id}`}
-                      className="min-h-11 px-4 rounded-full bg-gradient-to-r from-[#38bdf8] to-[#2dd4bf] text-slate-950 font-bold text-xs inline-flex items-center gap-1.5"
-                    >
-                      <CalendarCheck className="w-3.5 h-3.5" /> Book Slot
-                    </Link>
-                  </div>
-                </article>
+                  doc={doc}
+                  locale={locale}
+                  onStartCall={(d, mode) => setCallTarget({ doc: d, mode })}
+                />
               ))}
             </div>
           )}
         </section>
+
+        <DoctorInstantCallModal callTarget={callTarget} onClose={() => setCallTarget(null)} />
 
         {/* SECTION 02: INTERACTIVE 8-DIVISION BANGLADESH CARE ATLAS MAP */}
         <section id="care-atlas" className="scroll-mt-28 space-y-5">

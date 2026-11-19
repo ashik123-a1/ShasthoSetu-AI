@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, BookOpenCheck, LifeBuoy, ShieldCheck } from "lucide-react";
+import { PhoneCall, ShieldCheck } from "lucide-react";
 import { ApiError, apiGet, apiPatch, apiPost } from "../lib/apiClient";
+import { useAuth } from "../lib/authContext";
 import { useI18n } from "../lib/i18n";
 import { PortalLayout } from "../components/layout/PortalLayout";
-import { Skeleton, StatCard, StatusBadge, useToast } from "../components/ui";
+import { Skeleton, StatusBadge, useToast } from "../components/ui";
+import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
+import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
 
 export function SupportPortalPage({ section = "dashboard" }: { section?: string }) {
+  const { user } = useAuth();
   const { locale } = useI18n();
   const { pushToast } = useToast();
+  const [showVoiceDesk, setShowVoiceDesk] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [dash, setDash] = useState<Record<string, unknown> | null>(null);
@@ -111,11 +116,69 @@ export function SupportPortalPage({ section = "dashboard" }: { section?: string 
           </div>
 
           {section === "dashboard" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard label="Open Tickets" value={String(kpis.open_count || 0)} icon={LifeBuoy} />
-              <StatCard label="In Progress / Waiting" value={String((kpis.in_progress_count || 0) + (kpis.waiting_count || 0))} icon={AlertTriangle} />
-              <StatCard label="Escalated to Admin" value={String(kpis.escalated_count || 0)} icon={ShieldCheck} />
-              <StatCard label="Resolved / Closed" value={String(kpis.resolved_count || 0)} icon={BookOpenCheck} />
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <div className="lg:col-span-5 flex flex-col justify-center">
+                  <SmartHealthIdCard
+                    role="SUPPORT"
+                    fullName={user?.full_name || "Zero-PHI Support Officer"}
+                    idCode="SUP-BD-204"
+                    subtitle="Ticketing, Refunds & Non-Clinical Triage"
+                    locationLabel="ShasthoSetu Helpdesk • Dhaka"
+                    bloodGroup="AB+"
+                  />
+                </div>
+
+                <div className="lg:col-span-7 flex flex-col justify-between gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bento-card p-4 rounded-2xl">
+                      <div className="text-[11px] text-slate-400">Open Tickets</div>
+                      <div className="text-2xl font-black font-mono text-cyan-300 mt-1">{kpis.open_count || 0}</div>
+                    </div>
+                    <div className="bento-card p-4 rounded-2xl">
+                      <div className="text-[11px] text-slate-400">In Progress</div>
+                      <div className="text-2xl font-black font-mono text-amber-300 mt-1">
+                        {(kpis.in_progress_count || 0) + (kpis.waiting_count || 0)}
+                      </div>
+                    </div>
+                    <div className="bento-card p-4 rounded-2xl">
+                      <div className="text-[11px] text-slate-400">Escalated</div>
+                      <div className="text-2xl font-black font-mono text-rose-400 mt-1">{kpis.escalated_count || 0}</div>
+                    </div>
+                    <div className="bento-card p-4 rounded-2xl">
+                      <div className="text-[11px] text-slate-400">Resolved</div>
+                      <div className="text-2xl font-black font-mono text-emerald-400 mt-1">{kpis.resolved_count || 0}</div>
+                    </div>
+                  </div>
+
+                  <div className="bento-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-mono text-amber-300 font-bold">SUPPORT AUDIO HELPLINE • ZERO-PHI</div>
+                      <p className="text-xs text-slate-300 mt-0.5">
+                        Handle patient audio support calls &amp; booking enquiries without reading clinical notes.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowVoiceDesk((v) => !v)}
+                      className="min-h-11 px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs inline-flex items-center gap-2 cursor-pointer"
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                      {showVoiceDesk ? "Hide Audio Call Desk" : "Accept Voice Call Line"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {showVoiceDesk && (
+                <LiveConsultationCallStudio
+                  roomId="support-helpline-demo"
+                  counterpartyName="Incoming Support Inquiry (রহিমা বেগম)"
+                  counterpartyRole="Zero-PHI Support Voice Line • Bookings & Billing"
+                  counterpartyAvatar="/images/doctors/doc-f-02.jpg"
+                  initialMode="AUDIO"
+                />
+              )}
             </div>
           )}
 

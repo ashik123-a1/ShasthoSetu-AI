@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, CreditCard, ScrollText, ShieldAlert, ShieldCheck, Sliders, UserCheck, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { CheckCircle2, ScrollText, ShieldCheck, Sliders } from "lucide-react";
 import { ApiError, apiGet, apiPatch, apiPost } from "../lib/apiClient";
+import { useAuth } from "../lib/authContext";
 import { formatBdtFromPoisha } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { PortalLayout } from "../components/layout/PortalLayout";
-import { Skeleton, StatCard, StatusBadge, useToast } from "../components/ui";
+import { Skeleton, StatusBadge, useToast } from "../components/ui";
+import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
+import { LandGuardBentoAnalytics } from "../components/portal/LandGuardBentoAnalytics";
 
 export function AdminPortalPage({ section = "dashboard" }: { section?: string }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { locale } = useI18n();
   const { pushToast } = useToast();
 
@@ -98,24 +104,78 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
       ) : (
         <div className="space-y-6">
           {section === "dashboard" && dash && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label="Total Platform Users" value={String(uStats.total_users || 0)} icon={Users} />
-                <StatCard label="Pending Doctor Apps" value={String(dStats.pending_doctors || 0)} icon={UserCheck} />
-                <StatCard label="Demo Gross Volume" value={formatBdtFromPoisha(pStats.demo_paid_poisha || 0, locale)} icon={CreditCard} />
-                <StatCard label="Escalated Tickets" value={String(dash.escalated_tickets_count || 0)} icon={ShieldAlert} />
-              </div>
+            <div className="space-y-6">
+              <LandGuardBentoAnalytics
+                usersCount={uStats.total_users || 0}
+                approvedDoctorsCount={dStats.approved_doctors || 43}
+                pendingDoctorsCount={dStats.pending_doctors || 0}
+                auditEventsCount={((dash.recent_audit_logs as unknown[]) || []).length}
+                urgentItems={[
+                  ...(dStats.pending_doctors
+                    ? [
+                        {
+                          id: "urg-pending-docs",
+                          label: `${dStats.pending_doctors} Pending Doctor Application(s)`,
+                          subtitle: "Requires BMDC registration & credential verification",
+                          status: "PENDING_REVIEW",
+                          onAction: () => navigate("/admin/doctors"),
+                        },
+                      ]
+                    : []),
+                  ...(Number(dash.escalated_tickets_count || 0) > 0
+                    ? [
+                        {
+                          id: "urg-escalations",
+                          label: `${String(dash.escalated_tickets_count)} Escalated Zero-PHI Ticket(s)`,
+                          subtitle: "Support desk escalated for registrar settlement",
+                          status: "URGENT",
+                          onAction: () => navigate("/admin/support"),
+                        },
+                      ]
+                    : []),
+                ]}
+                onQuickNavigate={(tab) => {
+                  const routes: Record<string, string> = {
+                    doctors: "/admin/doctors",
+                    users: "/admin/users",
+                    audits: "/admin/audit-logs",
+                    governance: "/admin/research-registry",
+                    facilities: "/admin/config",
+                  };
+                  navigate(routes[tab] || "/admin/doctors");
+                }}
+              />
 
-              <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-2">
-                <h2 className="font-bold text-base">Recent Immutable Audit Events</h2>
-                {((dash.recent_audit_logs as Array<Record<string, string>>) || []).map((log) => (
-                  <div key={log.id} className="p-2.5 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] flex flex-wrap justify-between gap-2 text-xs">
-                    <span><strong>{log.action_type}</strong> ({log.actor_role}) → {log.target_resource}</span>
-                    <StatusBadge status={log.outcome === "DENIED" ? "CANCELLED" : "CONFIRMED"} />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="lg:col-span-5">
+                  <SmartHealthIdCard
+                    role="ADMIN"
+                    fullName={user?.full_name || "Senior System Registrar"}
+                    idCode="ADM-REG-1001"
+                    subtitle="Platform Governance & Audit Authority"
+                    bloodGroup="B+"
+                    locationLabel="Ministry Sandbox • Dhaka"
+                  />
+                </div>
+
+                <div className="lg:col-span-7 bento-card rounded-2xl p-5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <h2 className="font-bold text-base text-white">Recent Immutable Audit Events</h2>
+                    <span className="text-[11px] font-mono text-emerald-400">
+                      Gross: {formatBdtFromPoisha(pStats.demo_paid_poisha || 0, locale)}
+                    </span>
                   </div>
-                ))}
+                  {((dash.recent_audit_logs as Array<Record<string, string>>) || []).map((log) => (
+                    <div key={log.id} className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap justify-between gap-2 text-xs">
+                      <span className="text-slate-200">
+                        <strong className="text-cyan-300">{log.action_type}</strong> ({log.actor_role}) → {log.target_resource}
+                      </span>
+                      <StatusBadge status={log.outcome === "DENIED" ? "CANCELLED" : "CONFIRMED"} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {section === "doctors" && (

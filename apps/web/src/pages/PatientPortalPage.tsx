@@ -16,11 +16,15 @@ import {
   ScanText,
   Stethoscope,
 } from "lucide-react";
+import { HeartPulse, Search, Sparkles, Video } from "lucide-react";
 import { ApiError, apiGet, apiPatch, apiPost } from "../lib/apiClient";
+import { useAuth } from "../lib/authContext";
 import { formatBdtFromPoisha, formatDhakaDateTime } from "../lib/formatters";
 import { useI18n } from "../lib/i18n";
 import { PortalLayout } from "../components/layout/PortalLayout";
 import { Skeleton, StatusBadge, StatCard, TrustBadge, useToast } from "../components/ui";
+import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
+import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 
 interface PatientDashboardData {
@@ -128,7 +132,10 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
   const { paymentId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { locale } = useI18n();
+  const [activeFamilyId, setActiveFamilyId] = useState<string>("");
+  const [quickCareQuery, setQuickCareQuery] = useState<string>("");
   const { pushToast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -355,55 +362,247 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
         </div>
       ) : (
         <div className="space-y-6">
+
           {/* OVERVIEW SECTION */}
-          {section === "dashboard" && dash && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label={locale === "bn" ? "অ্যাপয়েন্টমেন্ট" : "Appointments"} value={String(dash.appointments.length)} icon={CalendarCheck} />
-                <StatCard label={locale === "bn" ? "সক্রিয় ওষুধ" : "Active Meds"} value={String(dash.medications.filter((m) => m.status === "ACTIVE").length)} icon={Pill} />
-                <StatCard label={locale === "bn" ? "ডিজিটাল ই-প্রেসক্রিপশন" : "Signed e-Rx"} value={String(dash.eprescriptions.length)} icon={Stethoscope} />
-                <StatCard label={locale === "bn" ? "পরিবার সদস্য" : "Family Profiles"} value={String(dash.profiles.length)} icon={FolderHeart} />
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-bold text-base">{locale === "bn" ? "সাম্প্রতিক অ্যাপয়েন্টমেন্ট" : "Recent Appointments"}</h2>
-                    <button type="button" onClick={() => navigate("/patient/doctors")} className="text-xs font-semibold text-[var(--color-primary)] hover:underline cursor-pointer">
-                      + {locale === "bn" ? "নতুন বুকিং" : "Book New"}
-                    </button>
+          {section === "dashboard" && dash && (() => {
+            const activeProfile =
+              dash.profiles.find((p) => p.id === activeFamilyId) || dash.profiles[0];
+            const latestRx = dash.eprescriptions[0];
+            return (
+              <div className="space-y-6">
+                {/* Land-Guard Top Grid: 3D Flippable Health ID (5 cols) + 4 Bento KPIs & Quick Search (7 cols) */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                  <div className="lg:col-span-5 flex flex-col justify-center">
+                    <SmartHealthIdCard
+                      role="PATIENT"
+                      fullName={activeProfile?.display_name || user?.full_name || "রহিমা বেগম"}
+                      idCode="SS-PT-884920"
+                      subtitle={`${activeProfile?.relationship_type || "SELF"} Profile • Owned EHR Scope`}
+                      bloodGroup={activeProfile?.blood_group || "O+"}
+                      locationLabel={`${activeProfile?.district || "Dhaka"}, BD`}
+                    />
                   </div>
-                  {dash.appointments.slice(0, 4).map((a) => (
-                    <div key={a.id} className="p-3 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] flex items-center justify-between gap-2 text-xs">
-                      <div>
-                        <p className="font-bold">{locale === "bn" && a.doctor_name_bn ? a.doctor_name_bn : a.doctor_name}</p>
-                        <p className="text-[var(--color-text-muted)]">{a.booking_reference} • {formatDhakaDateTime(a.slot_start_utc, locale)}</p>
+
+                  <div className="lg:col-span-7 flex flex-col justify-between gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="bento-card p-4 rounded-2xl">
+                        <div className="text-[11px] font-medium text-slate-400">
+                          {locale === "bn" ? "অ্যাপয়েন্টমেন্ট" : "Appointments"}
+                        </div>
+                        <div className="text-2xl font-black font-mono text-white mt-1">
+                          {dash.appointments.length}
+                        </div>
+                        <div className="text-[10px] font-mono text-cyan-400 mt-1">Video &amp; Clinic</div>
                       </div>
-                      <StatusBadge status={a.status} />
+                      <div className="bento-card p-4 rounded-2xl">
+                        <div className="text-[11px] font-medium text-slate-400">
+                          {locale === "bn" ? "সক্রিয় ওষুধ" : "Active Meds"}
+                        </div>
+                        <div className="text-2xl font-black font-mono text-emerald-400 mt-1">
+                          {dash.medications.filter((m) => m.status === "ACTIVE").length}
+                        </div>
+                        <div className="text-[10px] font-mono text-emerald-400 mt-1">Human-Verified</div>
+                      </div>
+                      <div className="bento-card p-4 rounded-2xl">
+                        <div className="text-[11px] font-medium text-slate-400">
+                          {locale === "bn" ? "ই-প্রেসক্রিপশন" : "Signed e-Rx"}
+                        </div>
+                        <div className="text-2xl font-black font-mono text-indigo-300 mt-1">
+                          {dash.eprescriptions.length}
+                        </div>
+                        <div className="text-[10px] font-mono text-indigo-300 mt-1">Doctor Signed</div>
+                      </div>
+                      <div className="bento-card p-4 rounded-2xl">
+                        <div className="text-[11px] font-medium text-slate-400">
+                          {locale === "bn" ? "ল্যাব অর্ডার" : "Lab Orders"}
+                        </div>
+                        <div className="text-2xl font-black font-mono text-amber-300 mt-1">
+                          {dash.diagnostic_orders.length}
+                        </div>
+                        <div className="text-[10px] font-mono text-amber-300 mt-1">Home Collect</div>
+                      </div>
                     </div>
-                  ))}
+
+                    {/* Quick Care Search + Family Profile Switcher */}
+                    <div className="bento-card p-4 rounded-2xl space-y-3">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          navigate(`/find-care?q=${encodeURIComponent(quickCareQuery.trim())}`);
+                        }}
+                        className="flex flex-wrap gap-2"
+                      >
+                        <div className="relative flex-1 min-w-[200px]">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={quickCareQuery}
+                            onChange={(e) => setQuickCareQuery(e.target.value)}
+                            placeholder={
+                              locale === "bn"
+                                ? "ডাক্তার, বিভাগ বা লক্ষণ লিখে খুঁজুন (৪৩ জন ডাক্তার)..."
+                                : "Search 43 specialists, doctor code, or symptom..."
+                            }
+                            className="w-full min-h-10 pl-9 pr-3 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="min-h-10 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs cursor-pointer"
+                        >
+                          Find Doctor →
+                        </button>
+                      </form>
+
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">
+                          Family Switcher:
+                        </span>
+                        {dash.profiles.map((p) => {
+                          const selected = p.id === activeProfile?.id;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => setActiveFamilyId(p.id)}
+                              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                                selected
+                                  ? "bg-cyan-500/20 border-cyan-400 text-cyan-200"
+                                  : "bg-slate-900 border-slate-700 text-slate-300 hover:border-cyan-500/40"
+                              }`}
+                            >
+                              {p.display_name} ({p.relationship_type})
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h2 className="font-bold text-base">{locale === "bn" ? "পরিবারের প্রোফাইল" : "Family Profiles & Dependents"}</h2>
-                    <button type="button" onClick={() => navigate("/patient/records")} className="text-xs font-semibold text-[var(--color-primary)] hover:underline cursor-pointer">
-                      Manage
-                    </button>
-                  </div>
-                  {dash.profiles.map((p) => (
-                    <div key={p.id} className="p-3 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-bold block">{p.display_name}</span>
-                        <span className="text-[var(--color-text-muted)]">{p.relationship_type} • {p.blood_group || "—"}</span>
-                      </div>
-                      <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-[var(--color-primary-soft)] text-[var(--color-primary)]">{p.district}</span>
+                {/* DocTime-Inspired 6 Visual Care Quick Tiles */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {[
+                    { icon: Video, label: locale === "bn" ? "ভিডিও কনসাল্ট" : "Video & Audio Call", to: "/patient/consultations", accent: "text-emerald-400", border: "hover:border-emerald-400/60" },
+                    { icon: FolderHeart, label: locale === "bn" ? "হেলথ রেকর্ড (EHR)" : "Medical Records", to: "/patient/records", accent: "text-cyan-400", border: "hover:border-cyan-400/60" },
+                    { icon: Pill, label: locale === "bn" ? "ওষুধ ও রিমাইন্ডার" : "Meds & ePharma", to: "/patient/medicines", accent: "text-amber-300", border: "hover:border-amber-400/60" },
+                    { icon: FlaskConical, label: locale === "bn" ? "ডায়াগনস্টিক ল্যাব" : "Diagnostic Tests", to: "/patient/diagnostics", accent: "text-indigo-300", border: "hover:border-indigo-400/60" },
+                    { icon: Sparkles, label: locale === "bn" ? "পিসিওএস ও শিশু এআই" : "PCOS & Child AI", to: "/patient/pcos", accent: "text-pink-400", border: "hover:border-pink-400/60" },
+                    { icon: LifeBuoy, label: locale === "bn" ? "২৪/৭ সাপোর্ট" : "Support & Bills", to: "/patient/support", accent: "text-sky-300", border: "hover:border-sky-400/60" },
+                  ].map((tile) => {
+                    const Icon = tile.icon;
+                    return (
+                      <button
+                        key={tile.to}
+                        type="button"
+                        onClick={() => navigate(tile.to)}
+                        className={`bento-card p-3.5 rounded-2xl text-left flex flex-col gap-2 cursor-pointer ${tile.border}`}
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center">
+                          <Icon className={`w-4 h-4 ${tile.accent}`} />
+                        </div>
+                        <span className="text-xs font-bold text-white leading-snug">{tile.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* EHR Summary + Recent Consultations & Join Call */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bento-card rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-bold text-base text-white">
+                        {locale === "bn" ? "সাম্প্রতিক অ্যাপয়েন্টমেন্ট ও লাইভ কল" : "Recent Consultations & Video Room"}
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/patient/doctors")}
+                        className="text-xs font-semibold text-cyan-400 hover:underline cursor-pointer"
+                      >
+                        + {locale === "bn" ? "নতুন বুকিং" : "Book New"}
+                      </button>
                     </div>
-                  ))}
+                    {dash.appointments.slice(0, 4).map((a) => (
+                      <div
+                        key={a.id}
+                        className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs"
+                      >
+                        <div>
+                          <p className="font-bold text-white">
+                            {locale === "bn" && a.doctor_name_bn ? a.doctor_name_bn : a.doctor_name}
+                          </p>
+                          <p className="text-slate-400">
+                            {a.booking_reference} • {formatDhakaDateTime(a.slot_start_utc, locale)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={a.status} />
+                          <button
+                            type="button"
+                            onClick={() => navigate("/patient/consultations")}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 font-semibold cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Video className="w-3 h-3" /> Call Room
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Personal Health Record & Latest e-Rx Snapshot */}
+                  <div className="bento-card rounded-2xl p-5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h2 className="font-bold text-base text-white flex items-center gap-2">
+                        <HeartPulse className="w-4 h-4 text-rose-400" />
+                        {locale === "bn" ? "পার্সোনাল হেলথ রেকর্ড (EHR)" : "Personal Health Record & Latest e-Rx"}
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/patient/records")}
+                        className="text-xs font-semibold text-cyan-400 hover:underline cursor-pointer"
+                      >
+                        Full Vault →
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2.5 text-center text-xs">
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400">BLOOD GROUP</div>
+                        <div className="text-base font-extrabold text-rose-400 mt-0.5">
+                          {activeProfile?.blood_group || "O+"}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400">BP (LAST LOG)</div>
+                        <div className="text-base font-extrabold text-cyan-300 mt-0.5">118/78</div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800">
+                        <div className="text-[10px] font-mono text-slate-400">BMI INDEX</div>
+                        <div className="text-base font-extrabold text-emerald-400 mt-0.5">22.4</div>
+                      </div>
+                    </div>
+
+                    {latestRx ? (
+                      <div className="p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-emerald-300">
+                            Latest Rx: {latestRx.rx_reference}
+                          </span>
+                          <span className="text-slate-400">{latestRx.doctor_name}</span>
+                        </div>
+                        <p className="text-slate-200">{latestRx.diagnosis_summary}</p>
+                        {latestRx.advice_notes && <p className="text-slate-400">{latestRx.advice_notes}</p>}
+                      </div>
+                    ) : (
+                      <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400">
+                        No signed e-prescription yet — open Consultation Room or Prescription OCR Review.
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </>
-          )}
+            );
+          })()}
 
           {/* BOOK DOCTOR SECTION */}
           {section === "doctors" && dash && (
@@ -498,7 +697,16 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
 
           {/* APPOINTMENTS & CONSULTATIONS */}
           {(section === "appointments" || section === "consultations") && dash && (
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {section === "consultations" && (
+                <LiveConsultationCallStudio
+                  roomId={dash.appointments[0]?.booking_reference || "patient-consult-room"}
+                  counterpartyName={dash.appointments[0]?.doctor_name || "Dr. Farhana Rahman"}
+                  counterpartyRole={dash.appointments[0]?.specialty || "OB-GYN & PCOS Specialist"}
+                  counterpartyAvatar="/images/doctors/doc-f-01.jpg"
+                  initialMode="VIDEO"
+                />
+              )}
               <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 p-3.5 text-xs flex flex-wrap items-center justify-between gap-2">
                 <span>SIMULATED / DEMO CHECKOUT: Select bKash, Nagad, or Card Demo method below when settling pending bookings (zero PIN/OTP/CVV).</span>
                 <select

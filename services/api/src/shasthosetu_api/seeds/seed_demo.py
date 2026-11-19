@@ -140,6 +140,243 @@ def _seed_blood_and_journal(conn, now: str) -> None:
             )
 
 
+def _seed_expanded_doctors_and_catalog(conn, now: str) -> None:
+    """Idempotently add rich doctor profile columns, 40 additional demo clinicians (43 total across 8 specialties), slots & 12 diagnostic tests."""
+    existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(doctor_profiles)").fetchall()}
+    migrations = [
+        ("avatar_url", "TEXT"),
+        ("doctor_code", "TEXT"),
+        ("rating", "REAL DEFAULT 4.9"),
+        ("reviews_count", "INTEGER DEFAULT 180"),
+        ("patients_seen", "INTEGER DEFAULT 1200"),
+        ("avg_wait_minutes", "INTEGER DEFAULT 15"),
+        ("joined_date_label", "TEXT DEFAULT 'June 02, 2022'"),
+        ("instant_hours_label", "TEXT DEFAULT 'Sat - Thu (8:00 PM - 11:30 PM)'"),
+        ("appointment_hours_label", "TEXT DEFAULT 'Sat - Fri (10:00 AM - 10:00 PM)'"),
+        ("workplace_history_json", "TEXT"),
+    ]
+    for col, col_def in migrations:
+        if col not in existing_cols:
+            conn.execute(f"ALTER TABLE doctor_profiles ADD COLUMN {col} {col_def};")
+
+    # Enrich base 3 doctors
+    base_meta = [
+        (
+            "doc-farhana", "/images/doctors/doc-f-01.jpg", "SS7001", 4.9, 412, 1574, 15, "June 02, 2022",
+            "Sat - Wed (8:00 PM - 11:00 PM)", "Sat - Thu (4:00 PM - 9:00 PM)",
+            json.dumps([
+                {"hospital": "Dhanmondi Care Hub (Demo)", "role": "Consultant OB-GYN & PCOS Specialist", "period": "2021 - Present"},
+                {"hospital": "Dhaka Medical College Hospital", "role": "Registrar (OB-GYN Demo Fellowship)", "period": "2017 - 2021"},
+            ]),
+        ),
+        (
+            "doc-tanvir", "/images/doctors/doc-m-01.jpg", "SS7002", 4.9, 368, 1869, 12, "July 05, 2021",
+            "Sat - Thu (8:00 PM - 11:55 PM)", "Sat - Fri (11:00 AM - 8:00 PM)",
+            json.dumps([
+                {"hospital": "Uttara Family Clinic (Demo)", "role": "Senior Pediatrician", "period": "2020 - Present"},
+                {"hospital": "Dhaka Shishu Hospital", "role": "Resident MD (Pediatrics Demo)", "period": "2016 - 2020"},
+            ]),
+        ),
+        (
+            "doc-nusrat", "/images/doctors/doc-f-02.jpg", "SS7003", 4.8, 294, 1140, 15, "March 14, 2022",
+            "Sun - Thu (7:30 PM - 11:00 PM)", "Sat - Thu (3:00 PM - 8:30 PM)",
+            json.dumps([
+                {"hospital": "Agrabad Skin Point (Demo)", "role": "Consultant Dermatologist", "period": "2021 - Present"},
+                {"hospital": "Chattogram Medical College Hospital", "role": "Medical Officer (Dermatology)", "period": "2018 - 2021"},
+            ]),
+        ),
+    ]
+    for did, av, dcode, rat, rev, pts, wait, joined, ih, ah, wh in base_meta:
+        conn.execute(
+            """
+            UPDATE doctor_profiles
+               SET avatar_url = ?, doctor_code = ?, rating = ?, reviews_count = ?,
+                   patients_seen = ?, avg_wait_minutes = ?, joined_date_label = ?,
+                   instant_hours_label = ?, appointment_hours_label = ?, workplace_history_json = ?
+             WHERE id = ?
+            """,
+            (av, dcode, rat, rev, pts, wait, joined, ih, ah, wh, did),
+        )
+
+    # Ensure all 8 core specialties exist
+    extra_specialties = [
+        ("spec-gp", "general-physician", "জেনারেল ফিজিশিয়ান", "General Physician", 25000, 100000),
+        ("spec-gyn", "gynecology-pcos", "স্ত্রীরোগ ও পিসিওএস", "Gynecology & PCOS", 30000, 150000),
+        ("spec-ped", "pediatrics", "শিশু ও নবজাতক রোগ", "Pediatrics & Child Care", 30000, 150000),
+        ("spec-derm", "dermatology", "চর্ম ও ভাইরাল র‍্যাশ", "Dermatology & Skin Care", 30000, 150000),
+        ("spec-med", "internal-medicine", "জেনারেল ও ইন্টারনাল মেডিসিন", "Internal Medicine", 20000, 120000),
+        ("spec-endo", "endocrinology", "এন্ডোক্রিনোলজি (হরমোন ও ডায়াবেটিস)", "Endocrinology", 40000, 160000),
+        ("spec-ortho", "orthopedics", "অর্থোপেডিক্স ও হাড়ের রোগ", "Orthopedics", 40000, 180000),
+        ("spec-card", "cardiology", "হৃদরোগ ও রক্তচাপ", "Cardiology", 50000, 200000),
+    ]
+    for sid, slug, bn, en, mn, mx in extra_specialties:
+        conn.execute(
+            "INSERT OR IGNORE INTO specialties (id, slug, name_bn, name_en, min_fee_minor_poisha, max_fee_minor_poisha) VALUES (?, ?, ?, ?, ?, ?)",
+            (sid, slug, bn, en, mn, mx),
+        )
+
+    # 40 additional synthetic clinicians (5 per each of 8 departments = 43 APPROVED total)
+    dept_catalog = [
+        ("General Physician", "gp", "general physician,fever,cold,flu,allergy,weakness,primary care", [
+            ("Dr. Asif Hossain (Demo)", "ডাঃ আসিফ হোসাইন", "MBBS, PGT (Medicine), CCD (BIRDEM)", "Dhaka Medical College Hospital", "Dhaka", 9, 40000, 25000, "m", 2, 1),
+            ("Dr. Samira Karim (Demo)", "ডাঃ সামিরা করিম", "MBBS, MPH, Primary Care Demo", "Ibn Sina Consultation Center", "Dhaka", 7, 35000, 20000, "f", 3, 1),
+            ("Dr. Mahbubur Rahman (Demo)", "ডাঃ মাহবুবুর রহমান", "MBBS, BCS (Health)", "Rajshahi Medical College Hospital", "Rajshahi", 11, 30000, 20000, "m", 3, 1),
+            ("Dr. Sabina Yasmin (Demo)", "ডাঃ সাবিনা ইয়াসমিন", "MBBS, CMU (Sonology)", "Sylhet MAG Osmani Medical College", "Sylhet", 8, 35000, 20000, "f", 4, 0),
+            ("Dr. Rafiqul Alam (Demo)", "ডাঃ রফিকুল আলম", "MBBS, FCGP (General Practice)", "Khulna Medical College Hospital", "Khulna", 14, 45000, 25000, "m", 4, 1),
+        ]),
+        ("Gynecology & Obstetrics", "gyn", "pcos,irregular periods,pregnancy,obgyn,maternal,hormone,ultrasound", [
+            ("Dr. Tahmina Hoque Pinki (Demo)", "ডাঃ তাহমিনা হক পিঙ্কি", "MBBS, MCPS (OB-GYN), MS, FCPS", "Dhaka Medical College Hospital", "Dhaka", 16, 100000, 70000, "f", 5, 1),
+            ("Dr. Tanzina Ahmed (Demo)", "ডাঃ তানজিনা আহমেদ", "MBBS (CU), FCPS (OB-GYN Final), CMU", "Dhaka Medical College Hospital", "Dhaka", 8, 32000, 21000, "f", 6, 1),
+            ("Dr. Laila Arjumand (Demo)", "ডাঃ লায়লা আরজুমান্দ", "MBBS, DGO, MS (Gynae)", "BSMMU Super Specialized Desk", "Dhaka", 15, 90000, 60000, "f", 7, 0),
+            ("Dr. Meherun Nessa (Demo)", "ডাঃ মেহেরুন নেসা", "MBBS, FCPS (Gynae & Obs)", "Chattogram Medical College Hospital", "Chattogram", 12, 70000, 40000, "f", 8, 1),
+            ("Dr. Dilruba Parvin (Demo)", "ডাঃ দিলরুবা পারভীন", "MBBS, MCPS (OB-GYN)", "Mymensingh Medical College Hospital", "Mymensingh", 10, 50000, 30000, "f", 1, 1),
+        ]),
+        ("Pediatrics & Child Care", "ped", "child fever,pediatric,vaccine,rash,cough,neonatal,epi", [
+            ("Assoc. Prof. Dr. Hasan Mahmud (Demo)", "সহযোগী অধ্যাপক ডাঃ হাসান মাহমুদ", "MBBS, DCH, FCPS (Pediatrics)", "Dhaka Shishu Hospital (Demo)", "Dhaka", 17, 70000, 45000, "m", 5, 1),
+            ("Dr. Md. Mehedi Hasan (Demo)", "ডাঃ মোঃ মেহেদী হাসান", "MBBS, BCS (Health), MD (Pediatric)", "Satkhira Medical College Hospital", "Khulna", 14, 70000, 40000, "m", 6, 1),
+            ("Dr. Tamanna Chowdhury (Demo)", "ডাঃ তামান্না চৌধুরী", "MBBS, MD (Pediatrics)", "Square Child Health Desk (Demo)", "Dhaka", 9, 80000, 50000, "f", 2, 1),
+            ("Dr. Nazmul Haque (Demo)", "ডাঃ নাজমুল হক", "MBBS, DCH (Child Health)", "Rangpur Medical College Hospital", "Rangpur", 11, 45000, 25000, "m", 7, 0),
+            ("Dr. Afroza Begum (Demo)", "ডাঃ আফরোজা বেগম", "MBBS, FCPS (Pediatrics)", "Sher-e-Bangla Medical College", "Barishal", 13, 55000, 30000, "f", 3, 1),
+        ]),
+        ("Dermatology & Skin Care", "derm", "skin rash,itching,acne,hair fall,fungal,chickenpox,eczema,dermatology", [
+            ("Dr. Sharmin Sultana (Demo)", "ডাঃ শারমিন সুলতানা", "MBBS, DDV, FCPS (Dermatology)", "BSMMU Dermatology Wing (Demo)", "Dhaka", 12, 80000, 50000, "f", 4, 1),
+            ("Dr. Rezwanul Karim (Demo)", "ডাঃ রেজওয়ানুল করিম", "MBBS, MD (Dermatology & VD)", "Popular Diagnostic Dhanmondi", "Dhaka", 10, 70000, 40000, "m", 8, 1),
+            ("Dr. Sadia Afrin (Demo)", "ডাঃ সাদিয়া আফরিন", "MBBS, DDV (CU)", "Chattogram Skin Laser Clinic (Demo)", "Chattogram", 7, 50000, 30000, "f", 5, 1),
+            ("Dr. Touhidul Islam (Demo)", "ডাঃ তৌহিদুল ইসলাম", "MBBS, MCPS (Dermatology)", "Rajshahi Skin Care Center (Demo)", "Rajshahi", 9, 45000, 25000, "m", 1, 0),
+            ("Dr. Taslima Akter (Demo)", "ডাঃ তাসলিমা আক্তার", "MBBS, PGT (Skin & Hair)", "Sylhet Modern Skin Hub (Demo)", "Sylhet", 6, 40000, 25000, "f", 6, 1),
+        ]),
+        ("Internal Medicine", "med", "internal medicine,fever,diabetes,hypertension,gastric,dengue,general", [
+            ("Dr. Pradicta Das Shreya (Demo)", "ডাঃ প্রাদিক্তা দাস শ্রেয়া", "MBBS, CCD, PGT, MRCP (UK)", "Evercare Internal Medicine (Demo)", "Dhaka", 11, 90000, 55000, "f", 7, 1),
+            ("Dr. Rayhan Ahmed (Demo)", "ডাঃ রায়হান আহমেদ", "MBBS, BCS (Health), FCPS, MD", "Dhaka Medical College Hospital", "Dhaka", 15, 85000, 50000, "m", 2, 1),
+            ("Dr. Shamsul Haque (Demo)", "ডাঃ শামসুল হক", "MBBS, FCPS (Medicine)", "Chattogram Medical College Hospital", "Chattogram", 18, 95000, 60000, "m", 3, 0),
+            ("Dr. Rubina Yasmin (Demo)", "ডাঃ রুবিনা ইয়াসমিন", "MBBS, MD (Internal Medicine)", "icddr,b Infectious Consultation Desk", "Dhaka", 12, 75000, 45000, "f", 8, 1),
+            ("Dr. Jahangir Kabir (Demo)", "ডাঃ জাহাঙ্গীর কবীর", "MBBS, MACP (Medicine)", "Barishal Central Care Hub (Demo)", "Barishal", 10, 50000, 30000, "m", 4, 1),
+        ]),
+        ("Endocrinology", "endo", "diabetes,thyroid,pcos,hormone,obesity,insulin,endocrine,weight", [
+            ("Dr. Imranul Haque (Demo)", "ডাঃ ইমরানুল হক", "MBBS, DEM (BIRDEM), MD (Endocrinology)", "BIRDEM General Desk (Demo)", "Dhaka", 14, 90000, 50000, "m", 5, 1),
+            ("Dr. Farzana Yasmin (Demo)", "ডাঃ ফারজানা ইয়াসমিন", "MBBS, FCPS (Endocrinology & Metabolism)", "Square Hormone Studio (Demo)", "Dhaka", 11, 100000, 65000, "f", 1, 1),
+            ("Dr. Mizanur Rahman (Demo)", "ডাঃ মিজানুর রহমান", "MBBS, CCD, MPhil (Endocrine)", "Rajshahi Diabetic Hub (Demo)", "Rajshahi", 9, 55000, 35000, "m", 6, 0),
+            ("Dr. Nargis Sultana (Demo)", "ডাঃ নার্গিস সুলতানা", "MBBS, DEM (BSMMU)", "Chattogram Endocrine Clinic (Demo)", "Chattogram", 10, 65000, 40000, "f", 2, 1),
+            ("Dr. Ashrafuzzaman Khan (Demo)", "ডাঃ আশরাফুজ্জামান খান", "MBBS, MD (Hormone & Thyroid)", "Sylhet Thyroid & Diabetes Care", "Sylhet", 13, 75000, 45000, "m", 7, 1),
+        ]),
+        ("Orthopedics", "ortho", "joint pain,knee,back pain,fracture,arthritis,bone,spine,orthopedics", [
+            ("Asst. Prof. Dr. Mamunur Rashid (Demo)", "সহকারী অধ্যাপক ডাঃ মামুনুর রশীদ", "MBBS, BCS, MRCS (UK), FACS, MS (Ortho)", "NITOR (Pangu Hospital) Demo Desk", "Dhaka", 16, 100000, 60000, "m", 8, 1),
+            ("Dr. Kamrul Hasan (Demo)", "ডাঃ কামরুল হাসান", "MBBS, D-Ortho, MS (Orthopedics)", "Popular Orthopedic Wing (Demo)", "Dhaka", 12, 75000, 45000, "m", 1, 1),
+            ("Dr. Nausheen Tabassum (Demo)", "ডাঃ নওশীন তাবাসসুম", "MBBS, MS (Ortho & Trauma Demo)", "United Bone & Joint Clinic (Demo)", "Dhaka", 8, 70000, 40000, "f", 3, 0),
+            ("Dr. Belayet Hossain (Demo)", "ডাঃ বেলায়েত হোসেন", "MBBS, D-Ortho (CU)", "Chattogram Ortho Care (Demo)", "Chattogram", 14, 65000, 40000, "m", 2, 1),
+            ("Dr. Monirul Islam (Demo)", "ডাঃ মনিরুল ইসলাম", "MBBS, BCS, PGT (Orthopedics)", "Rangpur Medical College Hospital", "Rangpur", 9, 45000, 25000, "m", 3, 1),
+        ]),
+        ("Cardiology", "card", "chest pain,blood pressure,hypertension,heart,ecg,palpitation,cardiology", [
+            ("Prof. Dr. Zakir Hossain (Demo)", "অধ্যাপক ডাঃ জাকির হোসেন", "MBBS, MD (Cardiology), FSCAI", "NICVD Heart Center (Demo)", "Dhaka", 21, 120000, 80000, "m", 4, 1),
+            ("Dr. Humayra Kabir (Demo)", "ডাঃ হুমায়রা কবির", "MBBS, D-Card, FCPS (Cardiology)", "Ibn Sina Cardiac Care (Demo)", "Dhaka", 13, 90000, 55000, "f", 4, 1),
+            ("Dr. Saiful Islam (Demo)", "ডাঃ সাইফুল ইসলাম", "MBBS, MD (Cardiology)", "Mymensingh Heart Foundation", "Mymensingh", 12, 65000, 40000, "m", 5, 1),
+            ("Dr. Tania Sultana (Demo)", "ডাঃ তানিয়া সুলতানা", "MBBS, MRCP, Fellow Cardiology", "Evercare Cardiac Desk (Demo)", "Dhaka", 10, 95000, 60000, "f", 5, 0),
+            ("Dr. Anwarul Azim (Demo)", "ডাঃ আনোয়ারুল আজিম", "MBBS, D-Card (BSMMU)", "Khulna Heart & BP Center (Demo)", "Khulna", 14, 70000, 45000, "m", 6, 1),
+        ]),
+    ]
+
+    pw_hash = hash_password("DoctorDemo#2026")
+    seq_num = 4
+    new_doc_ids: list[str] = []
+    for spec_name, prefix, tags, entries in dept_catalog:
+        for i, (name_en, name_bn, degrees, hospital, district, exp, fee, ffee, gender, img_idx, online) in enumerate(entries, 1):
+            did = f"doc-demo-{prefix}-{i}"
+            uid = f"usr-dr-demo-{prefix}-{i}"
+            email = f"dr.{prefix}{i}@shasthosetu.local"
+            phone = f"+8801722{seq_num:06d}"
+            dcode = f"SS{7000 + seq_num}"
+            bmdc = f"BMDC-DEMO-{51540 + seq_num}"
+            avatar = f"/images/doctors/doc-{gender}-{img_idx:02d}.jpg"
+            rating = round(4.8 + ((seq_num % 3) * 0.1), 1)
+            if rating > 5.0:
+                rating = 5.0
+            reviews = 140 + (seq_num * 23) % 880
+            patients_seen = 580 + (seq_num * 67) % 2780
+            bio_en = (
+                f"Fictional synthetic specialist demo profile practicing {spec_name} at {hospital}, {district}. "
+                f"Supports video consultations, prescription explanation, and safe non-diagnostic triage."
+            )
+            bio_bn = (
+                f"{hospital}, {district}-এ কর্মরত {spec_name} বিভাগের কাল্পনিক ডেমো বিশেষজ্ঞ। "
+                f"ভিডিও ও অডিও পরামর্শ এবং ফলো-আপ সহায়তার জন্য নিবন্ধিত।"
+            )
+            work_hist = json.dumps([
+                {"hospital": hospital, "role": f"Consultant • {spec_name}", "period": "2021 - Present"},
+                {"hospital": f"{district} Clinical Teaching Desk (Demo)", "role": "Registrar", "period": "2017 - 2021"},
+            ])
+
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO users (id, email, phone, password_hash, full_name, primary_role, preferred_locale, account_status, is_synthetic, created_at_utc, updated_at_utc)
+                VALUES (?, ?, ?, ?, ?, 'DOCTOR', 'bn', 'ACTIVE', 1, ?, ?)
+                """,
+                (uid, email, phone, pw_hash, name_en, now, now),
+            )
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO role_memberships (id, user_id, role, organization_id, approval_state, created_at_utc)
+                VALUES (?, ?, 'DOCTOR', NULL, 'APPROVED', ?)
+                """,
+                (f"rm-{uid}", uid, now),
+            )
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO doctor_profiles (
+                    id, user_id, display_name, display_name_bn, degrees, specialty, bmdc_demo_reg,
+                    practice_location, district, experience_years, languages_csv, symptom_tags_csv,
+                    consultation_modality, is_online_now, bio, bio_bn,
+                    consultation_fee_minor_poisha, followup_fee_minor_poisha, slot_duration_minutes,
+                    verification_status, is_active, is_fictional_demo,
+                    avatar_url, doctor_code, rating, reviews_count, patients_seen, avg_wait_minutes,
+                    joined_date_label, instant_hours_label, appointment_hours_label, workplace_history_json
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'bn,en', ?, 'BOTH', ?, ?, ?, ?, ?, 20, 'APPROVED', 1, 1, ?, ?, ?, ?, ?, 15, 'July 05, 2021', 'Sat - Thu (8:00 PM - 11:30 PM)', 'Sat - Fri (11:00 AM - 10:00 PM)', ?)
+                """,
+                (
+                    did, uid, name_en, name_bn, degrees, spec_name, bmdc,
+                    hospital, district, exp, tags, online, bio_en, bio_bn,
+                    fee, ffee, avatar, dcode, rating, reviews, patients_seen, work_hist,
+                ),
+            )
+            new_doc_ids.append(did)
+            seq_num += 1
+
+    # Ensure every newly added doctor has open bookable slots if none exist
+    for did in new_doc_ids:
+        open_cnt = conn.execute(
+            "SELECT COUNT(*) FROM appointment_slots WHERE doctor_id = ? AND state = 'OPEN'", (did,)
+        ).fetchone()[0]
+        if open_cnt == 0:
+            for idx, (day_off, hr) in enumerate(((1, 4), (1, 11), (2, 5))):
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO appointment_slots (id, doctor_id, start_utc, end_utc, modality, capacity, reserved_count, state)
+                    VALUES (?, ?, ?, ?, 'ONLINE_DEMO', 1, 0, 'OPEN')
+                    """,
+                    (f"slot-{did}-{idx}", did, _slot_iso(day_off, hr, 0), _slot_iso(day_off, hr, 20)),
+                )
+
+    # Expand diagnostic_tests to 12 realistic Bangladesh pathology & imaging panels
+    extra_tests = [
+        ("diag-cbc", "CBC-01", "সিবিসি ও রক্তের সাধারণ পরীক্ষা (ডেমো)", "Complete Blood Count (CBC)", "Hematology", "Whole Blood (Home Collect)", 45000, 12),
+        ("diag-fbg", "FBG-02", "ফাস্টিং ব্লাড গ্লুকোজ ও HbA1c (ডেমো)", "Fasting Glucose + HbA1c Panel", "Metabolic", "Serum / EDTA (Home Collect)", 85000, 18),
+        ("diag-pcos", "PCOS-03", "হরমোন ও পিসিওএস স্ক্রিনিং প্যানেল (ডেমো)", "Endocrine Hormone Panel (LH/FSH/TSH)", "Endocrinology", "Serum (Home Collect)", 180000, 24),
+        ("diag-usg", "USG-04", "পেলভিক আল্ট্রাসাউন্ড (ডেমো বুকিং)", "Pelvic / Ovarian Ultrasound", "Imaging", "Lab Imaging Visit", 120000, 6),
+        ("diag-thyroid", "THY-05", "থাইরয়েড প্রোফাইল (TSH, FT3, FT4)", "Thyroid Function Panel (TSH, FT3, FT4)", "Endocrinology", "Serum (Home Collect)", 110000, 16),
+        ("diag-lipid", "LIP-06", "লিপিড প্রোফাইল ও কোলেস্টেরল প্যানেল", "Full Lipid Profile (Cholesterol/LDL/HDL/TG)", "Cardiology", "Fasting Serum (Home Collect)", 95000, 14),
+        ("diag-dengue", "DEN-07", "ডেঙ্গু NS1 অ্যান্টিজেন + IgM/IgG প্যানেল", "Dengue NS1 Antigen + IgM/IgG Combo", "Infectious", "Serum (Urgent Home Collect)", 90000, 4),
+        ("diag-lft", "LFT-08", "লিভার ফাংশন টেস্ট (SGPT, SGOT, Bilirubin)", "Liver Function Test (LFT Complete)", "Internal Medicine", "Serum (Home Collect)", 80000, 12),
+        ("diag-rft", "RFT-09", "কিডনি ও ক্রিয়েটিনিন প্যানেল (Serum Creatinine)", "Renal Function & Serum Creatinine", "Nephrology", "Serum (Home Collect)", 65000, 12),
+        ("diag-vitd", "VTD-10", "ভিটামিন ডি-৩ (25-OH Vitamin D)", "25-Hydroxy Vitamin D3 Assay", "Nutrition", "Serum (Home Collect)", 160000, 24),
+        ("diag-urine", "URN-11", "প্রস্রাবের রুটিন পরীক্ষা (Urine R/M/E)", "Urine Routine & Microscopic Examination", "Pathology", "Urine Container (Home Collect)", 25000, 6),
+        ("diag-ecg", "ECG-12", "১২-লিড ইসিজি ও ট্রপোনিন-I স্ক্রিনিং", "12-Lead ECG + Cardiac Screening", "Cardiology", "Clinic / Home Nurse Visit", 140000, 3),
+    ]
+    for tid, code, bn, en, cat, smp, fee, hrs in extra_tests:
+        conn.execute(
+            "INSERT OR IGNORE INTO diagnostic_tests (id, code, name_bn, name_en, category, sample_type, fee_minor_poisha, turnaround_hours) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (tid, code, bn, en, cat, smp, fee, hrs),
+        )
+
+
 def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dict:
     target = db_path
     if force_reset and target and target.exists():
@@ -153,17 +390,22 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
             conn.execute("BEGIN IMMEDIATE;")
             try:
                 _seed_blood_and_journal(conn, now)
+                _seed_expanded_doctors_and_catalog(conn, now)
                 conn.execute("COMMIT;")
             except Exception:
                 conn.execute("ROLLBACK;")
                 raise
-            return {"seeded": False, "reason": "Base synthetic records present; ensured Blood Connect & Journal seeds."}
+            return {"seeded": False, "reason": "Base synthetic records present; ensured Blood Connect, Journal, AI flags & 43-doctor catalog."}
 
         conn.execute("BEGIN IMMEDIATE;")
         try:
             if force_reset:
                 # Clear dependent tables safely in reverse order
                 for tbl in [
+                    "ai_runtime_snapshots", "ocr_job_artifacts", "ai_feedback", "ai_message_citations",
+                    "ai_chat_messages", "ai_chat_sessions", "ai_asr_jobs", "ai_voice_consents",
+                    "rag_ingestion_jobs", "rag_chunks", "rag_source_versions", "rag_sources",
+                    "ai_inference_drafts",
                     "journal_sync_runs", "journal_items", "blood_match_logs", "blood_requests", "blood_donors",
                     "audit_logs", "notifications", "feature_flags", "diagnostic_demo_orders", "diagnostic_tests",
                     "healthcare_plans", "facilities", "pediatric_vaccine_records", "pediatric_intake_cases",
@@ -510,15 +752,13 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                 """
             )
 
-            # 11. Feature Flags (Fail-Closed RAG & Voice DEFERRED)
+            # 11. Feature Flags (AI-RAG-VOICE-OCR-01 Enabled + Admin Toggleable)
             flags = [
                 ("research_pcos_ml_preview", 1, "Read-only research preview for M01 XGBoost PCOS metrics (Non-diagnostic)"),
                 ("research_ultrasound_preview", 1, "Read-only research preview for M02 PCOM morphology (Non-diagnostic)"),
                 ("research_viral_rash_preview", 1, "Read-only research preview for M03 Grouped ResNet18 (Non-diagnostic)"),
                 ("research_ocr_draft_review", 1, "Safe OCR draft review requiring explicit human verification before schedule activation"),
                 ("research_dermoped_preview", 1, "Read-only research evaluator preview for M06 EXP_B"),
-                ("deferred_rag_chatbot", 0, "DEFERRED TO PHASE G: Medical RAG Chatbot disabled"),
-                ("deferred_voice_asr", 0, "DEFERRED TO PHASE G: Bangla Voice ASR disabled"),
             ]
             for fk, enb, desc in flags:
                 conn.execute(
@@ -564,6 +804,7 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                 details={"synthetic": True},
             )
             _seed_blood_and_journal(conn, now)
+            _seed_expanded_doctors_and_catalog(conn, now)
 
             conn.execute("COMMIT;")
         except Exception:
