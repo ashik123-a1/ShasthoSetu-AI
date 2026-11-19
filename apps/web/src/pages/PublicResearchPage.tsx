@@ -154,12 +154,12 @@ const SIX_RESEARCH_CARDS: Array<{
   },
   {
     slug: "bangla-voice",
-    titleEn: "5. Bangla Voice AI (Phase G)",
-    titleBn: "৫. বাংলা ভয়েস এআই (Phase G)",
-    arch: "anuragshas/whisper-small-bn vs Base/Tiny",
+    titleEn: "5. Bangla Voice AI (Live ASR + TTS)",
+    titleBn: "৫. বাংলা ভয়েস এআই (লাইভ ASR ও TTS)",
+    arch: "Whisper-Small-BN + Qwen2.5 RAG + MMS-TTS",
     dataset: "26 FLEURS Clips / 22 Unique Speakers",
     metric: "98.37% BN Unicode • 39.09% Norm WER",
-    limitNote: "No local training; live mic & RAG strictly deferred to Phase G per Master SRS v2.0.",
+    limitNote: "Live 3D Orb & mic transcription enabled in Health Services; FLEURS WER (39.09%) and mandatory user edit gate preserved.",
     accent: "#c084fc",
   },
   {

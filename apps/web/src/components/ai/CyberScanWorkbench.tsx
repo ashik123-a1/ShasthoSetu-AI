@@ -11,7 +11,6 @@ import {
   FileCheck2,
   FlaskConical,
   FolderOpen,
-  Lock,
   Mic,
   Printer,
   ScanText,
@@ -26,6 +25,7 @@ import { useI18n } from "../../lib/i18n";
 import { useToast, TrustBadge } from "../ui";
 import { type AiModuleKey } from "../three/AiModuleScene3D";
 import { ResultTelemetryOrb3D } from "../three/ResultTelemetryOrb3D";
+import { BanglaVoiceWorkbench } from "./BanglaVoiceWorkbench";
 
 interface ProbEntry {
   label: string;
@@ -469,40 +469,9 @@ export function CyberScanWorkbench({
     URL.revokeObjectURL(url);
   };
 
-  // Deferred Phase G View for Bangla Voice AI
+  // Live Full-Stack Bangla & English Voice AI + Land-Guard 3D Particle Orb
   if (activeModule === "bangla-voice") {
-    return (
-      <div className="ss-sapphire-card rounded-3xl p-6 space-y-5 text-white" data-testid="voice-deferred-card">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 font-mono text-xs text-purple-300">
-            <Mic className="w-4 h-4" /> MODULE 05 • BANGLA VOICE AI
-          </div>
-          <span className="font-mono text-[11px] font-bold px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-200">
-            ⏸ DEFERRED TO PHASE G (POST-CORE + RAG)
-          </span>
-        </div>
-        <h3 className="text-xl font-bold">
-          {locale === "bn" ? "বাংলা ভয়েস অ্যাসিস্ট্যান্ট — Phase G-তে নির্ধারিত" : "Bangla Clinical Voice Integration — Deferred to Phase G"}
-        </h3>
-        <p className="text-sm text-slate-300 leading-relaxed max-w-3xl">
-          {locale === "bn"
-            ? "আপনার পূর্বনির্ধারিত সিদ্ধান্ত ও Master SRS v2.0 অনুযায়ী Voice AI + RAG চ্যাটবট Phase G-তে একসাথে চালু হবে। অফলাইন গবেষণা বেঞ্চমার্কে Whisper-Small-BN ২৬টি মানব অডিও ক্লিপে 39.09% Normalized WER এবং 98.37% বাংলা ইউনিকোড অর্জন করেছে।"
-            : "Per project roadmap and Master SRS v2.0, browser microphone ASR + TTS activates together with Medical RAG in Phase G. Audited offline benchmark (M05-WHISPER-SMALL-BN-03) achieved 39.09% Normalized WER and 98.37% Bengali Unicode across 26 FLEURS clips."}
-        </p>
-        <div className="rounded-2xl border border-dashed border-purple-400/35 bg-black/35 p-5 flex flex-wrap items-center justify-between gap-3 opacity-80">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-purple-500/20 border border-purple-400/40 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-purple-300" />
-            </div>
-            <div>
-              <div className="text-sm font-semibold">Microphone Capture &amp; Editable Bangla Transcript Preview</div>
-              <div className="text-xs text-slate-400 font-mono">Feature Flag deferred_voice_asr = false (Managed in Admin Governance)</div>
-            </div>
-          </div>
-          <span className="font-mono text-xs text-purple-300">G:/hf_cache benchmarked</span>
-        </div>
-      </div>
-    );
+    return <BanglaVoiceWorkbench onScanStateChange={onScanStateChange} />;
   }
 
   return (
