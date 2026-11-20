@@ -1,0 +1,82 @@
+{
+  "zip_path": "AUDIT_V2_PROOFS.zip",
+  "zip_size_bytes": 314650,
+  "zip_sha256": "7e2035859374440148dfc815abbc895fcd7a78bc833e7a1ddd2488f77d0b6c42",
+  "packed_files": [
+    {
+      "file": "ANNOTATION_INTEGRITY_REPORT.md",
+      "size_bytes": 7343,
+      "sha256": "79cb110bbaaa125b96bcc951f7da6ec51812d341e4f64670f84948cf93bc1900"
+    },
+    {
+      "file": "SAFETY_GATE_AUDIT.md",
+      "size_bytes": 5093,
+      "sha256": "3f9287369d51de1ab64b65fa49e6cde2ebcbb056bc1023e95e16e0f3a4ff7833"
+    },
+    {
+      "file": "MODEL_COMPARISON.md",
+      "size_bytes": 4212,
+      "sha256": "131de9a04931573471f3eaca5f257361651a56a55d2bed826e25decf8c7a1097"
+    },
+    {
+      "file": "REPRODUCIBILITY_REPORT.md",
+      "size_bytes": 3143,
+      "sha256": "2588cebee261f528fe61a1267e1206931d0b88663af10419784460ae170409d2"
+    },
+    {
+      "file": "MEDICINE_EXTRACTION_AUDIT.md",
+      "size_bytes": 4451,
+      "sha256": "bbe446115fbf8ff3ced76190bb924d7abd5d80e929f1dae882efa71cb82b99bd"
+    },
+    {
+      "file": "NEXT_EXPERIMENT_PLAN.md",
+      "size_bytes": 3478,
+      "sha256": "2bb63c365947eb68927ef6f1c97a1f6c327f0cae2d66013aa57be0c63b6cffbe"
+    },
+    {
+      "file": "reproduce_audit_v2.ps1",
+      "size_bytes": 2270,
+      "sha256": "8c703adde0779790acf15a1363d59e6ab8cc4d6d3ccfea5b27d608ee6a131fdb"
+    },
+    {
+      "file": "corrected_annotation_manifest.csv",
+      "size_bytes": 1559060,
+      "sha256": "3da6b99362ec2cf20cb627f86324de35f5f05c5d6aeb89c5237536d90a2b8a38"
+    },
+    {
+      "file": "OCR_METRICS_AUDITED.json",
+      "size_bytes": 2187,
+      "sha256": "a3ba6771cdeea1277ed734c0c30e67cb43cc16fe786ca09e43def019dc73fd34"
+    },
+    {
+      "file": "LANGUAGE_ERROR_ANALYSIS.csv",
+      "size_bytes": 12995,
+      "sha256": "37fd7aef7a7de67cc3c74ea2578c22ca5bdea665733c5ba93205fd9cfb97b3d3"
+    },
+    {
+      "file": "safety_gate_audit.json",
+      "size_bytes": 1207,
+      "sha256": "db9a1797f1e0986af837e26f4d9c493e63ebd714e9cef803d838807984657d51"
+    },
+    {
+      "file": "test_predictions_safety_audited.csv",
+      "size_bytes": 356147,
+      "sha256": "44ce5124a680c0e05f57096a2bf3b80e633468e775b5c512849c3636578f71f3"
+    },
+    {
+      "file": "specific_stems_audit.json",
+      "size_bytes": 9238,
+      "sha256": "240966dabbb68debaa9f428fe2a73b3fe2260ea8c077258a70b2a1511e4ebcb2"
+    },
+    {
+      "file": "validation_model_comparison.json",
+      "size_bytes": 1357,
+      "sha256": "9d64e749353bc7d56a43e2e925767ec931179b7a994d9a00c1dd9d693d0369d7"
+    },
+    {
+      "file": "structured_medication_extractions.json",
+      "size_bytes": 316328,
+      "sha256": "54f6f8f878bd7de2294f1352201c6d507fb09a879567e92ce4c7c5ce31e8146b"
+    }
+  ]
+}

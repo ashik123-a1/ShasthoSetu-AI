@@ -1,0 +1,42 @@
+{
+  "validation": {
+    "total_crops": 92,
+    "total_patients": 4,
+    "image_accuracy": 0.782608695652174,
+    "image_macro_f1": 0.43902439024390244,
+    "confusion_matrix": [
+      [
+        72,
+        0
+      ],
+      [
+        20,
+        0
+      ]
+    ],
+    "chickenpox_recall": 1.0,
+    "pediculosis_recall": 0.0,
+    "patient_accuracy": 0.75,
+    "patient_macro_f1": 0.42857142857142855
+  },
+  "test": {
+    "total_crops": 110,
+    "total_patients": 4,
+    "image_accuracy": 1.0,
+    "image_macro_f1": 1.0,
+    "confusion_matrix": [
+      [
+        89,
+        0
+      ],
+      [
+        0,
+        21
+      ]
+    ],
+    "chickenpox_recall": 1.0,
+    "pediculosis_recall": 1.0,
+    "patient_accuracy": 1.0,
+    "patient_macro_f1": 1.0
+  }
+}

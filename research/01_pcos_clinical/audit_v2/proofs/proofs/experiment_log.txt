@@ -1,0 +1,133 @@
+[2026-11-17 18:03:18] ======================================================================
+[2026-11-17 18:03:18] ShasthoSetu AI — PCOS Clinical Tabular ML Audit V2
+[2026-11-17 18:03:18] Rigorous Repeated Stratified CV, Corrected Macro-F1, Gain & Permutation Importance
+[2026-11-17 18:03:18] ======================================================================
+[2026-11-17 18:03:18] Loading cleaned dataset from: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\data\processed\pcos_clinical_cleaned.csv
+[2026-11-17 18:03:18] Dataset shape: (88, 21)
+[2026-11-17 18:03:18] Features (20): ['age', 'testosterone', 'androstenedione', 'sdhea', 'waist_circumference', 'bmi', 'fsh', 'lh', 'prl', 'homa_ir', 'e2', 'oh_prog_17', 'sbp', 'dbp', 'glucose', 'total_cholesterol', 'triglycerides', 'hdl_c', 'ldl_c', 'vit_d_25oh']
+[2026-11-17 18:03:18] Class distribution: {1: np.int64(45), 0: np.int64(43)}
+[2026-11-17 18:03:18] Train/Test Partition: Train=70 (PCOS:36, Control:34), Test=18 (PCOS:9, Control:9)
+[2026-11-17 18:03:18] 
+--- Running Repeated Stratified Cross-Validation (10 repeats of 5-Fold = 50 total folds) ---
+[2026-11-17 18:03:18] 
+Evaluating Model: Logistic_Regression
+[2026-11-17 18:03:19]   Mean Balanced Acc: 0.8286 +/- 0.1153
+[2026-11-17 18:03:19]   Mean Macro F1:     0.8259 +/- 0.1179
+[2026-11-17 18:03:19]   Mean Sensitivity:  0.8400 +/- 0.1664
+[2026-11-17 18:03:19]   Mean Specificity:  0.8171 +/- 0.1414
+[2026-11-17 18:03:19]   Mean ROC-AUC:      0.9262 +/- 0.0726
+[2026-11-17 18:03:19] 
+Evaluating Model: Random_Forest
+[2026-11-17 18:03:23]   Mean Balanced Acc: 0.8777 +/- 0.0837
+[2026-11-17 18:03:23]   Mean Macro F1:     0.8756 +/- 0.0854
+[2026-11-17 18:03:23]   Mean Sensitivity:  0.8839 +/- 0.1234
+[2026-11-17 18:03:23]   Mean Specificity:  0.8714 +/- 0.1219
+[2026-11-17 18:03:23]   Mean ROC-AUC:      0.9335 +/- 0.0690
+[2026-11-17 18:03:23] 
+Evaluating Model: XGBoost
+[2026-11-17 18:03:24]   Mean Balanced Acc: 0.8857 +/- 0.0829
+[2026-11-17 18:03:24]   Mean Macro F1:     0.8839 +/- 0.0833
+[2026-11-17 18:03:24]   Mean Sensitivity:  0.9000 +/- 0.1024
+[2026-11-17 18:03:24]   Mean Specificity:  0.8714 +/- 0.1411
+[2026-11-17 18:03:24]   Mean ROC-AUC:      0.9327 +/- 0.0743
+[2026-11-17 18:03:24] 
+Best Model by 50-Fold Repeated CV Balanced Accuracy: XGBoost (0.8857)
+[2026-11-17 18:03:24] 
+--- Evaluating Models on Held-Out Test Set (N=18) ---
+[2026-11-17 18:03:24] Model: Logistic_Regression  | Acc: 0.7778 | BalAcc: 0.7778 | MacroF1: 0.7778 | ROC-AUC: 0.9012 | Sens: 0.7778 | Spec: 0.7778
+[2026-11-17 18:03:24] Model: Random_Forest        | Acc: 0.9444 | BalAcc: 0.9444 | MacroF1: 0.9443 | ROC-AUC: 0.9877 | Sens: 1.0000 | Spec: 0.8889
+[2026-11-17 18:03:24] Model: XGBoost              | Acc: 0.9444 | BalAcc: 0.9444 | MacroF1: 0.9443 | ROC-AUC: 0.9877 | Sens: 0.8889 | Spec: 1.0000
+[2026-11-17 18:03:24] Saved audited best model checkpoint to: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\audit_v2\models\model_best.joblib
+[2026-11-17 18:03:24] 
+--- Computing Feature Importance Analysis ---
+[2026-11-17 18:03:24] Top feature by XGBoost Gain Importance: e2 (0.3283)
+[2026-11-17 18:03:25] Top feature by Permutation Importance (Balanced Acc drop): e2 (0.4408)
+[2026-11-17 18:03:25] Generating research visualizations...
+[2026-11-17 18:03:26] Visualizations saved successfully.
+[2026-11-17 18:03:26] Creating Model Card and Experiment Summary...
+[2026-11-17 18:03:26] Creating proof archive at: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\audit_v2\proofs\PROOFS.zip
+[2026-11-17 18:03:26] PROOFS.zip created successfully (239939 bytes).
+[2026-11-17 18:03:26] PCOS Clinical Audit V2 successfully completed in 7.23 seconds.
+[2026-11-17 18:03:26] ======================================================================
+[2026-11-17 18:04:21] ======================================================================
+[2026-11-17 18:04:21] ShasthoSetu AI — PCOS Clinical Tabular ML Audit V2
+[2026-11-17 18:04:21] Rigorous Repeated Stratified CV, Corrected Macro-F1, Gain & Permutation Importance
+[2026-11-17 18:04:21] ======================================================================
+[2026-11-17 18:04:21] Loading cleaned dataset from: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\data\processed\pcos_clinical_cleaned.csv
+[2026-11-17 18:04:21] Dataset shape: (88, 21)
+[2026-11-17 18:04:21] Features (20): ['age', 'testosterone', 'androstenedione', 'sdhea', 'waist_circumference', 'bmi', 'fsh', 'lh', 'prl', 'homa_ir', 'e2', 'oh_prog_17', 'sbp', 'dbp', 'glucose', 'total_cholesterol', 'triglycerides', 'hdl_c', 'ldl_c', 'vit_d_25oh']
+[2026-11-17 18:04:21] Class distribution: {1: np.int64(45), 0: np.int64(43)}
+[2026-11-17 18:04:21] Train/Test Partition: Train=70 (PCOS:36, Control:34), Test=18 (PCOS:9, Control:9)
+[2026-11-17 18:04:21] 
+--- Running Repeated Stratified Cross-Validation (10 repeats of 5-Fold = 50 total folds) ---
+[2026-11-17 18:04:21] 
+Evaluating Model: Logistic_Regression
+[2026-11-17 18:04:21]   Mean Balanced Acc: 0.8286 +/- 0.1153
+[2026-11-17 18:04:21]   Mean Macro F1:     0.8259 +/- 0.1179
+[2026-11-17 18:04:21]   Mean Sensitivity:  0.8400 +/- 0.1664
+[2026-11-17 18:04:21]   Mean Specificity:  0.8171 +/- 0.1414
+[2026-11-17 18:04:21]   Mean ROC-AUC:      0.9262 +/- 0.0726
+[2026-11-17 18:04:21] 
+Evaluating Model: Random_Forest
+[2026-11-17 18:04:25]   Mean Balanced Acc: 0.8777 +/- 0.0837
+[2026-11-17 18:04:25]   Mean Macro F1:     0.8756 +/- 0.0854
+[2026-11-17 18:04:25]   Mean Sensitivity:  0.8839 +/- 0.1234
+[2026-11-17 18:04:25]   Mean Specificity:  0.8714 +/- 0.1219
+[2026-11-17 18:04:25]   Mean ROC-AUC:      0.9335 +/- 0.0690
+[2026-11-17 18:04:25] 
+Evaluating Model: XGBoost
+[2026-11-17 18:04:26]   Mean Balanced Acc: 0.8857 +/- 0.0829
+[2026-11-17 18:04:26]   Mean Macro F1:     0.8839 +/- 0.0833
+[2026-11-17 18:04:26]   Mean Sensitivity:  0.9000 +/- 0.1024
+[2026-11-17 18:04:26]   Mean Specificity:  0.8714 +/- 0.1411
+[2026-11-17 18:04:26]   Mean ROC-AUC:      0.9327 +/- 0.0743
+[2026-11-17 18:04:26] 
+Best Model by 50-Fold Repeated CV Balanced Accuracy: XGBoost (0.8857)
+[2026-11-17 18:04:26] 
+--- Evaluating Models on Held-Out Test Set (N=18) ---
+[2026-11-17 18:04:26] Model: Logistic_Regression  | Acc: 0.7778 | BalAcc: 0.7778 | MacroF1: 0.7778 | ROC-AUC: 0.9012 | Sens: 0.7778 | Spec: 0.7778
+[2026-11-17 18:04:26] Model: Random_Forest        | Acc: 0.9444 | BalAcc: 0.9444 | MacroF1: 0.9443 | ROC-AUC: 0.9877 | Sens: 1.0000 | Spec: 0.8889
+[2026-11-17 18:04:26] Model: XGBoost              | Acc: 0.9444 | BalAcc: 0.9444 | MacroF1: 0.9443 | ROC-AUC: 0.9877 | Sens: 0.8889 | Spec: 1.0000
+[2026-11-17 18:04:26] Saved audited best model checkpoint to: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\audit_v2\models\model_best.joblib
+[2026-11-17 18:04:26] 
+--- Computing Feature Importance Analysis ---
+[2026-11-17 18:04:26] Top feature by XGBoost Gain Importance: e2 (0.3283)
+[2026-11-17 18:04:27] Top feature by Permutation Importance (Balanced Acc drop): e2 (0.4408)
+[2026-11-17 18:04:27] Generating research visualizations...
+[2026-11-17 18:04:28] Visualizations saved successfully.
+[2026-11-17 18:04:28] Creating Model Card and Experiment Summary...
+[2026-11-17 18:04:28] Creating proof archive at: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\audit_v2\proofs\PROOFS.zip
+[2026-11-17 18:04:28] PROOFS.zip created successfully (240205 bytes).
+[2026-11-17 18:04:28] PCOS Clinical Audit V2 successfully completed in 7.17 seconds.
+[2026-11-17 18:04:28] ======================================================================
+[2026-11-17 18:25:34] ======================================================================
+[2026-11-17 18:25:34] ShasthoSetu AI — PCOS Clinical Tabular ML Audit V2 (Finalized)
+[2026-11-17 18:25:34] ======================================================================
+[2026-11-17 18:25:34] Loading cleaned dataset from: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\data\processed\pcos_clinical_cleaned.csv
+[2026-11-17 18:25:34] Dataset shape: (88, 21)
+[2026-11-17 18:25:34] 
+--- Running Repeated Stratified Cross-Validation (10 repeats of 5-Fold = 50 total folds on N=70 training patients) ---
+[2026-11-17 18:25:34] Evaluating Model: Logistic_Regression
+[2026-11-17 18:25:35]   Mean Balanced Acc: 0.8286 +/- 0.1153
+[2026-11-17 18:25:35]   Mean Macro F1:     0.8259 +/- 0.1179
+[2026-11-17 18:25:35]   Mean Sensitivity:  0.8400 +/- 0.1664
+[2026-11-17 18:25:35]   Mean Specificity:  0.8171 +/- 0.1414
+[2026-11-17 18:25:35]   Mean ROC-AUC:      0.9262 +/- 0.0726
+[2026-11-17 18:25:35] Evaluating Model: Random_Forest
+[2026-11-17 18:25:38]   Mean Balanced Acc: 0.8777 +/- 0.0837
+[2026-11-17 18:25:38]   Mean Macro F1:     0.8756 +/- 0.0854
+[2026-11-17 18:25:38]   Mean Sensitivity:  0.8839 +/- 0.1234
+[2026-11-17 18:25:38]   Mean Specificity:  0.8714 +/- 0.1219
+[2026-11-17 18:25:38]   Mean ROC-AUC:      0.9335 +/- 0.0690
+[2026-11-17 18:25:38] Evaluating Model: XGBoost
+[2026-11-17 18:25:40]   Mean Balanced Acc: 0.8857 +/- 0.0829
+[2026-11-17 18:25:40]   Mean Macro F1:     0.8839 +/- 0.0833
+[2026-11-17 18:25:40]   Mean Sensitivity:  0.9000 +/- 0.1024
+[2026-11-17 18:25:40]   Mean Specificity:  0.8714 +/- 0.1411
+[2026-11-17 18:25:40]   Mean ROC-AUC:      0.9327 +/- 0.0743
+[2026-11-17 18:25:40] 
+Best Model by 50-Fold Repeated CV Balanced Accuracy: XGBoost (0.8857)
+[2026-11-17 18:25:40] Saved audited best model checkpoint to: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\audit_v2\models\model_best.joblib
+[2026-11-17 18:25:41] Top feature by XGBoost Gain Importance: e2 (0.3283)
+[2026-11-17 18:25:41] Top feature by Permutation Importance: e2 (0.4408)
+[2026-11-17 18:25:41] Creating complete reproducibility proof archive at: F:\Clude cccccccccccccccccccccccc\data we test\01_PCOS_Clinical\audit_v2\proofs\PROOFS.zip

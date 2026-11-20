@@ -1,0 +1,4 @@
+disease,patient_folder,crops_in_zip,assigned_split
+pediculosis,patient71,20,val
+pediculosis,patient72,67,train
+pediculosis,patient74,21,test

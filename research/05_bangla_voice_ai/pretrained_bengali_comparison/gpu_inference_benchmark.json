@@ -1,0 +1,14 @@
+{
+  "Whisper-Tiny": {
+    "model_id": "openai/whisper-tiny",
+    "mean_latency_ms": 280.57,
+    "peak_vram_mb": 182.84,
+    "parameters": 37760640
+  },
+  "Whisper-Base": {
+    "model_id": "openai/whisper-base",
+    "mean_latency_ms": 184.26,
+    "peak_vram_mb": 432.94,
+    "parameters": 72593920
+  }
+}

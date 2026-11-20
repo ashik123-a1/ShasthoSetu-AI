@@ -1,0 +1,16 @@
+{
+  "platform": "win32",
+  "python_version": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "torch_version": "2.6.0+cu124",
+  "cuda_available": true,
+  "device_count": 1,
+  "device_name": "NVIDIA GeForce RTX 5060 Ti",
+  "device_capability": [
+    12,
+    0
+  ],
+  "exp_d_actual_execution_device": "CPU (fallback due to sm_120 compatibility)",
+  "cuda_forward_backward_test": "Failed with RuntimeError: CUDA error: no kernel image is available for execution on the device (sm_120 not compiled in torch 2.6.0+cu124)",
+  "attempted_upgrade": "Attempted torch 2.11.0+cu128; failed due to disk space limit on F: (1GB remaining, required >5GB uncompressed)",
+  "current_device_status": "Verified CPU execution. Model ran cleanly in 29.77 seconds."
+}

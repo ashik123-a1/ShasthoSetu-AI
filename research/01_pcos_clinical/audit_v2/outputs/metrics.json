@@ -1,0 +1,111 @@
+{
+  "experiment": "PCOS Clinical Tabular Research Baseline (Audit V2 Finalized)",
+  "audit_version": "v2.1",
+  "best_model": "XGBoost",
+  "sample_counts": {
+    "total": 88,
+    "train": 70,
+    "test_held_out": 18,
+    "features": 20
+  },
+  "repeated_cross_validation_50_folds": {
+    "Logistic_Regression": {
+      "mean_balanced_accuracy": 0.8286,
+      "std_balanced_accuracy": 0.1153,
+      "mean_macro_f1": 0.8259,
+      "std_macro_f1": 0.1179,
+      "mean_sensitivity": 0.84,
+      "std_sensitivity": 0.1664,
+      "mean_specificity": 0.8171,
+      "std_specificity": 0.1414,
+      "mean_roc_auc": 0.9262,
+      "std_roc_auc": 0.0726
+    },
+    "Random_Forest": {
+      "mean_balanced_accuracy": 0.8777,
+      "std_balanced_accuracy": 0.0837,
+      "mean_macro_f1": 0.8756,
+      "std_macro_f1": 0.0854,
+      "mean_sensitivity": 0.8839,
+      "std_sensitivity": 0.1234,
+      "mean_specificity": 0.8714,
+      "std_specificity": 0.1219,
+      "mean_roc_auc": 0.9335,
+      "std_roc_auc": 0.069
+    },
+    "XGBoost": {
+      "mean_balanced_accuracy": 0.8857,
+      "std_balanced_accuracy": 0.0829,
+      "mean_macro_f1": 0.8839,
+      "std_macro_f1": 0.0833,
+      "mean_sensitivity": 0.9,
+      "std_sensitivity": 0.1024,
+      "mean_specificity": 0.8714,
+      "std_specificity": 0.1411,
+      "mean_roc_auc": 0.9327,
+      "std_roc_auc": 0.0743
+    }
+  },
+  "cv_cohort_reuse_notice": "The 50 validation folds represent 10 random 5-way partitions of the exact same 70 training patients. They quantify split-induced variance but DO NOT represent 50 independent patient cohorts.",
+  "held_out_test_results": {
+    "Logistic_Regression": {
+      "test_accuracy": 0.7778,
+      "test_balanced_accuracy": 0.7778,
+      "test_precision_pcos": 0.7778,
+      "test_recall_sensitivity": 0.7778,
+      "test_specificity": 0.7778,
+      "test_f1_class_0_control": 0.7778,
+      "test_f1_class_1_pcos": 0.7778,
+      "test_macro_f1_corrected": 0.7778,
+      "test_roc_auc": 0.9012,
+      "confusion_matrix": {
+        "TN": 7,
+        "FP": 2,
+        "FN": 2,
+        "TP": 7
+      }
+    },
+    "Random_Forest": {
+      "test_accuracy": 0.9444,
+      "test_balanced_accuracy": 0.9444,
+      "test_precision_pcos": 0.9,
+      "test_recall_sensitivity": 1.0,
+      "test_specificity": 0.8889,
+      "test_f1_class_0_control": 0.9412,
+      "test_f1_class_1_pcos": 0.9474,
+      "test_macro_f1_corrected": 0.9443,
+      "test_roc_auc": 0.9877,
+      "confusion_matrix": {
+        "TN": 8,
+        "FP": 1,
+        "FN": 0,
+        "TP": 9
+      }
+    },
+    "XGBoost": {
+      "test_accuracy": 0.9444,
+      "test_balanced_accuracy": 0.9444,
+      "test_precision_pcos": 1.0,
+      "test_recall_sensitivity": 0.8889,
+      "test_specificity": 1.0,
+      "test_f1_class_0_control": 0.9474,
+      "test_f1_class_1_pcos": 0.9412,
+      "test_macro_f1_corrected": 0.9443,
+      "test_roc_auc": 0.9877,
+      "confusion_matrix": {
+        "TN": 9,
+        "FP": 0,
+        "FN": 1,
+        "TP": 8
+      }
+    }
+  },
+  "feature_importance_audit": {
+    "top_feature_gain": "e2",
+    "top_feature_gain_value": 0.3283,
+    "top_feature_permutation": "e2",
+    "top_feature_permutation_drop": 0.4408,
+    "scientific_interpretation": "e2 (Estradiol) is the #1 ranked feature by both split gain (0.3283) and permutation importance (0.4408 drop in balanced accuracy). Feature importance reflects statistical utility in this specific decision tree model on day-3 menses blood samples, and does not establish medical causality or diagnostic sufficiency. Note that lh and fsh are individual laboratory features in the dataset; no computed LH/FSH ratio column exists in the raw data."
+  },
+  "total_runtime_seconds": 7.39
+}

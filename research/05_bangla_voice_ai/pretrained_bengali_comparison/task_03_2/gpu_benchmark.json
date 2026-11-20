@@ -1,0 +1,16 @@
+{
+  "Whisper-Base": {
+    "model_id": "openai/whisper-base",
+    "parameters": 72593920,
+    "mean_latency_ms": 586.52,
+    "median_latency_ms": 389.81,
+    "peak_vram_mb": 341.47
+  },
+  "Whisper-Small-Bengali": {
+    "model_id": "anuragshas/whisper-small-bn",
+    "parameters": 241734912,
+    "mean_latency_ms": 2198.24,
+    "median_latency_ms": 2135.1,
+    "peak_vram_mb": 1097.13
+  }
+}

@@ -9,8 +9,8 @@
 # ------------------------------------------------------------------------------
 # 1. Python Virtual Environments, Caches & Test Artifacts
 # ------------------------------------------------------------------------------
-_shared/
-_reports/
+/_shared/
+/_reports/
 .venv/
 venv/
 **/venv/
@@ -53,12 +53,12 @@ LIVE_ONLINE_LINK.txt
 # ------------------------------------------------------------------------------
 # 4. Raw Local ML Module Workspaces (Clean Subset Lives in research/)
 # ------------------------------------------------------------------------------
-01_PCOS_Clinical/
-02_PCOS_Ultrasound/
-03_Measles_Viral_Rash/
-04_Prescription_OCR/
-05_Bangla_Voice_AI/
-06_DermoPed_Pediatric_Skin/
+/01_PCOS_Clinical/
+/02_PCOS_Ultrasound/
+/03_Measles_Viral_Rash/
+/04_Prescription_OCR/
+/05_Bangla_Voice_AI/
+/06_DermoPed_Pediatric_Skin/
 
 # ------------------------------------------------------------------------------
 # 5. Model Checkpoints, Weights, Heavy Media & Archives
@@ -79,9 +79,9 @@ LIVE_ONLINE_LINK.txt
 # ------------------------------------------------------------------------------
 # 6. Legacy Prototype Demos, Reference Repos & Duplicate Unused Media
 # ------------------------------------------------------------------------------
-demo/
-submission/
-_reference_repos/
+/demo/
+/submission/
+/_reference_repos/
 apps/web/public/images/hero/hero-doctors-cutout.png
 apps/web/public/images/hero/hero-doctors-back-to-back-cutout.png
 apps/web/public/images/team/team_docx_image_*.jpg

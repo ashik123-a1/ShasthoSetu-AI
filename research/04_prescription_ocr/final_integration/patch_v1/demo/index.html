@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShasthoSetu AI — Prescription OCR Research Demo (Patch V1)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div>
+        <h1>🩺 ShasthoSetu AI — Prescription OCR & Human-in-the-Loop Assistive Portal</h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Local Research Demonstration | Patch V1 (Zero Autonomous Dispatch)</p>
+      </div>
+      <div>
+        <span class="badge-research">SIMULATION MODE ONLY (DISPATCH LOCKED)</span>
+      </div>
+    </header>
+
+    <div class="simulation-banner">
+      <span style="font-size: 1.4rem;">⚠️</span>
+      <div>
+        <strong>Mandatory Healthcare AI Governance Warning:</strong> 
+        This is a research-only demonstration. All extracted tokens start as <code>UNVERIFIED_REQUIRES_HUMAN_REVIEW</code>. 
+        Web-form review inputs are recorded strictly as <strong>SIMULATED_REVIEW_ONLY</strong>. 
+        Real automated reminders, SMS alerts, and EHR writes are permanently disabled (<code>reminder_auto_enabled = false</code>). 
+        Active medication orders cannot be generated without authenticated enterprise clinical IAM.
+      </div>
+    </div>
+
+    <div class="layout-grid">
+      <!-- Left Column: Source Image Viewer -->
+      <div class="card">
+        <div class="card-title">
+          <span>📄 Source Prescription Document</span>
+          <span class="status-tag status-unverified" id="image-status-tag">STATUS: UNVERIFIED</span>
+        </div>
+
+        <div class="selector-bar">
+          <label style="font-size: 0.85rem; font-weight: 600; white-space: nowrap;">Prescription Sample:</label>
+          <select id="prescription-selector">
+            <option value="0052">0052.jpg (Shaheed Suhrawardy Hospital — Cap Roxim 400)</option>
+            <option value="0011">0011.jpg (Chest Clinic — Tab Imucort)</option>
+            <option value="0174">0174.jpg (Suhrawardy Hospital — Tab Histal 4mg)</option>
+            <option value="0001">0001.jpg (Oncology — Inj Xgeva 120mg)</option>
+          </select>
+        </div>
+
+        <div class="image-viewer">
+          <img id="prescription-image" src="/images/0052.jpg" alt="Prescription Document">
+        </div>
+      </div>
+
+      <!-- Right Column: OCR Extraction & Simulated Review -->
+      <div class="card">
+        <div class="card-title">
+          <span>🔍 OCR Extraction & Simulated Review</span>
+          <span class="status-tag status-unverified" id="verification-status-badge">UNVERIFIED_REQUIRES_HUMAN_REVIEW</span>
+        </div>
+
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">
+            Extracted OCR Text Stream (Low Confidence Tokens < 0.60 Highlighted):
+          </label>
+          <div class="ocr-box" id="ocr-stream"></div>
+        </div>
+
+        <div style="margin-top: 15px;">
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">
+            Extracted Medication Candidates (Human Verification & Correction):
+          </label>
+          <div id="candidates-container"></div>
+        </div>
+
+        <!-- Simulated Sign-off Form -->
+        <div class="verification-section">
+          <div class="card-title" style="font-size: 0.95rem; margin-bottom: 10px;">
+            <span>👨‍⚕️ Simulated Review Sign-off (Fictional Reviewer Credentials)</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fictional Reviewer Name:</label>
+              <input type="text" id="clinician-name" value="Demo Reviewer Alpha (Fictional)">
+            </div>
+            <div class="form-group">
+              <label>Fictional Tester ID:</label>
+              <input type="text" id="clinician-bmdc" value="DEMO-REVIEWER-01">
+            </div>
+          </div>
+
+          <div style="margin: 10px 0;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;">
+              <input type="checkbox" id="legal-confirm-checkbox">
+              <span>I confirm this is a simulated research demonstration. No live patient reminders will be dispatched.</span>
+            </label>
+          </div>
+
+          <button class="btn btn-warning" id="btn-verify" style="width: 100%;">
+            🔬 Submit Simulated Human Review (Labels as SIMULATED_REVIEW_ONLY)
+          </button>
+        </div>
+
+        <!-- Simulated Review Panel & FHIR Preview -->
+        <div class="simulated-panel" id="simulated-panel">
+          <h4 style="color: #9a3412; margin-bottom: 8px;">🔬 Simulated Review Completed (Non-Actionable)</h4>
+          <p style="font-size: 0.85rem; color: #7c2d12; margin-bottom: 10px;" id="simulation-summary-text"></p>
+          
+          <label style="font-size: 0.75rem; font-weight: 700; color: #7c2d12;">Exported FHIR R4 MedicationRequest (Status: Draft, Intent: Proposal):</label>
+          <pre style="background: #ffffff; padding: 10px; border-radius: 6px; font-size: 0.75rem; max-height: 150px; overflow-y: auto; border: 1px solid #fed7aa;" id="fhir-json-preview"></pre>
+
+          <div style="margin-top: 10px;">
+            <button class="btn btn-danger" id="btn-test-security-rejection" style="font-size: 0.8rem; width: 100%;">
+              🛡️ Security Test: Attempt Direct Automated Reminder Dispatch (Verify Rejection)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShasthoSetu AI — Prescription OCR & Safe Human Verification Portal</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div>
+        <h1>🩺 ShasthoSetu AI — Prescription OCR Assistive Portal</h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Bilingual Medical Handwriting OCR & Human-in-the-Loop Clinical Verification</p>
+      </div>
+      <div>
+        <span class="badge-research">RESEARCH DEMO (ZERO AUTONOMOUS DISPATCH)</span>
+      </div>
+    </header>
+
+    <div class="safety-banner">
+      <span style="font-size: 1.4rem;">⚠️</span>
+      <div>
+        <strong>Mandatory Medical Safety Notice:</strong> All AI-extracted prescription tokens are unverified candidates. 
+        Autonomous reminder activation and dosage scheduling are strictly disabled by default (<code>reminder_auto_enabled = false</code>). 
+        Actionable medication reminders require explicit sign-off by a qualified healthcare professional.
+      </div>
+    </div>
+
+    <div class="layout-grid">
+      <!-- Left Column: Image Viewer -->
+      <div class="card">
+        <div class="card-title">
+          <span>📄 Physical Prescription Scan</span>
+          <span class="status-tag status-unverified" id="image-status-tag">STATUS: UNVERIFIED</span>
+        </div>
+
+        <div class="selector-bar">
+          <label style="font-size: 0.85rem; font-weight: 600; white-space: nowrap;">Select Sample:</label>
+          <select id="prescription-selector">
+            <option value="0052">Prescription 0052 (Shaheed Suhrawardy Hospital — Cap Roxim 400)</option>
+            <option value="0011">Prescription 0011 (Chest & Allergy Clinic — Tab Imucort)</option>
+            <option value="0174">Prescription 0174 (Suhrawardy OPD — Tab Histal 4mg)</option>
+            <option value="0001">Prescription 0001 (Oncology/Orthopedic — Inj Xgeva 120mg)</option>
+          </select>
+        </div>
+
+        <div class="image-viewer" id="image-viewer">
+          <img id="prescription-image" src="" alt="Prescription Document">
+        </div>
+      </div>
+
+      <!-- Right Column: OCR Extraction & Human Verification Form -->
+      <div class="card">
+        <div class="card-title">
+          <span>🔍 OCR Extraction & Clinical Verification</span>
+          <span class="status-tag status-unverified" id="verification-status-badge">UNVERIFIED_REQUIRES_HUMAN_REVIEW</span>
+        </div>
+
+        <!-- Raw OCR Stream with highlighted uncertainty -->
+        <div>
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">
+            Extracted OCR Text Stream (Low Confidence Tokens < 0.60 Highlighted):
+          </label>
+          <div class="ocr-box" id="ocr-stream"></div>
+        </div>
+
+        <!-- Structured Candidate Form -->
+        <div style="margin-top: 15px;">
+          <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">
+            Extracted Medication Candidates (Review & Correct Against Scan):
+          </label>
+          <div id="candidates-container"></div>
+        </div>
+
+        <!-- Human Sign-off Form -->
+        <div class="verification-section">
+          <div class="card-title" style="font-size: 0.95rem; margin-bottom: 10px;">
+            <span>👨‍⚕️ Clinician Verification Sign-off</span>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Clinician Full Name:</label>
+              <input type="text" id="clinician-name" placeholder="e.g. Dr. Kazi Rahman, MBBS">
+            </div>
+            <div class="form-group">
+              <label>BMDC / Registration ID:</label>
+              <input type="text" id="clinician-bmdc" placeholder="e.g. BMDC-A-98765">
+            </div>
+          </div>
+
+          <div style="margin: 10px 0;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer;">
+              <input type="checkbox" id="legal-confirm-checkbox">
+              <span>I certify that I have verified every drug name, dosage, frequency, and duration against the physical prescription image.</span>
+            </label>
+          </div>
+
+          <button class="btn btn-primary" id="btn-verify" style="width: 100%;">
+            ✅ Confirm Human Verification & Enable Staged Reminders
+          </button>
+        </div>
+
+        <!-- Verified Success Panel & FHIR Preview -->
+        <div class="verified-panel" id="verified-panel">
+          <h4 style="color: #065f46; margin-bottom: 8px;">✅ Prescription Successfully Verified</h4>
+          <p style="font-size: 0.85rem; color: #047857; margin-bottom: 10px;" id="verification-summary-text"></p>
+          
+          <label style="font-size: 0.75rem; font-weight: 700; color: #047857;">Exported FHIR R4 MedicationRequest (Status: Active):</label>
+          <pre style="background: #ffffff; padding: 10px; border-radius: 6px; font-size: 0.75rem; max-height: 150px; overflow-y: auto;" id="fhir-json-preview"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

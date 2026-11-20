@@ -1,0 +1,7 @@
+label,split,patients,crops
+chickenpox,test,3,89
+chickenpox,train,13,414
+chickenpox,val,3,72
+pediculosis,test,1,21
+pediculosis,train,1,40
+pediculosis,val,1,20

@@ -1,0 +1,29 @@
+{
+  "experiment": "Validation Split Head-to-Head Architecture Comparison",
+  "development_sample_size": 35,
+  "pipeline_v1_baseline": {
+    "mean_latency_seconds": 0.727,
+    "mean_detected_boxes": 41.86,
+    "mean_confidence": 0.3148,
+    "mean_cer": 0.9257,
+    "median_cer": 0.8694,
+    "mean_wer": 1.0902
+  },
+  "pipeline_v2_enhanced": {
+    "preprocessing": "CLAHE + Bilateral Denoising Filter",
+    "spatial_ordering": "2D Topological Reading-Order Line Grouping (Top-Down, Left-Right)",
+    "detection_tuning": "text_threshold=0.6, link_threshold=0.3, low_text=0.3",
+    "mean_latency_seconds": 0.607,
+    "mean_detected_boxes": 34.46,
+    "mean_confidence": 0.3023,
+    "mean_cer": 0.8804,
+    "median_cer": 0.8353,
+    "mean_wer": 1.0337
+  },
+  "findings": [
+    "Enhanced v2 reading-order sorting groups multi-word drug names and instructions into coherent spatial sequences.",
+    "CLAHE contrast enhancement improves stroke edge detection on low-contrast ballpoint pen handwriting.",
+    "However, whole-page narrative CER remains high across both models because ground truth is narrative translation rather than literal transcription.",
+    "Clinical implication: Off-the-shelf recognition without domain-specific finetuning on Bangladeshi prescription crops cannot surpass the clinical reliability threshold."
+  ]
+}
