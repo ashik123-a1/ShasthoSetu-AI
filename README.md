@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/ashik123-a1/ShasthoSetu-AI">
-    <img src="docs/readme/banner.svg" alt="ShasthoSetu AI — Smart Health. Accessible Care. Built for 170M Citizens." width="100%" />
+    <img src="docs/readme/banner.svg" alt="ShasthoSetu AI — Animated Particle Preloader & Live Platform Showcase" width="100%" />
   </a>
 </p>
 
@@ -110,12 +110,12 @@ Every screenshot below was freshly captured (`1440×900`) from the live running 
   </tr>
   <tr>
     <td width="50%">
-      <img src="docs/readme/06_health_services_ai.png" alt="Health Services Hub & Live Consultation Queue"/>
-      <br/><sub><b>5. Unified Health Services &amp; Live AI Workbenches.</b> Continuous workspace integrating camera/mic pre-check, all 6 live clinical AI upload tools, 12 diagnostic lab panels, and medicine store.</sub>
+      <img src="docs/readme/06_health_services_ai.png" alt="Live 2-Device Telemedicine Consultation Call & Bilingual Chat"/>
+      <br/><sub><b>5. Live 2-Device Telemedicine Call &amp; Health Services.</b> Active WebRTC HD consultation call with live duration timer, audio equalizer, PiP camera feed, mute/screen-share controls, and synced bilingual clinical chat.</sub>
     </td>
     <td width="50%">
-      <img src="docs/readme/07_research_mcp_hub.png" alt="3D Holographic Body Scanner & Research Observatory"/>
-      <br/><sub><b>6. Research Observatory &amp; 3D Holographic Body Scanner.</b> Volumetric WebGL anatomical sweep synchronized with audited model benchmarks (M01–M06), MCP explorer, and LangGraph decks.</sub>
+      <img src="docs/readme/07_blood_connect_engine.png" alt="ShasthoSetu Blood Connect Engine & Geo-Proximity Donor Matching"/>
+      <br/><sub><b>6. Blood Connect Engine &amp; Donor Privacy.</b> Emergency blood coordination across 8 Bangladesh divisions with hospital-verified badges, blood-group filters, 5/10/20 km matching, and consent-locked donor numbers.</sub>
     </td>
   </tr>
   <tr>
@@ -124,8 +124,8 @@ Every screenshot below was freshly captured (`1440×900`) from the live running 
       <br/><sub><b>7. Clinical Daylight White Mode &amp; 8 Specialty Sectors.</b> Accessible high-contrast white surface palette showcasing all 43 approved specialists organized across 8 medical departments.</sub>
     </td>
     <td width="50%">
-      <img src="docs/readme/09_team_5_members.png" alt="Official 5-Member Engineering Team Directory Modal"/>
-      <br/><sub><b>8. Official 5-Member Engineering Directory Modal.</b> Accessible anytime from the bottom-right gyroscopic Support 3D Orb radial menu, featuring verified project architects and QA leads.</sub>
+      <img src="docs/readme/09_skin_scan_dermoped.png" alt="Live AI Skin Lesion Scan & Leak-Free 6-Class Vision Analysis"/>
+      <br/><sub><b>8. AI Skin Lesion Scan (6-Class ResNet18 Vision).</b> Real PyTorch CUDA inference with 3D confidence telemetry orb, 6-class softmax probability breakdown, and mandatory non-diagnostic clinical review banner.</sub>
     </td>
   </tr>
 </table>
