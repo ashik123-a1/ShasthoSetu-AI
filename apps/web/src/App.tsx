@@ -158,6 +158,7 @@ function AppRoutes() {
         {/* Admin Portal (Strict RBAC: ADMIN) */}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/dashboard" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="dashboard" /></RequireRole>} />
+        <Route path="/admin/transactions" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="transactions" /></RequireRole>} />
         <Route path="/admin/doctors" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="doctors" /></RequireRole>} />
         <Route path="/admin/users" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="users" /></RequireRole>} />
         <Route path="/admin/appointments" element={<RequireRole allowedRoles={["ADMIN"]}><AdminPortalPage section="appointments" /></RequireRole>} />

@@ -117,3 +117,32 @@ sequenceDiagram
 - **Three.js / React Three Fiber Scenes:** `HeroCareLattice.tsx`, `AiModuleScene3D.tsx`, and `HolographicBodyScanner3D.tsx` render interactive clinical geometries with motion-pause fallback (`prefers-reduced-motion` / manual toggle).
 - **Gyroscopic `MedicalAiChatbotOrb.tsx`:** Uses a 60 FPS `requestAnimationFrame` SVG loop rotating counter-spinning rings cleanly around `(50, 50)`, with cursor-tracking pupils, natural blink intervals, reactive audio bars, and an expandable radial menu (`ShasthoSetuRadialMenu.tsx`) linking to the 5-member `TeamRosterModal` and GitHub.
 - **Bilingual & Theme System (`tokens.css` & `preferences.tsx`):** Persists `en`/`bn` locale and **Obsidian Dark** vs **Clinical Daylight White Mode** across public and portal headers.
+
+---
+
+## 6. Financial Settlement, Multi-Tier Escrow & Live Admin Alert Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor P as Patient
+    participant GW as MFS Gateway / Bank Escrow
+    participant API as FastAPI Treasury Engine
+    participant DB as SQLite platform_transactions
+    participant ADM as Live Admin Portal (/admin/transactions)
+    participant PRT as Partner (Lab / Doctor / Pharma)
+
+    P->>GW: Checkout (Diagnostic Lab / Doctor Consultation / ePharma)
+    GW-->>API: Payment Confirmed (bKash / Nagad / SSLCommerz / City Bank)
+    API->>API: Compute Dynamic Commission Cut (18% Lab / 15% Doctor / 12% Pharma)
+    API->>DB: BEGIN IMMEDIATE: Insert platform_transactions & Update Bank Ledger
+    API->>DB: Insert notification (topic = 'FINANCE_TRANSACTION')
+    API-->>P: Receipt Issued (DEMO-RCP-XXXX) + Service Unlocked
+    API-->>ADM: Live 4s Polling: Trigger Real-time Alert Banner & Sound Notice
+    Note over ADM: Admin Views Gross Inflow, Commission (+%) & Net Partner Share
+    ADM->>API: POST /v1/admin/finance/banks/{id}/settle (Weekly Reconciliation)
+    API->>DB: Mark SETTLED & Audited
+    API->>PRT: Disburse Net Partner Share (82% Lab / 85% Doctor) via BRAC Bank
+```
+
+For full revenue projections, commission formulas, and banking details, read [`docs/BUSINESS_MODEL.md`](BUSINESS_MODEL.md).

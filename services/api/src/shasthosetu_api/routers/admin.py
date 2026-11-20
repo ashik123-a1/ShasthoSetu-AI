@@ -112,12 +112,25 @@ def _build_admin_finance_snapshot(
     tx_sql += " ORDER BY pt.created_at_utc DESC LIMIT 120"
     txns = rows_to_dicts(conn.execute(tx_sql, tuple(tx_params)).fetchall())
 
+    notifs = rows_to_dicts(
+        conn.execute(
+            """
+            SELECT id, title_bn, title_en, delivery_status, created_at_utc, entity_id
+              FROM notifications
+             WHERE topic = 'FINANCE_TRANSACTION'
+             ORDER BY created_at_utc DESC LIMIT 15
+            """
+        ).fetchall()
+    )
+
     return {
         "kpis": kpis,
         "bank_accounts": bank_accounts,
         "monthly_six_month_trend": month_rows,
         "stream_commission_breakdown": stream_rows,
         "platform_transactions": txns,
+        "latest_transaction": txns[0] if txns else None,
+        "transaction_notifications": notifs,
     }
 
 
@@ -146,6 +159,13 @@ class AppointmentOverrideRequest(BaseModel):
 
 class DemoRefundRequest(BaseModel):
     reason: str = Field(default="Admin demo refund processed", max_length=300)
+
+
+class TransactionSimulateRequest(BaseModel):
+    revenue_stream: str = Field(default="DIAGNOSTIC_TEST")  # DIAGNOSTIC_TEST | DOCTOR_CONSULTATION | EPHARMA_SALE | HEALTH_PLAN
+    item_title: Optional[str] = None
+    gross_amount_bdt: Optional[float] = None
+    gateway_method: Optional[str] = "DEMO_BKASH"
 
 
 class FeatureFlagPatchRequest(BaseModel):
@@ -587,6 +607,94 @@ def get_admin_finance_overview(
             stream_filter=revenue_stream,
             month_filter=billing_month,
         )
+
+
+@router.get("/finance/transactions")
+def list_admin_transactions(
+    status: Optional[str] = None,
+    revenue_stream: Optional[str] = None,
+    billing_month: Optional[str] = None,
+    user: dict = Depends(require_role("ADMIN")),
+):
+    """Direct live transactions & commission monitoring endpoint for Admin Portal."""
+    with get_db_conn() as conn:
+        return _build_admin_finance_snapshot(
+            conn,
+            status_filter=status,
+            stream_filter=revenue_stream,
+            month_filter=billing_month,
+        )
+
+
+@router.post("/finance/transactions/simulate")
+def simulate_live_transaction(payload: TransactionSimulateRequest, user: dict = Depends(require_role("ADMIN"))):
+    """Simulates a live patient transaction across any of the 4 business verticals and fires an Admin transaction notice."""
+    with get_db_conn() as conn:
+        from .patient import record_platform_transaction
+        stream = payload.revenue_stream.upper()
+        defaults = {
+            "DIAGNOSTIC_TEST": {
+                "title": "Diagnostic Lab Order: Endocrine & Lipid Panel (Popular Diagnostic Centre)",
+                "amount_bdt": 1800.0,
+                "beneficiary": "Popular Diagnostic Centre Dhanmondi (82% Lab Share)",
+                "bank_id": "bank-ssl-card",
+                "method": "DEMO_CARD",
+            },
+            "DOCTOR_CONSULTATION": {
+                "title": "Telemedicine Specialist Consultation (Dr. Farhana Rahman, BMDC #91044)",
+                "amount_bdt": 800.0,
+                "beneficiary": "Dr. Farhana Rahman (85% Clinician Share)",
+                "bank_id": "bank-bkash-escrow",
+                "method": "DEMO_BKASH",
+            },
+            "EPHARMA_SALE": {
+                "title": "ePharma Medicine Order: Metformin 500mg, Seclo 20mg & Eco-Thermometer",
+                "amount_bdt": 1250.0,
+                "beneficiary": "Square & Beximco ePharma Hub (88% Vendor Share)",
+                "bank_id": "bank-nagad-merchant",
+                "method": "DEMO_NAGAD",
+            },
+            "HEALTH_PLAN": {
+                "title": "Family Care Plus Monthly Plan (4 Registered Members)",
+                "amount_bdt": 1200.0,
+                "beneficiary": "ShasthoSetu Care Network Pool (80% Network Share)",
+                "bank_id": "bank-city-corp",
+                "method": "DEMO_BANK",
+            },
+        }
+        cfg = defaults.get(stream, defaults["DIAGNOSTIC_TEST"])
+        title = payload.item_title or cfg["title"]
+        amount_bdt = payload.gross_amount_bdt or cfg["amount_bdt"]
+        poisha = int(round(amount_bdt * 100))
+        gateway = payload.gateway_method or cfg["method"]
+        bank_id = cfg["bank_id"]
+        beneficiary = cfg["beneficiary"]
+
+        conn.execute("BEGIN IMMEDIATE;")
+        tx = record_platform_transaction(
+            conn,
+            stream=stream,
+            item_title=title,
+            gross_amount_minor_poisha=poisha,
+            payer_user=user,
+            beneficiary_entity=beneficiary,
+            gateway_method=gateway,
+            bank_account_id=bank_id,
+        )
+        record_audit(
+            conn,
+            actor_user_id=user["id"],
+            actor_role="ADMIN",
+            action_type="ADMIN_SIMULATE_TRANSACTION",
+            target_resource="platform_transactions",
+            target_id=tx["id"],
+            details={"txn_ref": tx["txn_ref"], "stream": stream, "gross_poisha": poisha},
+        )
+        conn.execute("COMMIT;")
+        return {
+            "transaction": tx,
+            "message": "Live transaction recorded and admin notice fired successfully.",
+        }
 
 
 @router.post("/finance/transactions/{txn_id}/refund")

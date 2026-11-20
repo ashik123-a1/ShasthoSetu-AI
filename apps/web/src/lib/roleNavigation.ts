@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LifeBuoy,
   Pill,
+  Receipt,
   ScanText,
   ScrollText,
   Settings2,
@@ -63,6 +64,7 @@ export const FOUR_ROLE_NAV_CONFIG: Record<AppRole, RoleNavItem[]> = {
   ],
   ADMIN: [
     { id: "ad-dash", labelKey: "nav.admin.dashboard", previewPath: "/admin/dashboard", icon: LayoutDashboard },
+    { id: "ad-txns", labelKey: "nav.admin.transactions", previewPath: "/admin/transactions", icon: Receipt, sampleBadge: "LIVE" },
     { id: "ad-docs", labelKey: "nav.admin.doctors", previewPath: "/admin/doctors", icon: UserCheck, sampleBadge: "3" },
     { id: "ad-users", labelKey: "nav.admin.users", previewPath: "/admin/users", icon: Users },
     { id: "ad-apts", labelKey: "nav.admin.appointments", previewPath: "/admin/appointments", icon: CalendarClock },

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
+  Bell,
   Building2,
   CheckCircle2,
   CreditCard,
@@ -12,6 +13,8 @@ import {
   Sliders,
   Stethoscope,
   TrendingUp,
+  X,
+  Zap,
 } from "lucide-react";
 import { ApiError, apiGet, apiPatch, apiPost } from "../lib/apiClient";
 import { useAuth } from "../lib/authContext";
@@ -119,6 +122,19 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
   const [auditLogs, setAuditLogs] = useState<Array<Record<string, unknown>>>([]);
   const [researchData, setResearchData] = useState<Array<Record<string, unknown>>>([]);
   const [privacyProof, setPrivacyProof] = useState<string>("");
+  const [latestTxNotice, setLatestTxNotice] = useState<{
+    id: string;
+    txn_ref: string;
+    revenue_stream: string;
+    item_title: string;
+    gross_bdt: number;
+    comm_pct: number;
+    comm_bdt: number;
+    payout_bdt: number;
+    beneficiary: string;
+    time: string;
+  } | null>(null);
+  const [simulatingStream, setSimulatingStream] = useState<string | null>(null);
 
   // Staff provision state
   const [staffName, setStaffName] = useState("");
@@ -140,8 +156,8 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
         setUsers((await apiGet<{ users: Array<Record<string, unknown>> }>("/v1/admin/users")).users);
       } else if (section === "appointments") {
         setAppointments((await apiGet<{ appointments: Array<Record<string, unknown>> }>("/v1/admin/appointments")).appointments);
-      } else if (section === "payments") {
-        const payRes = await apiGet<{ payments: Array<Record<string, unknown>> } & FinanceSnapshot>("/v1/admin/payments");
+      } else if (section === "transactions" || section === "payments") {
+        const payRes = await apiGet<{ payments: Array<Record<string, unknown>> } & FinanceSnapshot>("/v1/admin/finance/transactions");
         setPayments(payRes.payments || []);
         setFinance(payRes);
       } else if (section === "config") {
@@ -163,6 +179,85 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  // Live real-time polling: automatically checks for new incoming transactions every 4 seconds
+  useEffect(() => {
+    if (section !== "transactions" && section !== "payments" && section !== "dashboard") return;
+    const interval = setInterval(() => {
+      void (async () => {
+        try {
+          const fresh = await apiGet<FinanceSnapshot>("/v1/admin/finance/overview");
+          if (fresh?.platform_transactions && fresh.platform_transactions.length > 0) {
+            setFinance((prev) => {
+              if (prev?.platform_transactions && prev.platform_transactions.length > 0) {
+                const prevTopId = prev.platform_transactions[0]?.id;
+                const newTop = fresh.platform_transactions[0];
+                if (newTop && newTop.id !== prevTopId) {
+                  setLatestTxNotice({
+                    id: newTop.id,
+                    txn_ref: newTop.txn_ref,
+                    revenue_stream: newTop.revenue_stream,
+                    item_title: newTop.item_title,
+                    gross_bdt: newTop.gross_amount_minor_poisha / 100,
+                    comm_pct: newTop.commission_rate_pct,
+                    comm_bdt: newTop.commission_minor_poisha / 100,
+                    payout_bdt: newTop.net_partner_payout_minor_poisha / 100,
+                    beneficiary: newTop.beneficiary_entity,
+                    time: new Date().toLocaleTimeString(),
+                  });
+                  pushToast({
+                    title: `🔔 Live Transaction Received: ${newTop.txn_ref}`,
+                    description: `৳${(newTop.gross_amount_minor_poisha / 100).toFixed(2)} (${newTop.revenue_stream}) • Comm (+${newTop.commission_rate_pct}%): ৳${(newTop.commission_minor_poisha / 100).toFixed(2)}`,
+                    tone: "success",
+                  });
+                }
+              }
+              return fresh;
+            });
+          }
+        } catch {
+          // ignore transient poll failure
+        }
+      })();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [section, pushToast]);
+
+  const triggerSimulatedTransaction = async (stream: "DIAGNOSTIC_TEST" | "DOCTOR_CONSULTATION" | "EPHARMA_SALE" | "HEALTH_PLAN") => {
+    setSimulatingStream(stream);
+    try {
+      const res = await apiPost<{ transaction: PlatformTxnItem; message: string }>("/v1/admin/finance/transactions/simulate", {
+        revenue_stream: stream,
+      });
+      const tx = res.transaction;
+      setLatestTxNotice({
+        id: tx.id,
+        txn_ref: tx.txn_ref,
+        revenue_stream: tx.revenue_stream,
+        item_title: tx.item_title,
+        gross_bdt: tx.gross_amount_minor_poisha / 100,
+        comm_pct: tx.commission_rate_pct,
+        comm_bdt: tx.commission_minor_poisha / 100,
+        payout_bdt: tx.net_partner_payout_minor_poisha / 100,
+        beneficiary: tx.beneficiary_entity,
+        time: new Date().toLocaleTimeString(),
+      });
+      pushToast({
+        title: `🔔 Live Transaction Recorded: ${tx.txn_ref}`,
+        description: `৳${(tx.gross_amount_minor_poisha / 100).toFixed(2)} • Comm (+${tx.commission_rate_pct}%): ৳${(tx.commission_minor_poisha / 100).toFixed(2)}`,
+        tone: "success",
+      });
+      await loadData();
+    } catch (err) {
+      pushToast({
+        title: "Simulation Failed",
+        description: err instanceof ApiError ? err.detail : "Error",
+        tone: "danger",
+      });
+    } finally {
+      setSimulatingStream(null);
+    }
+  };
 
   const verifyDoctor = async (docId: string, decision: "APPROVED" | "REJECTED" | "SUSPENDED") => {
     await apiPost(`/v1/admin/doctors/${docId}/verify`, { decision, reason: `Admin action: ${decision}` });
@@ -226,6 +321,123 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
 
   const renderFinanceTreasuryCenter = (compactMode = false) => (
     <div className="space-y-6" data-testid="admin-treasury-commission-center">
+      {/* 1. Real-time Live Transaction Notice Alert Banner */}
+      {latestTxNotice && (
+        <div
+          data-testid="admin-live-transaction-notice"
+          className="relative overflow-hidden rounded-3xl p-5 border-2 border-emerald-400 bg-gradient-to-r from-emerald-950/90 via-slate-950 to-cyan-950/90 shadow-[0_0_35px_rgba(16,185,129,0.35)] transition-all animate-in fade-in slide-in-from-top-2"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="relative flex items-center justify-center w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-400/40 shrink-0">
+                <Bell className="w-5 h-5 animate-bounce" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full font-mono text-[10px] font-black uppercase bg-emerald-400 text-slate-950 tracking-wider">
+                    {locale === "bn" ? "নতুন লেনদেন নোটিশ" : "LIVE TRANSACTION RECEIVED"}
+                  </span>
+                  <span className="font-mono text-xs text-emerald-300">
+                    {latestTxNotice.time}
+                  </span>
+                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-amber-300">
+                    {latestTxNotice.revenue_stream}
+                  </span>
+                </div>
+                <h4 className="text-sm sm:text-base font-bold text-white">
+                  {latestTxNotice.txn_ref}: {latestTxNotice.item_title}
+                </h4>
+                <p className="text-xs text-slate-300">
+                  Beneficiary: <strong className="text-white">{latestTxNotice.beneficiary}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-right font-mono">
+                <div className="text-[11px] text-slate-400">Gross Inflow</div>
+                <div className="text-lg font-black text-emerald-400">
+                  ৳{latestTxNotice.gross_bdt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
+                <div className="text-[11px] text-cyan-300 font-semibold">
+                  Platform Comm (+{latestTxNotice.comm_pct}%): ৳{latestTxNotice.comm_bdt.toFixed(2)}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLatestTxNotice(null)}
+                className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700 cursor-pointer"
+                aria-label="Dismiss notice"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Live Transaction Simulator Toolbar */}
+      <div className="rounded-2xl p-4 bg-gradient-to-r from-slate-900/90 via-cyan-950/40 to-slate-900/90 border border-cyan-500/30 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-300">
+            <Zap className="w-4 h-4 animate-pulse" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-white flex items-center gap-2">
+              <span>{locale === "bn" ? "লাইভ লেনদেন ও নোটিশ সিমুলেটর" : "Live Transaction & Notice Simulator"}</span>
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                ACTIVE MONITORING
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              {locale === "bn"
+                ? "যেকোনো বাটনে ক্লিক করে তাৎক্ষণিক লেনদেন, কমিশন বণ্টন ও অ্যাডমিন নোটিশ পরীক্ষা করুন।"
+                : "Trigger real-time patient transactions, test dynamic commission splits & watch instant admin notices."}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={Boolean(simulatingStream)}
+            onClick={() => void triggerSimulatedTransaction("DIAGNOSTIC_TEST")}
+            className="min-h-9 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
+          >
+            <FlaskConical className="w-3.5 h-3.5" />
+            Lab Test (+18%)
+          </button>
+          <button
+            type="button"
+            disabled={Boolean(simulatingStream)}
+            onClick={() => void triggerSimulatedTransaction("DOCTOR_CONSULTATION")}
+            className="min-h-9 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
+          >
+            <Stethoscope className="w-3.5 h-3.5" />
+            Doctor Fee (+15%)
+          </button>
+          <button
+            type="button"
+            disabled={Boolean(simulatingStream)}
+            onClick={() => void triggerSimulatedTransaction("EPHARMA_SALE")}
+            className="min-h-9 px-3 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 border border-amber-400/40 text-amber-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
+          >
+            <Pill className="w-3.5 h-3.5" />
+            ePharma (+12%)
+          </button>
+          <button
+            type="button"
+            disabled={Boolean(simulatingStream)}
+            onClick={() => void triggerSimulatedTransaction("HEALTH_PLAN")}
+            className="min-h-9 px-3 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition"
+          >
+            <ShieldCheck className="w-3.5 h-3.5" />
+            Health Plan (+20%)
+          </button>
+        </div>
+      </div>
+
       {/* Top 4 Financial & Commission KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bento-card rounded-2xl p-4 border border-emerald-500/35 bg-emerald-950/20">
@@ -772,7 +984,7 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
             </div>
           )}
 
-          {section === "payments" && (
+          {(section === "transactions" || section === "payments") && (
             <div className="space-y-6">
               {renderFinanceTreasuryCenter(false)}
               {payments.length > 0 && (

@@ -51,18 +51,20 @@ _ROUTE_RE = re.compile(
 )
 
 
-def _get_easyocr_reader():
-    cached = get_cached_model("ocr_easyocr")
+def _get_easyocr_reader(lang_mode: str = "en"):
+    cache_key = f"ocr_easyocr_{lang_mode}"
+    cached = get_cached_model(cache_key)
     if cached is not None:
         return cached
     import easyocr
 
     release_ollama_model()
-    unload_pytorch_models(except_keys={"ocr_easyocr"})
+    unload_pytorch_models(except_keys={cache_key, "ocr_easyocr"})
     record_runtime_status("ocr_easyocr", "LOADING", "M04-EASYOCR-PIPELINE-01", "loading")
     device, dev_label = get_pytorch_device(min_vram_mb=1500.0)
-    reader = easyocr.Reader(["bn", "en"], gpu=(device.type == "cuda"), verbose=False)
-    set_cached_model("ocr_easyocr", reader)
+    langs = ["en"] if lang_mode == "en" else ["bn", "en"]
+    reader = easyocr.Reader(langs, gpu=(device.type == "cuda"), verbose=False)
+    set_cached_model(cache_key, reader)
     record_runtime_status("ocr_easyocr", "READY", "M04-EASYOCR-PIPELINE-01", dev_label)
     return reader
 
@@ -90,59 +92,70 @@ def _cluster_reading_lines(boxes: list[dict[str, Any]]) -> list[str]:
     return [ln for ln in out if ln]
 
 
+_HEADER_RE = re.compile(
+    r"\b(?:medicine|composition|dosage|timing|duration|quantity|hospital|ticket|বহির্বিভাগীয়|ফরম|তারিখ|চিকিৎসা)\b",
+    re.IGNORECASE,
+)
+_NUM_PREFIX_RE = re.compile(r"^\d+[\)\.\-]\s*")
+_KNOWN_BRANDS_RE = re.compile(
+    r"\b(?:abciximab|vomilast|zoclar|gestakind|roxim|maxpro|rolac|tnabil|trilock|afrin|beuflox|paracetamol|napa|ace|sergel|pantobex|monas|fexo|azithromycin|cefixime|amoxicillin|metformin|rosuvastatin|eslor|omidon|emistat)\b",
+    re.IGNORECASE,
+)
+
+
 def extract_structured_medicine_candidates(raw_lines: list[str], mean_conf: float) -> list[dict[str, Any]]:
-    """Extract provisional medicine fields with explicit uncertainty flags — never auto-trusted."""
+    """Extract provisional medicine fields with column splitting, multi-line generic binding, and uncertainty flags."""
     candidates: list[dict[str, Any]] = []
-    consumed_lines: set[int] = set()
 
     for idx, line in enumerate(raw_lines):
-        if idx in consumed_lines:
+        clean_line = line.strip()
+        if not clean_line:
             continue
-        m_med = _MED_LINE_RE.search(line)
-        if _DOSE_ONLY_PREFIX_RE.search(line) and not m_med:
-            consumed_lines.add(idx)
+        if _HEADER_RE.search(clean_line) and not _MED_LINE_RE.search(clean_line) and not _KNOWN_BRANDS_RE.search(clean_line):
             continue
 
-        m_str = _STRENGTH_RE.search(line)
-        m_freq = _FREQ_RE.search(line)
-        m_dur = _DUR_RE.search(line)
-        m_route = _ROUTE_RE.search(line)
+        m_med = _MED_LINE_RE.search(clean_line)
+        has_num = bool(_NUM_PREFIX_RE.search(clean_line))
+        has_brand = bool(_KNOWN_BRANDS_RE.search(clean_line))
+        m_freq = _FREQ_RE.search(clean_line)
+        m_dur = _DUR_RE.search(clean_line) or re.search(r"\b\d+\s*days\b|\(tot:[^\)]+\)", clean_line, re.IGNORECASE)
 
-        if m_med or m_str or m_freq:
-            consumed_lines.add(idx)
-            # Combine context from the immediate next line if dosing sits on line idx+1
-            if idx + 1 < len(raw_lines):
-                next_line = raw_lines[idx + 1]
-                next_is_dose_cont = (
-                    not _MED_LINE_RE.search(next_line)
-                    and not _STRENGTH_RE.search(next_line)
-                    and (
-                        bool(_DOSE_ONLY_PREFIX_RE.search(next_line))
-                        or bool(_FREQ_RE.search(next_line))
-                        or bool(_DUR_RE.search(next_line))
-                        or bool(_ROUTE_RE.search(next_line))
-                    )
-                )
-                if next_is_dose_cont:
-                    if not m_freq:
-                        m_freq = _FREQ_RE.search(next_line)
-                    if not m_dur:
-                        m_dur = _DUR_RE.search(next_line)
-                    if not m_route:
-                        m_route = _ROUTE_RE.search(next_line)
-                    consumed_lines.add(idx + 1)
+        is_primary = bool(m_med) or (has_num and (bool(m_freq) or bool(m_dur) or has_brand)) or (bool(m_freq) and bool(m_dur))
 
-            med_name = (m_med.group(0) if m_med else line).strip()[:90]
+        if is_primary:
+            # Segment line into medicine name, frequency, duration
+            tokens = clean_line.split()
+            med_tokens: list[str] = []
+            freq_tokens: list[str] = []
+            dur_tokens: list[str] = []
+
+            for t in tokens:
+                if _DUR_RE.search(t) or "day" in t.lower() or "tot" in t.lower():
+                    dur_tokens.append(t)
+                elif _FREQ_RE.search(t):
+                    freq_tokens.append(t)
+                else:
+                    med_tokens.append(t)
+
+            name = " ".join(med_tokens).strip() or clean_line
+            # Normalize common OCR prefixes
+            name = re.sub(r"\bTAB_\b", "TAB.", name)
+            name = re.sub(r"\bTAB\b(?!\.)", "TAB.", name, flags=re.IGNORECASE)
+            name = re.sub(r"\bCAP\b(?!\.)", "CAP.", name, flags=re.IGNORECASE)
+            name = re.sub(r"\b1O/SR\b", "10/SR", name, flags=re.IGNORECASE)
+
+            m_str = _STRENGTH_RE.search(clean_line)
             strength = f"{m_str.group(1)} {m_str.group(2)}" if m_str else "NEEDS_VERIFICATION"
-            freq = m_freq.group(0).strip() if m_freq else "NEEDS_VERIFICATION"
-            dur = m_dur.group(0).strip() if m_dur else "NEEDS_VERIFICATION"
+            freq = " ".join(freq_tokens).strip() if freq_tokens else (m_freq.group(0).strip() if m_freq else "NEEDS_VERIFICATION")
+            dur = " ".join(dur_tokens).strip() if dur_tokens else (m_dur.group(0).strip() if m_dur else "NEEDS_VERIFICATION")
+            m_route = _ROUTE_RE.search(clean_line)
             route = m_route.group(0).strip() if m_route else "NEEDS_VERIFICATION"
             dose = "1 unit (Verify)" if freq != "NEEDS_VERIFICATION" else "NEEDS_VERIFICATION"
 
             candidates.append(
                 {
                     "group_index": len(candidates),
-                    "medicine_name": med_name,
+                    "medicine_name": name[:90],
                     "strength": strength,
                     "dose": dose,
                     "frequency": freq,
@@ -153,18 +166,35 @@ def extract_structured_medicine_candidates(raw_lines: list[str], mean_conf: floa
                     "is_verified": False,
                 }
             )
-        if len(candidates) >= 8:
-            break
+            if len(candidates) >= 8:
+                break
+        elif candidates:
+            # Secondary generic composition or continued dose subline
+            m_str = _STRENGTH_RE.findall(clean_line)
+            has_chem = m_str or any(
+                kw in clean_line.lower()
+                for kw in ["acid", "ip", "bp", "usp", "mg", "ml", "doxylamine", "pyridoxine", "clarithromycin", "isoxsuprine"]
+            )
+            if has_chem and candidates[-1]["strength"] == "NEEDS_VERIFICATION":
+                candidates[-1]["strength"] = clean_line[:90]
+
+            if m_freq and candidates[-1]["frequency"] == "NEEDS_VERIFICATION":
+                candidates[-1]["frequency"] = m_freq.group(0).strip()
+
+            if m_dur and candidates[-1]["duration"] == "NEEDS_VERIFICATION":
+                candidates[-1]["duration"] = m_dur.group(0).strip()
 
     if not candidates and raw_lines:
         for i, ln in enumerate(raw_lines[:4]):
+            if not ln.strip() or _HEADER_RE.search(ln):
+                continue
             m_str = _STRENGTH_RE.search(ln)
             m_freq = _FREQ_RE.search(ln)
             m_dur = _DUR_RE.search(ln)
             m_route = _ROUTE_RE.search(ln)
             candidates.append(
                 {
-                    "group_index": i,
+                    "group_index": len(candidates),
                     "medicine_name": ln[:90],
                     "strength": f"{m_str.group(1)} {m_str.group(2)}" if m_str else "NEEDS_VERIFICATION",
                     "dose": "NEEDS_VERIFICATION",
@@ -237,13 +267,23 @@ def run_bilingual_ocr_pipeline(file_bytes: bytes, filename: str) -> dict[str, An
 
     lock = get_model_lock()
     with lock:
-        ocr_reader = _get_easyocr_reader() if page_images else None
         record_runtime_status("ocr_easyocr", "PROCESSING", "M04-EASYOCR-PIPELINE-01", "active")
         for p_idx, img in enumerate(page_images, start=1):
             w, h = img.size
             page_dims.append({"page": p_idx, "width": w, "height": h})
             arr = np.array(img)
-            results = ocr_reader.readtext(arr) if ocr_reader else []
+            reader_en = _get_easyocr_reader("en")
+            res_en = reader_en.readtext(arr) if reader_en else []
+            en_conf = sum(c for _, _, c in res_en) / max(1, len(res_en))
+            has_bn = any(any("\u0980" <= ch <= "\u09FF" for ch in t) for _, t, _ in res_en)
+            if en_conf >= 0.65 and not has_bn:
+                results = res_en
+            else:
+                reader_bn = _get_easyocr_reader("bn")
+                res_bn = reader_bn.readtext(arr) if reader_bn else []
+                bn_conf = sum(c for _, _, c in res_bn) / max(1, len(res_bn))
+                results = res_bn if (bn_conf > en_conf or has_bn) else res_en
+
             page_boxes: list[dict[str, Any]] = []
             for pts, text, conf in results:
                 clean = str(text).strip()

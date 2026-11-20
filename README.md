@@ -81,6 +81,7 @@ Across Bangladesh's **170+ million citizens**, district clinics and rural Upazil
 | **Automated Backend & Web Tests** | **`53 / 53` passed (`38` pytest + `15` vitest)** + **`0` TypeScript errors** | [`services/api/tests/`](services/api/tests) · [`apps/web/src/test/designSystem.test.tsx`](apps/web/src/test/designSystem.test.tsx) |
 | **Audited ML / DL Modules** | **6 clinical research prototypes** (`7/7` read-only SHA-256 lock checks pass) | [`FINAL_AUDIT_SIGNOFF.md`](SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT/final_lock/FINAL_AUDIT_SIGNOFF.md) · [`research/`](research) |
 | **MCP & Agent Orchestration** | **3 custom MCP servers** + **4 integrated public/SSE MCPs** + Live **LangGraph** | [`docs/mcp_architecture.md`](docs/mcp_architecture.md) · [`services/agents/`](services/agents) |
+| **Business & Commission Treasury** | **4 revenue verticals** (Diagnostic Lab 18%, Doctor 15%, ePharma 12%, Plan 20%), **5 bank escrow accounts**, live admin alerts & 6-month ledger | [`docs/BUSINESS_MODEL.md`](docs/BUSINESS_MODEL.md) · [`/admin/transactions`](apps/web/src/pages/AdminPortalPage.tsx) |
 | **Hugging Face Open Dataset** | **35,641 files (`~2.03 GiB`)** across 7 audited dataset folders | [`huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets`](https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets) |
 
 ---
@@ -493,6 +494,7 @@ ShasthoSetu-AI/
 | :--- | :--- |
 | 📘 [`docs/INSTRUCTION_BOOK.md`](docs/INSTRUCTION_BOOK.md) | Complete A–Z installation, first launch, 5-role evaluation guide, Ollama & troubleshooting |
 | 🏗️ [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 6-layer topology, SQLite `BEGIN IMMEDIATE` locks, colored Mermaid flows & 3D Orb architecture |
+| 💰 [`docs/BUSINESS_MODEL.md`](docs/BUSINESS_MODEL.md) | Business architecture, 4 revenue verticals, 18% lab & 15% doctor commission splits, live admin transaction alerts & 5-bank settlement |
 | 🧠 [`docs/ENGINEERING.md`](docs/ENGINEERING.md) | Comprehensive engineering handbook (`v2.5.0`), subsystem highlights & team summary |
 | 🔌 [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) | Complete REST, WebRTC & MCP catalog across all **15 routers (139 endpoints)** |
 | 🗄️ [`docs/DATABASE.md`](docs/DATABASE.md) | Full inventory of all **55 SQLite WAL tables**, pragmas, seeding & migrations |

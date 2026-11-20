@@ -123,6 +123,20 @@ def record_live_platform_transaction(
         ),
     )
     _recompute_bank_balances(conn, now)
+    try:
+        admins = conn.execute("SELECT id FROM users WHERE primary_role = 'ADMIN'").fetchall()
+        for adm in admins:
+            notify_user(
+                conn,
+                recipient_user_id=adm["id"],
+                topic="FINANCE_TRANSACTION",
+                title_en=f"New Transaction: {final_txn_ref} (৳{gross/100:.2f} - {stream})",
+                title_bn=f"নতুন লেনদেন: {final_txn_ref} (৳{gross/100:.2f} - {stream})",
+                entity_type="platform_transactions",
+                entity_id=tx_id,
+            )
+    except Exception:
+        pass
     return {
         "id": tx_id,
         "txn_ref": final_txn_ref,

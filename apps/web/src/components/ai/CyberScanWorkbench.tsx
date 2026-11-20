@@ -12,11 +12,13 @@ import {
   FlaskConical,
   FolderOpen,
   Mic,
+  Plus,
   Printer,
   ScanText,
   Send,
   ShieldAlert,
   Sparkles,
+  Trash2,
   UploadCloud,
 } from "lucide-react";
 import { ApiError, apiPost, apiPostForm } from "../../lib/apiClient";
@@ -451,6 +453,32 @@ export function CyberScanWorkbench({
 
   const toggleVerifyRow = (idx: number) => {
     setEditableOcrRows((prev) => prev.map((r, i) => (i === idx ? { ...r, is_verified: !r.is_verified } : r)));
+    setOcrGateError(null);
+  };
+
+  const verifyAllRows = () => {
+    setEditableOcrRows((prev) => prev.map((r) => ({ ...r, is_verified: true })));
+    setOcrGateError(null);
+  };
+
+  const removeOcrRow = (idx: number) => {
+    setEditableOcrRows((prev) => prev.filter((_, i) => i !== idx));
+    setOcrGateError(null);
+  };
+
+  const addOcrRow = () => {
+    setEditableOcrRows((prev) => [
+      ...prev,
+      {
+        group_index: prev.length,
+        medicine_name: "",
+        strength: "",
+        frequency: "",
+        duration: "",
+        confidence: 1.0,
+        is_verified: true,
+      },
+    ]);
     setOcrGateError(null);
   };
 
@@ -936,54 +964,113 @@ export function CyberScanWorkbench({
 
             {/* Right Editable Candidate Fields */}
             <div className="lg:col-span-7 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-white/10">
+                <span className="text-xs font-mono text-slate-300">
+                  Extracted Items ({editableOcrRows.filter((r) => r.is_verified).length}/{editableOcrRows.length} Verified)
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={addOcrRow}
+                    className="min-h-8 px-2.5 rounded-lg border border-sky-400/35 bg-sky-950/60 hover:bg-sky-900 text-sky-200 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Item
+                  </button>
+                  {editableOcrRows.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={verifyAllRows}
+                      className="min-h-8 px-3 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 border border-teal-400/50 text-teal-200 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-teal-300" /> Verify All
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {editableOcrRows.map((row, idx) => (
                 <div
                   key={idx}
-                  className={`rounded-2xl border p-3.5 space-y-2 ${
+                  className={`rounded-2xl border p-3.5 space-y-2.5 ${
                     row.is_verified ? "border-teal-400/50 bg-teal-500/10" : "border-amber-400/40 bg-black/35"
                   }`}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      value={row.medicine_name}
-                      onChange={(e) =>
-                        setEditableOcrRows((prev) => prev.map((r, i) => (i === idx ? { ...r, medicine_name: e.target.value, is_verified: false } : r)))
-                      }
-                      aria-label="Medicine Name"
-                      className="min-h-10 rounded-xl border border-white/15 bg-black/45 px-2.5 text-xs text-white"
-                    />
-                    <input
-                      type="text"
-                      value={row.strength}
-                      onChange={(e) =>
-                        setEditableOcrRows((prev) => prev.map((r, i) => (i === idx ? { ...r, strength: e.target.value, is_verified: false } : r)))
-                      }
-                      aria-label="Strength or Dose"
-                      className="min-h-10 rounded-xl border border-white/15 bg-black/45 px-2.5 text-xs text-white"
-                    />
-                    <input
-                      type="text"
-                      value={row.frequency}
-                      onChange={(e) =>
-                        setEditableOcrRows((prev) => prev.map((r, i) => (i === idx ? { ...r, frequency: e.target.value, is_verified: false } : r)))
-                      }
-                      aria-label="Frequency"
-                      className="min-h-10 rounded-xl border border-white/15 bg-black/45 px-2.5 text-xs text-white"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    <label className="space-y-1 block">
+                      <span className="text-[10px] font-mono text-slate-400">Medicine Name</span>
+                      <input
+                        type="text"
+                        value={row.medicine_name}
+                        onChange={(e) =>
+                          setEditableOcrRows((prev) => prev.map((r, i) => (i === idx ? { ...r, medicine_name: e.target.value, is_verified: false } : r)))
+                        }
+                        placeholder="e.g. TAB. ABCIXIMAB"
+                        aria-label="Medicine Name"
+                        className="w-full min-h-10 rounded-xl border border-white/15 bg-black/45 px-2.5 text-xs text-white"
+                      />
+                    </label>
+                    <label className="space-y-1 block">
+                      <span className="text-[10px] font-mono text-slate-400">Strength / Generic</span>
+                      <input
+                        type="text"
+                        value={row.strength}
+                        onChange={(e) =>
+                          setEditableOcrRows((prev) => prev.map((r, i) => (i === idx ? { ...r, strength: e.target.value, is_verified: false } : r)))
+                        }
+                        placeholder="e.g. 500mg or Salt"
+                        aria-label="Strength or Dose"
+                        className="w-full min-h-10 rounded-xl border border-white/15 bg-black/45 px-2.5 text-xs text-white"
+                      />
+                    </label>
+                    <label className="space-y-1 block">
+                      <span className="text-[10px] font-mono text-slate-400">Frequency / Timing</span>
+                      <input
+                        type="text"
+                        value={row.frequency}
+                        onChange={(e) =>
+                          setEditableOcrRows((prev) => prev.map((r, i) => (i === idx ? { ...r, frequency: e.target.value, is_verified: false } : r)))
+                        }
+                        placeholder="e.g. 1 Morning, 1 Night"
+                        aria-label="Frequency"
+                        className="w-full min-h-10 rounded-xl border border-white/15 bg-black/45 px-2.5 text-xs text-white"
+                      />
+                    </label>
+                    <label className="space-y-1 block">
+                      <span className="text-[10px] font-mono text-slate-400">Duration / Total</span>
+                      <input
+                        type="text"
+                        value={row.duration || ""}
+                        onChange={(e) =>
+                          setEditableOcrRows((prev) => prev.map((r, i) => (i === idx ? { ...r, duration: e.target.value, is_verified: false } : r)))
+                        }
+                        placeholder="e.g. 8 Days (Tot: 8 Tab)"
+                        aria-label="Duration or Total"
+                        className="w-full min-h-10 rounded-xl border border-white/15 bg-black/45 px-2.5 text-xs text-white"
+                      />
+                    </label>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] font-mono">
+                  <div className="flex items-center justify-between text-[11px] font-mono pt-1">
                     <span className="text-slate-300">Conf: {(row.confidence * 100).toFixed(0)}%</span>
-                    <button
-                      type="button"
-                      onClick={() => toggleVerifyRow(idx)}
-                      className={`min-h-9 px-3.5 rounded-lg font-bold inline-flex items-center gap-1.5 cursor-pointer ${
-                        row.is_verified ? "bg-teal-400 text-slate-950" : "bg-amber-400/20 border border-amber-400/50 text-amber-200"
-                      }`}
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      {row.is_verified ? "Verified by Human" : "Verify Field"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => removeOcrRow(idx)}
+                        title="Remove row"
+                        className="min-h-9 px-2.5 rounded-lg border border-rose-400/35 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleVerifyRow(idx)}
+                        className={`min-h-9 px-3.5 rounded-lg font-bold inline-flex items-center gap-1.5 cursor-pointer ${
+                          row.is_verified ? "bg-teal-400 text-slate-950" : "bg-amber-400/20 border border-amber-400/50 text-amber-200"
+                        }`}
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        {row.is_verified ? "Verified by Human" : "Verify Field"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

@@ -67,6 +67,7 @@
     },
     "admin": {
       "dashboard": "Operations Overview",
+      "transactions": "Live Transactions & Commissions",
       "doctors": "Doctor Approvals",
       "users": "Users & Staff",
       "appointments": "Global Schedule Override",
