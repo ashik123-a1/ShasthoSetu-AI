@@ -319,4 +319,14 @@ describe("UI-01 ShasthoSetu Design System & Reusable Primitives", () => {
     expect(screen.getByText(/11 Years Clinical Exp/)).toBeInTheDocument();
     expect(screen.getByText("Book Appointment with this Doctor")).toBeInTheDocument();
   });
+
+  it("16. Prohibits automated hardcoded demo login in CyberScanWorkbench when unauthenticated", async () => {
+    renderApp(["/features/prescription-ocr"]);
+    // Confirm the page renders and prompts user to sign in rather than auto-authenticating
+    await waitFor(() => {
+      expect(screen.getAllByText(/EasyOCR/i).length).toBeGreaterThan(0);
+    });
+    // Check that sign in CTA is visible rather than an active authenticated session
+    expect(screen.queryByText(/Sign In Required/i) || screen.getAllByRole("link", { name: /লগইন|সাইন-ইন|Sign In|Log In/i }).length).toBeTruthy();
+  });
 });

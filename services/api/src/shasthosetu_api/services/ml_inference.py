@@ -472,11 +472,11 @@ _DUR_RE = re.compile(
     re.IGNORECASE,
 )
 _STRENGTH_RE = re.compile(
-    r"(\b\d+(?:\.\d+)?[oO0]*(?:\+\d+(?:\.\d+)?[oO0]*)?|[০-৯]+(?:\.[০-৯]+)?)\s*(mg|ml|gm|g|mcg|iu|%|মি\.গ্রা|মিলিগ্রাম|মি\.লি)\b",
+    r"(\b\d+(?:\.\d+)?[oO0]*(?:\+\d+(?:\.\d+)?[oO0]*)?|[০-৯]+(?:\.[০-৯]+)?)\s*(mg|ml|gm|g|mcg|iu|%|মি\.গ্রা|মিলিগ্রাম|মি\.লি)(?:\b|\s|$)",
     re.IGNORECASE,
 )
 _HEADER_RE = re.compile(
-    r"\b(?:medicine|composition|dosage|timing|duration|quantity|hospital|ticket|বহির্বিভাগীয়|ফরম|তারিখ|চিকিৎসা)\b",
+    r"(?:\b|^)(?:medicine|composition|dosage|timing|duration|quantity|hospital|ticket|বহির্বিভাগীয়|ফরম|তারিখ|চিকিৎসা)(?:\b|\s|$)",
     re.IGNORECASE,
 )
 

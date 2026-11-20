@@ -230,7 +230,7 @@ export function CyberScanWorkbench({
   onScanStateChange?: (scanning: boolean, confidence: number | null) => void;
 }) {
   const { locale } = useI18n();
-  const { user, authenticated, login } = useAuth();
+  const { user, authenticated } = useAuth();
   const { pushToast } = useToast();
 
   const meta = MODULE_META[activeModule];
@@ -359,6 +359,23 @@ export function CyberScanWorkbench({
     setOcrGateError(null);
     setOcrGateUnlocked(false);
 
+    if (!authenticated) {
+      setInferError(
+        locale === "bn"
+          ? "নিরাপত্তার স্বার্থে মডেল ইনফারেন্স চালানোর পূর্বে সাইন-ইন আবশ্যক।"
+          : "Authentication required. Please sign in before executing AI model inference."
+      );
+      pushToast({
+        title: locale === "bn" ? "সাইন-ইন আবশ্যক" : "Sign In Required",
+        description:
+          locale === "bn"
+            ? "মডেল ইনফারেন্স ও ক্লিনিক্যাল ট্রায়াজ চালানোর জন্য অনুগ্রহ করে সিস্টেমে লগইন করুন।"
+            : "Please sign in to your account to run clinical neural inference.",
+        tone: "warning",
+      });
+      return;
+    }
+
     if (activeModule !== "pcos-clinical" && !selectedFile) {
       setInferError(locale === "bn" ? "প্রথমে একটি ছবি আপলোড করুন অথবা Sample বেছে নিন।" : "Please upload a file or load a real sample first.");
       return;
@@ -383,13 +400,6 @@ export function CyberScanWorkbench({
     setTerminalLogs((prev) => [...prev, "> Laser neural inspection active — awaiting PyTorch/XGBoost/EasyOCR checkpoint output..."]);
 
     try {
-      if (!authenticated) {
-        try {
-          await login("patient.demo@shasthosetu.local", "PatientDemo#2026");
-        } catch {
-          // Proceed to endpoint so 401 is surfaced if demo login is disabled in production
-        }
-      }
       let data: InferenceResult;
       if (activeModule === "pcos-clinical") {
         const numericPayload: Record<string, number> = {};

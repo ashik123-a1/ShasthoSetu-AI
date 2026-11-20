@@ -34,7 +34,7 @@ _MED_LINE_RE = re.compile(
 )
 _DOSE_ONLY_PREFIX_RE = re.compile(r"^\s*(?:dose|মাত্রা|মাতরা)\s*:", re.IGNORECASE)
 _STRENGTH_RE = re.compile(
-    r"(\b\d+(?:\.\d+)?[oO0]*(?:\+\d+(?:\.\d+)?[oO0]*)?|[০-৯]+(?:\.[০-৯]+)?)\s*(mg|ml|gm|g|mcg|iu|%|মি\.গ্রা|মিলিগ্রাম|মলিগিরাম|মলগিরাম|মি\.লি)\b",
+    r"(\b\d+(?:\.\d+)?[oO0]*(?:\+\d+(?:\.\d+)?[oO0]*)?|[০-৯]+(?:\.[০-৯]+)?)\s*(mg|ml|gm|g|mcg|iu|%|মি\.গ্রা|মিলিগ্রাম|মলিগিরাম|মলগিরাম|মি\.লি)(?:\b|\s|$)",
     re.IGNORECASE,
 )
 _FREQ_RE = re.compile(
@@ -93,7 +93,7 @@ def _cluster_reading_lines(boxes: list[dict[str, Any]]) -> list[str]:
 
 
 _HEADER_RE = re.compile(
-    r"\b(?:medicine|composition|dosage|timing|duration|quantity|hospital|ticket|বহির্বিভাগীয়|ফরম|তারিখ|চিকিৎসা)\b",
+    r"(?:\b|^)(?:medicine|composition|dosage|timing|duration|quantity|hospital|ticket|বহির্বিভাগীয়|ফরম|তারিখ|চিকিৎসা)(?:\b|\s|$)",
     re.IGNORECASE,
 )
 _NUM_PREFIX_RE = re.compile(r"^\d+[\)\.\-]\s*")

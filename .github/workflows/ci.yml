@@ -7,9 +7,12 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   backend-pytest:
-    name: FastAPI Backend & Security Tests (Python 3.11)
+    name: FastAPI Backend, Security & OCR Regression Tests (Python 3.11)
     runs-on: ubuntu-latest
     env:
       SHASTHOSETU_ENV: development
@@ -43,11 +46,11 @@ jobs:
           python -m py_compile services/api/src/shasthosetu_api/routers/support.py
           python -m py_compile services/api/src/shasthosetu_api/routers/patient.py
 
-      - name: Run Backend Pytest Suite
+      - name: Run Backend Pytest Suite & OCR Regression Tests
         env:
           PYTHONPATH: services/api/src
         run: |
-          pytest services/api/tests/test_fullstack_api.py -v
+          pytest services/api/tests/test_fullstack_api.py services/api/tests/test_ocr_regression.py -v
 
   frontend-vitest-build:
     name: React 19 Frontend Vitest & Production Build (Node 20)
