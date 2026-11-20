@@ -491,6 +491,7 @@ async def voice_transcribe(
         raise HTTPException(status_code=503, detail=str(exc))
 
     job_id = new_id("asr")
+    job_status = asr_out.get("status") if asr_out.get("status") in ("TRANSCRIBED", "MODEL_UNAVAILABLE") else "TRANSCRIBED"
     with get_db_conn() as conn:
         conn.execute("BEGIN IMMEDIATE;")
         conn.execute(
@@ -498,20 +499,21 @@ async def voice_transcribe(
             INSERT INTO ai_asr_jobs (
                 id, user_id, language_mode, detected_language, model_id, audio_format,
                 duration_sec, byte_size, raw_transcript, is_confirmed, latency_ms, status, limitation_note, created_at_utc
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'TRANSCRIBED', ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
             """,
             (
                 job_id,
                 user["id"] if user else None,
                 mode,
-                asr_out["detected_language"],
-                asr_out["model_id"],
-                asr_out["audio_format"],
-                asr_out["duration_sec"],
+                asr_out.get("detected_language", "bn"),
+                asr_out.get("model_id", "whisper-offline"),
+                asr_out.get("audio_format", "wav"),
+                asr_out.get("duration_sec", 0.0),
                 len(audio_bytes),
-                asr_out["raw_transcript"],
-                asr_out["latency_ms"],
-                asr_out["limitation_note"],
+                asr_out.get("raw_transcript") or asr_out.get("transcript") or "",
+                asr_out.get("latency_ms", 0),
+                job_status,
+                asr_out.get("limitation_note") or asr_out.get("limitation") or "",
                 utc_now_iso(),
             ),
         )

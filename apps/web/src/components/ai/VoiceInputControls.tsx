@@ -115,6 +115,7 @@ interface TranscribeResult {
   duration_sec: number;
   bn_unicode_pct: number;
   latency_ms: number;
+  status?: string;
   limitation_note: string;
   requires_confirmation: boolean;
 }
@@ -609,7 +610,13 @@ export function VoiceInputControls({
       setAsrResult(res);
       setEditableTranscript(res.raw_transcript || "");
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Speech transcription failed.");
+      const rawErr = err instanceof Error ? err.message : "Speech transcription failed.";
+      const cleanErr = rawErr.includes("Whisper model") || rawErr.includes("huggingface.co")
+        ? locale === "bn"
+          ? "স্থানীয় ভয়েস মডেল (Whisper) বর্তমানে অফলাইনে রয়েছে। নিচে চ্যাট বক্সে লিখে আপনার প্রশ্ন পাঠান।"
+          : "Local Whisper voice model is currently offline. Please type your question in the chat box below."
+        : rawErr;
+      setErrorMsg(cleanErr);
     } finally {
       setTranscribing(false);
     }
@@ -842,6 +849,11 @@ export function VoiceInputControls({
                 rows={2}
                 value={editableTranscript}
                 onChange={(e) => setEditableTranscript(e.target.value)}
+                placeholder={
+                  locale === "bn"
+                    ? "এখানে আপনার ট্রান্সক্রিপ্ট বা প্রশ্ন লিখুন বা সম্পাদনা করুন..."
+                    : "Type or edit your voice transcript here..."
+                }
                 data-testid="voice-editable-transcript"
                 aria-label="Editable voice transcript"
                 className="w-full rounded-xl border border-white/20 bg-black/50 p-2.5 text-sm text-white"

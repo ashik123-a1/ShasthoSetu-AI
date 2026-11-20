@@ -1,6 +1,6 @@
 # ShasthoSetu AI — Complete Automated Testing, Security & Research Audit Guide
 
-This document provides the complete inventory of **backend pytest suites (`48` tests)**, **frontend Vitest unit/component tests (`16` tests)**, **TypeScript/Vite build verification**, **Playwright browser E2E specs (`3` specs)**, **MCP JSON-RPC checks**, and **cryptographic research lock suites (`7` checks)**.
+This document provides the complete inventory of **backend pytest suites (`49` tests)**, **frontend Vitest unit/component tests (`16` tests)**, **TypeScript/Vite build verification**, **Playwright browser E2E specs (`3` specs)**, **MCP JSON-RPC checks**, and **cryptographic research lock suites (`7` checks)**.
 
 ---
 
@@ -8,7 +8,7 @@ This document provides the complete inventory of **backend pytest suites (`48` t
 
 | Layer | Suite / File | Count / Scope | Command | Expected Outcome |
 | :--- | :--- | :---: | :--- | :---: |
-| **Backend API** | [`services/api/tests/test_ai_rag_voice_ocr.py`](../services/api/tests/test_ai_rag_voice_ocr.py) | `24 tests` | `pytest services/api/tests/test_ai_rag_voice_ocr.py -q` | **24 Passed** |
+| **Backend API** | [`services/api/tests/test_ai_rag_voice_ocr.py`](../services/api/tests/test_ai_rag_voice_ocr.py) | `25 tests` | `pytest services/api/tests/test_ai_rag_voice_ocr.py -q` | **25 Passed** |
 | **Backend API** | [`services/api/tests/test_fullstack_api.py`](../services/api/tests/test_fullstack_api.py) | `10 tests` | `pytest services/api/tests/test_fullstack_api.py -q` | **10 Passed** |
 | **Safe-OCR Reg**| [`services/api/tests/test_ocr_regression.py`](../services/api/tests/test_ocr_regression.py) | `10 tests` | `pytest services/api/tests/test_ocr_regression.py -q` | **10 Passed** |
 | **Metric Lock** | [`services/api/tests/test_rag_metric_lock_02.py`](../services/api/tests/test_rag_metric_lock_02.py) | `4 tests` | `pytest services/api/tests/test_rag_metric_lock_02.py -q` | **4 Passed** |

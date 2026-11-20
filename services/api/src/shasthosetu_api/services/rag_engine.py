@@ -6,7 +6,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-import faiss
+try:
+    import faiss
+except ImportError:
+    faiss = None
 import httpx
 import numpy as np
 from rank_bm25 import BM25Okapi
@@ -513,6 +516,108 @@ def _verify_and_build_citations(answer_text: str, retrieved_chunks: list[dict[st
     return cleaned_text, citations
 
 
+_GREETING_OR_IDENTITY_RE = re.compile(
+    r"\b(hello|hi|hey|good\s+morning|good\s+evening|assalamu|salam|namaskar|"
+    r"tomar\s+naam|tumi\s+ke|apni\s+ke|who\s+are\s+you|what\s+is\s+your\s+name|"
+    r"how\s+are\s+you|kemon\s+acho|kemon\s+achen)\b|"
+    r"(হ্যালো|হাই|সালাম|নমস্কার|তোমার\s*নাম|তুমি\s*কে|আপনি\s*কে|কেমন\s*আছ)",
+    re.IGNORECASE,
+)
+
+
+def _is_short_greeting_or_identity(query_text: str) -> bool:
+    words = query_text.strip().split()
+    return bool(words and len(words) <= 9 and _GREETING_OR_IDENTITY_RE.search(query_text))
+
+
+def _summarize_top_chunk_concise(chunk: dict[str, Any], target_lang: str) -> str:
+    raw = str(chunk.get("chunk_text") or "").strip()
+    lines = [
+        re.sub(r"^[#*\-\d\.\s]+", "", ln).strip()
+        for ln in raw.splitlines()
+        if ln.strip() and not ln.strip().startswith("#")
+    ]
+    joined = " ".join(lines) if lines else re.sub(r"\s+", " ", raw)
+    # Take first 1-2 sentences up to ~280 chars
+    parts = re.split(r"(?<=[\.\!\?।])\s+", joined)
+    summary_parts: list[str] = []
+    total_len = 0
+    for p in parts:
+        p_clean = p.strip()
+        if not p_clean:
+            continue
+        summary_parts.append(p_clean)
+        total_len += len(p_clean)
+        if total_len >= 180 or len(summary_parts) >= 2:
+            break
+    excerpt = " ".join(summary_parts).strip() or joined[:260].strip()
+    if len(excerpt) > 300:
+        excerpt = excerpt[:297].rstrip() + "..."
+    title = (chunk.get("title_bn") or chunk.get("title")) if target_lang == "bn" else chunk.get("title")
+    pub = chunk.get("publisher") or "DGHS/WHO"
+    return f"**{title} ({pub}):** {excerpt} [1]"
+
+
+def _build_offline_llm_fallback_response(
+    *,
+    clean_query: str,
+    target_lang: str,
+    lang_detected: str,
+    retrieval: dict[str, Any],
+    safety_flags: list[str],
+    t0: float,
+) -> dict[str, Any]:
+    """Provide a concise, grounded answer + explicit local-LLM-offline notice when Ollama is unavailable."""
+    is_greet = _is_short_greeting_or_identity(clean_query)
+    has_banglish_greet = bool(re.search(r"\b(tomar|naam|tumi|apni|kemon|acho|achen)\b", clean_query, re.IGNORECASE))
+    use_bn = target_lang == "bn" or has_banglish_greet
+    chunks = retrieval.get("chunks") or []
+    citations: list[dict[str, Any]] = []
+
+    if is_greet or not chunks:
+        if use_bn:
+            core_text = (
+                "আসসালামু আলাইকুম / নমস্কার! আমি **স্বাস্থ্যসেতু এআই (ShasthoSetu AI)** — আপনার দ্বিভাষিক প্রাথমিক স্বাস্থ্য ও টেলিমেডিসিন সহকারী। "
+                "আপনি আমাকে প্রাথমিক স্বাস্থ্য নির্দেশিকা, রোগের লক্ষণ, বিশেষজ্ঞ ডাক্তার ডিরেক্টরি বা প্রেসক্রিপশন বুঝতে প্রশ্ন করতে পারেন।"
+            )
+        else:
+            core_text = (
+                "Hello! I am **ShasthoSetu AI (স্বাস্থ্যসেতু এআই)** — your bilingual primary healthcare and telemedicine assistant. "
+                "You can ask me about verified clinical guidelines, symptoms, specialist directories, or prescription terms."
+            )
+    else:
+        top_summary = _summarize_top_chunk_concise(chunks[0], "bn" if use_bn else "en")
+        core_text, citations = _verify_and_build_citations(top_summary, chunks[:1])
+
+    offline_notice = (
+        f"\n\n*(দ্রষ্টব্য: স্থানীয় LLM মডেল `{settings.ollama_chat_model}` বর্তমানে অফলাইনে রয়েছে — অফলাইন স্বাস্থ্য নির্দেশিকা থেকে সংক্ষিপ্ত উত্তর প্রদান করা হয়েছে।)*"
+        if use_bn
+        else f"\n\n*(Note: Local LLM model `{settings.ollama_chat_model}` is currently offline — concise answer provided from verified offline guidelines.)*"
+    )
+
+    follow_ups = (
+        ["পিসিওএস (PCOS)-এর প্রধান লক্ষণগুলো কী কী?", "ডেঙ্গু জ্বরের বিপদচিহ্নগুলো কী?"]
+        if use_bn
+        else ["What are the common symptoms of PCOS?", "What are the warning signs of Dengue fever?"]
+    )
+
+    return {
+        "answer_text": f"{core_text}{offline_notice}",
+        "grounded_status": "MODEL_UNAVAILABLE",
+        "language_detected": lang_detected,
+        "response_language": "bn" if use_bn else target_lang,
+        "model_id": f"{settings.ollama_chat_model} (offline-fallback)",
+        "index_version": retrieval.get("index_version", "v1"),
+        "latency_ms": int((time.perf_counter() - t0) * 1000),
+        "safety_flags": list(dict.fromkeys(safety_flags + ["LLM_UNAVAILABLE", "OFFLINE_SHORT_FALLBACK"])),
+        "citations": citations,
+        "follow_up_questions": follow_ups,
+        "retrieval_mode": retrieval.get("mode_used", "hybrid"),
+        "max_dense": retrieval.get("max_dense", 0.0),
+        "max_bm25": retrieval.get("max_bm25", 0.0),
+    }
+
+
 def generate_rag_answer(
     *,
     query: str,
@@ -690,7 +795,7 @@ def generate_rag_answer(
             preferred_categories=pref_cats,
         )
 
-    if not _has_sufficient_evidence(retrieval):
+    if not _has_sufficient_evidence(retrieval) and not _is_short_greeting_or_identity(clean_query):
         abstain_msg = (
             "অনুমোদিত স্বাস্থ্যসেতু নথিপত্রে এই প্রশ্নের উত্তর প্রমাণের জন্য পর্যাপ্ত নির্ভরযোগ্য তথ্য পাওয়া যায়নি। কোনো অনুমানভিত্তিক পরামর্শ দেওয়া হয়নি—অনুগ্রহ করে অনুমোদিত চিকিৎসক বা স্বাস্থ্যকেন্দ্রের পরামর্শ নিন।"
             if target_lang == "bn"
@@ -715,23 +820,14 @@ def generate_rag_answer(
     # 4. Check Ollama LLM Readiness Before Calling
     ollama_info = probe_ollama_models()
     if not ollama_info.get("chat_ready"):
-        return {
-            "answer_text": (
-                f"স্থানীয় এলএলএম মডেল ({settings.ollama_chat_model}) বর্তমানে অনুপলব্ধ। অনুগ্রহ করে Ollama সার্ভার চালু ও মডেল ইনস্টল নিশ্চিত করুন।"
-                if target_lang == "bn"
-                else f"Local LLM runtime ({settings.ollama_chat_model}) is currently unavailable. Please verify Ollama is running and the model is loaded."
-            ),
-            "grounded_status": "MODEL_UNAVAILABLE",
-            "language_detected": lang_detected,
-            "response_language": target_lang,
-            "model_id": settings.ollama_chat_model,
-            "index_version": retrieval.get("index_version", "v1"),
-            "latency_ms": int((time.perf_counter() - t0) * 1000),
-            "safety_flags": safety_flags + ["LLM_UNAVAILABLE"],
-            "citations": [],
-            "follow_up_questions": [],
-            "retrieval_mode": retrieval.get("mode_used", "hybrid"),
-        }
+        return _build_offline_llm_fallback_response(
+            clean_query=clean_query,
+            target_lang=target_lang,
+            lang_detected=lang_detected,
+            retrieval=retrieval,
+            safety_flags=safety_flags,
+            t0=t0,
+        )
 
     # 5. Assemble Grounded Context with Strict Trust Boundaries
     source_blocks: list[str] = []
@@ -741,6 +837,11 @@ def generate_rag_answer(
         source_blocks.append(
             f"[{i}] TITLE: {c['title']} | PUBLISHER: {c['publisher']} | SECTION: {c.get('page_or_section_ref') or c.get('section_heading')}\n"
             f"{safe_chunk}"
+        )
+    if not source_blocks and _is_short_greeting_or_identity(clean_query):
+        source_blocks.append(
+            "[1] TITLE: ShasthoSetu AI Platform Identity | PUBLISHER: ShasthoSetu AI | SECTION: Overview\n"
+            "ShasthoSetu AI (স্বাস্থ্যসেতু এআই) is a bilingual primary healthcare, clinical guideline, and telemedicine assistant built for Bangladesh."
         )
 
     lang_instruction = (
@@ -792,24 +893,15 @@ def generate_rag_answer(
 
     try:
         raw_answer, llm_ms = _call_ollama_chat(system_prompt, user_prompt)
-    except RuntimeError as exc:
-        return {
-            "answer_text": (
-                f"স্থানীয় এআই জেনারেটর বর্তমানে উত্তর দিতে পারেনি: {exc}"
-                if target_lang == "bn"
-                else f"Local LLM failed to respond: {exc}"
-            ),
-            "grounded_status": "MODEL_UNAVAILABLE",
-            "language_detected": lang_detected,
-            "response_language": target_lang,
-            "model_id": settings.ollama_chat_model,
-            "index_version": retrieval.get("index_version", "v1"),
-            "latency_ms": int((time.perf_counter() - t0) * 1000),
-            "safety_flags": safety_flags + ["LLM_INFERENCE_FAILED"],
-            "citations": [],
-            "follow_up_questions": [],
-            "retrieval_mode": retrieval.get("mode_used", "hybrid"),
-        }
+    except RuntimeError:
+        return _build_offline_llm_fallback_response(
+            clean_query=clean_query,
+            target_lang=target_lang,
+            lang_detected=lang_detected,
+            retrieval=retrieval,
+            safety_flags=safety_flags + ["LLM_INFERENCE_FAILED"],
+            t0=t0,
+        )
 
     checked_answer, out_flags = validate_llm_response(raw_answer, target_lang)
     safety_flags.extend(out_flags)

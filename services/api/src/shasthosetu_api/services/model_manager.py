@@ -178,8 +178,15 @@ def probe_ollama_models() -> dict[str, Any]:
 
 
 def _check_hf_snapshot(repo_folder_name: str) -> bool:
-    cache_hub = os.path.join(settings.hf_home, "hub", repo_folder_name, "snapshots")
-    return os.path.isdir(cache_hub) and len(os.listdir(cache_hub)) > 0
+    candidates = [os.path.join(str(settings.hf_home), "hub", repo_folder_name, "snapshots")]
+    if "hf_cache" in str(settings.hf_home):
+        candidates.append(os.path.join(os.path.expanduser("~/.cache/huggingface/hub"), repo_folder_name, "snapshots"))
+    for cache_hub in candidates:
+        if os.path.isdir(cache_hub):
+            for _, _, files in os.walk(cache_hub):
+                if any("model.safetensors" in f or "pytorch_model" in f for f in files):
+                    return True
+    return False
 
 
 def _check_easyocr_cached() -> bool:

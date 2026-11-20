@@ -596,3 +596,79 @@ def test_qa_fix_7_tts_and_voice_flag_fallback(client: TestClient, tmp_path, monk
             conn.execute("BEGIN IMMEDIATE;")
             conn.execute("UPDATE feature_flags SET enabled = 1 WHERE flag_key = 'voice_ai_enabled'")
             conn.execute("COMMIT;")
+
+
+def test_qa_fix_8_rag_and_voice_online_and_offline_resilience(client: TestClient, tmp_path, monkeypatch):
+    """Verify RAG chat and Whisper ASR behavior in both MODEL AVAILABLE (online) and MODEL UNAVAILABLE (offline) states."""
+    import wave
+    import numpy as np
+    from shasthosetu_api.core.security import reset_rate_limits
+    from shasthosetu_api.services import rag_engine as rag_mod
+    from shasthosetu_api.services import voice_asr as asr_mod
+
+    reset_rate_limits()
+
+    # 1. RAG Chat when Local LLM is OFFLINE: returns short helpful answer + offline notice
+    monkeypatch.setattr(rag_mod, "probe_ollama_models", lambda: {"ollama_reachable": False, "chat_ready": False, "embed_ready": False})
+    r_greet = client.post("/v1/ai/chat", json={"query": "hello Tomar Naam Ki", "language_mode": "auto"})
+    assert r_greet.status_code == 200
+    d_greet = r_greet.json()
+    assert "ShasthoSetu AI" in d_greet["answer_text"] or "স্বাস্থ্যসেতু এআই" in d_greet["answer_text"]
+    assert "অফলাইনে" in d_greet["answer_text"] or "offline" in d_greet["answer_text"].lower()
+    assert "OFFLINE_SHORT_FALLBACK" in d_greet["safety_flags"]
+
+    r_med_off = client.post("/v1/ai/chat", json={"query": "PCOS symptoms and menstrual cycle", "language_mode": "en"})
+    assert r_med_off.status_code == 200
+    d_med_off = r_med_off.json()
+    assert len(d_med_off["answer_text"]) > 40
+    assert "offline" in d_med_off["answer_text"].lower()
+    assert len(d_med_off["citations"]) >= 1
+
+    # 2. RAG Chat when Local LLM is ONLINE: returns full GROUNDED answer + citations
+    monkeypatch.setattr(rag_mod, "probe_ollama_models", lambda: {"ollama_reachable": True, "chat_ready": True, "embed_ready": True})
+    monkeypatch.setattr(
+        rag_mod,
+        "_call_ollama_chat",
+        lambda sys_p, usr_p: ("Polycystic Ovary Syndrome (PCOS) commonly presents with irregular menstrual cycles and hyperandrogenism [1].", 42),
+    )
+    r_med_on = client.post("/v1/ai/chat", json={"query": "PCOS symptoms and menstrual cycle", "language_mode": "en"})
+    assert r_med_on.status_code == 200
+    d_med_on = r_med_on.json()
+    assert d_med_on["grounded_status"] == "GROUNDED"
+    assert "Polycystic Ovary Syndrome" in d_med_on["answer_text"]
+    assert len(d_med_on["citations"]) >= 1
+
+    # Build a valid 1-second 16kHz sine wave WAV buffer for ASR testing
+    wav_buf = io.BytesIO()
+    with wave.open(wav_buf, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(16000)
+        t = np.linspace(0, 1.0, 16000, endpoint=False)
+        samples = (0.2 * np.sin(2 * np.pi * 440 * t) * 32767).astype(np.int16)
+        wf.writeframes(samples.tobytes())
+    valid_wav_bytes = wav_buf.getvalue()
+
+    # 3. Voice ASR when Whisper is AVAILABLE locally (resolves ~/.cache/huggingface/hub)
+    r_asr_on = client.post(
+        "/v1/ai/voice/transcribe",
+        files={"file": ("tone.wav", valid_wav_bytes, "audio/wav")},
+        data={"language_mode": "en"},
+    )
+    assert r_asr_on.status_code == 200
+    d_asr_on = r_asr_on.json()
+    assert d_asr_on["status"] == "TRANSCRIBED"
+    assert "whisper" in d_asr_on["model_id"]
+
+    # 4. Voice ASR when Whisper is UNAVAILABLE / OFFLINE: returns HTTP 200 clean fallback instead of 503 crash
+    monkeypatch.setattr(asr_mod, "_load_whisper", lambda *a, **kw: (_ for _ in ()).throw(RuntimeError("Simulated offline Whisper")))
+    r_asr_off = client.post(
+        "/v1/ai/voice/transcribe",
+        files={"file": ("tone.wav", valid_wav_bytes, "audio/wav")},
+        data={"language_mode": "bn"},
+    )
+    assert r_asr_off.status_code == 200
+    d_asr_off = r_asr_off.json()
+    assert d_asr_off["status"] == "MODEL_UNAVAILABLE"
+    assert d_asr_off["model_id"] == "whisper-offline-fallback"
+    assert "অফলাইনে" in d_asr_off["limitation_note"] or "offline" in d_asr_off["limitation_note"].lower()

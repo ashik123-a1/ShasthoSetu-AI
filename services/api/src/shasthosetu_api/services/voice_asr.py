@@ -5,10 +5,22 @@ import os
 import time
 from typing import Any
 
-import av
+try:
+    import av
+except ImportError:
+    av = None  # type: ignore
+
 import numpy as np
-import soundfile as sf
-from scipy.signal import resample_poly
+
+try:
+    import soundfile as sf
+except ImportError:
+    sf = None  # type: ignore
+
+try:
+    from scipy.signal import resample_poly
+except ImportError:
+    resample_poly = None  # type: ignore
 
 try:
     import torch
@@ -38,7 +50,55 @@ TARGET_SR = 16000
 
 
 def _cache_hub_dir() -> str:
-    return os.path.join(settings.hf_home, "hub")
+    primary = os.path.join(str(settings.hf_home), "hub")
+    if os.path.isdir(primary):
+        return primary
+    user_hub = os.path.expanduser("~/.cache/huggingface/hub")
+    if os.path.isdir(user_hub):
+        return user_hub
+    return primary
+
+
+def _candidate_hub_dirs() -> list[str]:
+    primary = os.path.join(str(settings.hf_home), "hub")
+    dirs = [primary]
+    # Only fall back to global user ~/.cache if settings.hf_home is using the default workspace path
+    if "hf_cache" in str(settings.hf_home):
+        user_hub = os.path.expanduser("~/.cache/huggingface/hub")
+        if os.path.normcase(os.path.abspath(user_hub)) != os.path.normcase(os.path.abspath(primary)):
+            dirs.append(user_hub)
+    return dirs
+
+
+def _has_complete_snapshot(hub_dir: str, model_id: str) -> bool:
+    snap_dir = os.path.join(hub_dir, f"models--{model_id.replace('/', '--')}", "snapshots")
+    if not os.path.isdir(snap_dir):
+        return False
+    has_weights = False
+    has_preproc = False
+    for _, _, files in os.walk(snap_dir):
+        if any("model.safetensors" in f or "pytorch_model" in f for f in files):
+            has_weights = True
+        if "preprocessor_config.json" in files:
+            has_preproc = True
+    return has_weights and has_preproc
+
+
+def _resolve_cached_whisper_model(preferred_id: str, is_finetuned_bn: bool) -> tuple[str, str, bool]:
+    candidates = (
+        [preferred_id, "anuragshas/whisper-small-bn", "openai/whisper-small", "openai/whisper-base", "openai/whisper-tiny"]
+        if is_finetuned_bn
+        else [preferred_id, "openai/whisper-small", "openai/whisper-base", "openai/whisper-tiny"]
+    )
+    seen: set[str] = set()
+    for cand in candidates:
+        if cand in seen:
+            continue
+        seen.add(cand)
+        for hdir in _candidate_hub_dirs():
+            if _has_complete_snapshot(hdir, cand):
+                return cand, hdir, True
+    return preferred_id, os.path.join(str(settings.hf_home), "hub"), False
 
 
 def decode_audio_to_16k_mono(audio_bytes: bytes, filename: str = "audio.wav") -> tuple[np.ndarray, float, str]:
@@ -51,13 +111,13 @@ def decode_audio_to_16k_mono(audio_bytes: bytes, filename: str = "audio.wav") ->
     ext = (os.path.splitext(filename or "")[1] or ".wav").lower().lstrip(".")
 
     # Fast path: soundfile supports WAV, FLAC, OGG cleanly
-    if ext in {"wav", "flac", "ogg"}:
+    if ext in {"wav", "flac", "ogg"} and sf is not None:
         try:
             data, sr = sf.read(io.BytesIO(audio_bytes), dtype="float32", always_2d=False)
             if data.ndim > 1:
                 data = np.mean(data, axis=1)
             data = np.asarray(data, dtype=np.float32)
-            if sr != TARGET_SR and len(data) > 0:
+            if sr != TARGET_SR and len(data) > 0 and resample_poly is not None:
                 from math import gcd
                 g = gcd(int(sr), TARGET_SR)
                 data = resample_poly(data, TARGET_SR // g, int(sr) // g).astype(np.float32)
@@ -74,6 +134,8 @@ def decode_audio_to_16k_mono(audio_bytes: bytes, filename: str = "audio.wav") ->
             pass
 
     # General path: PyAV (handles webm/opus, mp3, m4a, mp4, ogg, wav)
+    if av is None:
+        raise ValueError("Voice audio decoding (PyAV/soundfile) is unavailable in lightweight hosting mode.")
     try:
         container = av.open(io.BytesIO(audio_bytes))
         audio_streams = [s for s in container.streams if s.type == "audio"]
@@ -106,14 +168,8 @@ def decode_audio_to_16k_mono(audio_bytes: bytes, filename: str = "audio.wav") ->
 
 
 def _resolve_en_whisper_id() -> str:
-    hub_dir = _cache_hub_dir()
-    small_dir = os.path.join(hub_dir, "models--openai--whisper-small", "snapshots")
-    if os.path.isdir(small_dir):
-        for _, _, files in os.walk(small_dir):
-            if any("model" in f or "pytorch_model" in f for f in files):
-                return "openai/whisper-small"
-    # Fallback to fully cached whisper-base
-    return "openai/whisper-base"
+    resolved_id, _, _ = _resolve_cached_whisper_model("openai/whisper-small", is_finetuned_bn=False)
+    return resolved_id
 
 
 def _load_whisper(key: str, model_id: str, is_finetuned_bn: bool) -> tuple[WhisperProcessor, WhisperForConditionalGeneration, torch.device, str]:
@@ -124,41 +180,33 @@ def _load_whisper(key: str, model_id: str, is_finetuned_bn: bool) -> tuple[Whisp
 
     release_ollama_model()
     unload_pytorch_models(except_keys={key})
-    record_runtime_status(key, "LOADING", model_id, "loading")
+    resolved_id, hub_dir, has_weights = _resolve_cached_whisper_model(model_id, is_finetuned_bn)
+    record_runtime_status(key, "LOADING", resolved_id, "loading")
 
-    hub_dir = _cache_hub_dir()
+    if not has_weights:
+        record_runtime_status(key, "UNAVAILABLE", resolved_id, "cpu", {"error": "No local Whisper snapshot found"})
+        raise RuntimeError(f"Local Whisper checkpoint for '{resolved_id}' not found in local cache.")
+
     device, dev_label = get_pytorch_device(min_vram_mb=1800.0)
 
-    # Check if target model has weights in snapshot
-    snap_dir = os.path.join(hub_dir, f"models--{model_id.replace('/', '--')}", "snapshots")
-    has_weights = False
-    if os.path.isdir(snap_dir):
-        for _, _, files in os.walk(snap_dir):
-            if any("model" in f or "pytorch_model" in f for f in files):
-                has_weights = True
-                break
-
-    if not has_weights and "whisper-small" in model_id and not is_finetuned_bn:
-        model_id = _resolve_en_whisper_id()
-        has_weights = True
-
     try:
-        proc = WhisperProcessor.from_pretrained(model_id, cache_dir=hub_dir, local_files_only=has_weights)
-        model = WhisperForConditionalGeneration.from_pretrained(model_id, cache_dir=hub_dir, local_files_only=has_weights).to(device)
-        if is_finetuned_bn:
+        proc = WhisperProcessor.from_pretrained(resolved_id, cache_dir=hub_dir, local_files_only=True)
+        model = WhisperForConditionalGeneration.from_pretrained(resolved_id, cache_dir=hub_dir, local_files_only=True).to(device)
+        if resolved_id == "anuragshas/whisper-small-bn":
             gen_cfg_cached = os.path.isdir(os.path.join(hub_dir, "models--openai--whisper-small", "snapshots"))
-            model.generation_config = GenerationConfig.from_pretrained(
-                "openai/whisper-small",
-                cache_dir=hub_dir,
-                local_files_only=gen_cfg_cached,
-            )
+            if gen_cfg_cached:
+                model.generation_config = GenerationConfig.from_pretrained(
+                    "openai/whisper-small",
+                    cache_dir=hub_dir,
+                    local_files_only=True,
+                )
         model.eval()
         set_cached_model(key, (proc, model, device, dev_label))
-        record_runtime_status(key, "READY", model_id, dev_label)
+        record_runtime_status(key, "READY", resolved_id, dev_label)
         return proc, model, device, dev_label
     except Exception as exc:
-        record_runtime_status(key, "UNAVAILABLE", model_id, "cpu", {"error": str(exc)})
-        raise RuntimeError(f"Whisper model '{model_id}' unavailable: {exc}") from exc
+        record_runtime_status(key, "UNAVAILABLE", resolved_id, "cpu", {"error": str(exc)})
+        raise RuntimeError(f"Whisper model '{resolved_id}' unavailable: {exc}") from exc
 
 
 def _detect_whisper_language(proc: WhisperProcessor, model: WhisperForConditionalGeneration, device: torch.device, audio: np.ndarray) -> str:
@@ -227,44 +275,70 @@ def transcribe_audio_bytes(
     mode = language_mode if language_mode in {"auto", "bn", "en"} else "auto"
 
     lock = get_model_lock()
-    with lock:
-        if mode == "bn":
-            proc, model, dev, dev_label = _load_whisper("asr_bn", "anuragshas/whisper-small-bn", is_finetuned_bn=True)
-            record_runtime_status("asr_bn", "PROCESSING", "anuragshas/whisper-small-bn", dev_label)
-            text = _run_whisper_chunks(proc, model, dev, audio, language="bengali")
-            detected = "bn"
-            used_model = "anuragshas/whisper-small-bn"
-            limitation = (
-                "Bengali ASR preview (39.09% FLEURS corpus WER). Verify & edit Bengali script before submitting."
-            )
-            record_runtime_status("asr_bn", "READY", used_model, dev_label)
-        elif mode == "en":
-            proc, model, dev, dev_label = _load_whisper("asr_en", "openai/whisper-small", is_finetuned_bn=False)
-            record_runtime_status("asr_en", "PROCESSING", "openai/whisper-small", dev_label)
-            text = _run_whisper_chunks(proc, model, dev, audio, language="english")
-            detected = "en"
-            used_model = "openai/whisper-small"
-            limitation = "English transcription preserved without translating to Bengali. Please review medical terms before sending."
-            record_runtime_status("asr_en", "READY", used_model, dev_label)
-        else:
-            # Auto mode: detect with Whisper-Small; route Bengali clips to whisper-small-bn
-            proc_en, model_en, dev_en, dev_label = _load_whisper("asr_en", "openai/whisper-small", is_finetuned_bn=False)
-            detected = _detect_whisper_language(proc_en, model_en, dev_en, audio)
-            if detected == "bn":
-                proc_bn, model_bn, dev_bn, dev_label = _load_whisper("asr_bn", "anuragshas/whisper-small-bn", is_finetuned_bn=True)
-                record_runtime_status("asr_bn", "PROCESSING", "anuragshas/whisper-small-bn", dev_label)
-                text = _run_whisper_chunks(proc_bn, model_bn, dev_bn, audio, language="bengali")
-                used_model = "anuragshas/whisper-small-bn"
-                limitation = "Auto-detected Bengali; mixed Banglish code-switching may drop English words—edit transcript if needed."
-                record_runtime_status("asr_bn", "READY", used_model, dev_label)
-            else:
-                record_runtime_status("asr_en", "PROCESSING", "openai/whisper-small", dev_label)
-                text = _run_whisper_chunks(proc_en, model_en, dev_en, audio, language="english")
-                used_model = "openai/whisper-small"
+    try:
+        with lock:
+            if mode == "bn":
+                resolved_bn, _, _ = _resolve_cached_whisper_model("anuragshas/whisper-small-bn", is_finetuned_bn=True)
+                proc, model, dev, dev_label = _load_whisper("asr_bn", "anuragshas/whisper-small-bn", is_finetuned_bn=True)
+                record_runtime_status("asr_bn", "PROCESSING", resolved_bn, dev_label)
+                text = _run_whisper_chunks(proc, model, dev, audio, language="bengali")
+                detected = "bn"
+                used_model = resolved_bn
                 limitation = (
-                    "Auto-detected English/Latin audio. If you spoke mixed Bangla-English (Banglish), review & edit the transcript before sending."
+                    "Bengali ASR preview (39.09% FLEURS corpus WER). Verify & edit Bengali script before submitting."
                 )
+                record_runtime_status("asr_bn", "READY", used_model, dev_label)
+            elif mode == "en":
+                resolved_en, _, _ = _resolve_cached_whisper_model("openai/whisper-small", is_finetuned_bn=False)
+                proc, model, dev, dev_label = _load_whisper("asr_en", "openai/whisper-small", is_finetuned_bn=False)
+                record_runtime_status("asr_en", "PROCESSING", resolved_en, dev_label)
+                text = _run_whisper_chunks(proc, model, dev, audio, language="english")
+                detected = "en"
+                used_model = resolved_en
+                limitation = "English transcription preserved without translating to Bengali. Please review medical terms before sending."
                 record_runtime_status("asr_en", "READY", used_model, dev_label)
+            else:
+                resolved_en, _, _ = _resolve_cached_whisper_model("openai/whisper-small", is_finetuned_bn=False)
+                proc_en, model_en, dev_en, dev_label = _load_whisper("asr_en", "openai/whisper-small", is_finetuned_bn=False)
+                detected = _detect_whisper_language(proc_en, model_en, dev_en, audio)
+                if detected == "bn":
+                    resolved_bn, _, _ = _resolve_cached_whisper_model("anuragshas/whisper-small-bn", is_finetuned_bn=True)
+                    proc_bn, model_bn, dev_bn, dev_label = _load_whisper("asr_bn", "anuragshas/whisper-small-bn", is_finetuned_bn=True)
+                    record_runtime_status("asr_bn", "PROCESSING", resolved_bn, dev_label)
+                    text = _run_whisper_chunks(proc_bn, model_bn, dev_bn, audio, language="bengali")
+                    used_model = resolved_bn
+                    limitation = "Auto-detected Bengali; mixed Banglish code-switching may drop English words—edit transcript if needed."
+                    record_runtime_status("asr_bn", "READY", used_model, dev_label)
+                else:
+                    record_runtime_status("asr_en", "PROCESSING", resolved_en, dev_label)
+                    text = _run_whisper_chunks(proc_en, model_en, dev_en, audio, language="english")
+                    used_model = resolved_en
+                    limitation = (
+                        "Auto-detected English/Latin audio. If you spoke mixed Bangla-English (Banglish), review & edit the transcript before sending."
+                    )
+                    record_runtime_status("asr_en", "READY", used_model, dev_label)
+    except Exception:
+        fallback_lang = "bn" if mode in {"bn", "auto"} else "en"
+        fallback_note = (
+            "স্থানীয় ভয়েস মডেল (Whisper) বর্তমানে অফলাইনে রয়েছে। অনুগ্রহ করে নিচের বক্সে আপনার প্রশ্নটি লিখে বা সম্পাদনা করে পাঠান।"
+            if fallback_lang == "bn"
+            else "Local Whisper voice model is currently offline. Please type or edit your question in the box below and send."
+        )
+        return {
+            "raw_transcript": "",
+            "transcript": "",
+            "language_mode": mode,
+            "detected_language": fallback_lang,
+            "model_id": "whisper-offline-fallback",
+            "device": "cpu",
+            "audio_format": fmt,
+            "duration_sec": duration_sec,
+            "bn_unicode_pct": 0.0,
+            "latency_ms": int((time.perf_counter() - t0) * 1000),
+            "status": "MODEL_UNAVAILABLE",
+            "limitation_note": fallback_note,
+            "requires_confirmation": True,
+        }
 
     bn_chars = sum(1 for c in text if 0x0980 <= ord(c) <= 0x09FF)
     non_ws = max(1, sum(1 for c in text if not c.isspace()))
@@ -282,6 +356,7 @@ def transcribe_audio_bytes(
         "duration_sec": duration_sec,
         "bn_unicode_pct": bn_unicode_pct,
         "latency_ms": latency_ms,
+        "status": "TRANSCRIBED",
         "limitation_note": limitation,
         "requires_confirmation": True,
     }

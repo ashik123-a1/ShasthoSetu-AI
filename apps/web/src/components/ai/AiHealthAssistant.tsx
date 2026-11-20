@@ -530,7 +530,7 @@ export function AiHealthAssistant({
                           : m.grounded_status === "EMERGENCY_ESCALATION"
                           ? "bg-rose-950/60 border border-rose-400/55 text-rose-50"
                           : m.grounded_status === "MODEL_UNAVAILABLE"
-                          ? "bg-amber-950/50 border border-amber-400/50 text-amber-50"
+                          ? "bg-[#061224]/90 border border-amber-400/40 text-slate-100"
                           : "bg-[#040a18]/85 border border-white/15 text-slate-100"
                       }`}
                     >
@@ -556,8 +556,8 @@ export function AiHealthAssistant({
                               </span>
                             )}
                             {m.grounded_status === "MODEL_UNAVAILABLE" && (
-                              <span className="px-2 py-0.5 rounded bg-rose-500/25 border border-rose-400/40 text-rose-200 font-bold">
-                                FAILED / MODEL UNAVAILABLE
+                              <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-400/40 text-amber-200 font-bold">
+                                {locale === "bn" ? "অফলাইন সংক্ষিপ্ত গাইডেন্স (লোকাল মডেল অফলাইন)" : "OFFLINE SHORT FALLBACK (LOCAL LLM OFFLINE)"}
                               </span>
                             )}
                           </div>
