@@ -28,9 +28,15 @@ const memoryStorage = new MemoryStorage();
 Object.defineProperty(window, "localStorage", { value: memoryStorage, writable: true });
 Object.defineProperty(globalThis, "localStorage", { value: memoryStorage, writable: true });
 
+const memorySessionStorage = new MemoryStorage();
+memorySessionStorage.setItem("ss-preloader-seen-v1", "1");
+Object.defineProperty(window, "sessionStorage", { value: memorySessionStorage, writable: true });
+Object.defineProperty(globalThis, "sessionStorage", { value: memorySessionStorage, writable: true });
+
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  window.sessionStorage.setItem("ss-preloader-seen-v1", "1");
   document.documentElement.lang = "bn";
   document.documentElement.dataset.theme = "light";
   document.documentElement.classList.remove("reduce-motion");

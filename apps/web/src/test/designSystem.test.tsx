@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import App from "../App";
@@ -154,6 +154,7 @@ describe("UI-01 ShasthoSetu Design System & Reusable Primitives", () => {
     expect(screen.getByTestId("unauthenticated-dev-banner")).toBeInTheDocument();
 
     // Direct navigation to /admin/dashboard unauthenticated MUST redirect to /login, never render admin portal
+    cleanup();
     renderApp(["/admin/dashboard"]);
     await waitFor(() => {
       expect(screen.getByTestId("login-identifier-input")).toBeInTheDocument();
@@ -256,7 +257,7 @@ describe("UI-01 ShasthoSetu Design System & Reusable Primitives", () => {
     render(<MedicalReceiptDocument receipt={mockReceipt} locale="en" />);
     expect(screen.getByText("ShasthoSetu AI • স্বাস্থ্যসেতু")).toBeInTheDocument();
     expect(screen.getByText("DEMO-RCP-9001")).toBeInTheDocument();
-    expect(screen.getByText("ShasthoPay MFS (Simulated)")).toBeInTheDocument();
+    expect(screen.getByText("Demo Payment MFS (Simulated)")).toBeInTheDocument();
     expect(screen.getByText("BMDC-DEMO-44102")).toBeInTheDocument();
     expect(screen.getByText(/Helpline: 16263/)).toBeInTheDocument();
     expect(screen.getByText(/Telehealth Specialist Clinical Consultation/)).toBeInTheDocument();

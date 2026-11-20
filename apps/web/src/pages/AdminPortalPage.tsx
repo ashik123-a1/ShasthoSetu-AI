@@ -488,7 +488,7 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
             {bankAccounts.length} Accounts Online
           </div>
           <p className="text-[11px] text-slate-400 mt-1">
-            bKash • Nagad • SSLCommerz • City Bank • BRAC Bank
+            Demo Payment MFS • Demo Payment Direct • SSLCommerz • City Bank • BRAC Bank
           </p>
         </div>
       </div>
@@ -503,7 +503,7 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
             <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-0.5">
               <Building2 className="w-5 h-5 text-cyan-400" />
               {locale === "bn"
-                ? "অ্যাডমিন ব্যাংক ও পেমেন্ট গেটওয়ে মনিটরিং (bKash, Nagad, SSLCommerz, City Bank, BRAC Bank)"
+                ? "অ্যাডমিন ব্যাংক ও পেমেন্ট গেটওয়ে মনিটরিং (Demo Payment MFS, Demo Direct Pay, SSLCommerz, City Bank, BRAC Bank)"
                 : "Monitored Bank & MFS Gateway Settlement Accounts"}
             </h3>
           </div>

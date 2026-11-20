@@ -317,7 +317,7 @@ export function SupportPortalPage({ section = "dashboard" }: { section?: string 
                         type="text"
                         value={txnQuery}
                         onChange={(e) => setTxnQuery(e.target.value)}
-                        placeholder="Search TXN-..., DEMO-RCP-..., bKash/Nagad..."
+                        placeholder="Search TXN-..., DEMO-RCP-..., Demo Payment..."
                         className="w-full min-h-9 pl-8 pr-3 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:border-emerald-400 focus:outline-none"
                       />
                     </div>

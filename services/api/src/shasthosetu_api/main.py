@@ -31,7 +31,8 @@ from .seeds.seed_demo import seed_database
 async def lifespan(_app: FastAPI):
     import os
     apply_schema()
-    if settings.env != "production" and os.getenv("SHASTHOSETU_ENV") != "production":
+    # Safe production-by-default guard: never seed demo accounts in production
+    if settings.env == "development" and (settings.seed_demo_enabled or os.getenv("SHASTHOSETU_SEED_DEMO", "false").lower() in ("true", "1", "yes")):
         seed_database()
     try:
         from .services.rag_ingestion import seed_curated_corpus

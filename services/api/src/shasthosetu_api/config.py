@@ -30,6 +30,8 @@ def _parse_origins() -> list[str]:
 @dataclass(frozen=True)
 class Settings:
     env: str = os.getenv("SHASTHOSETU_ENV", "development")
+    allow_demo_accounts: bool = os.getenv("SHASTHOSETU_ALLOW_DEMO", "true").lower() in ("true", "1", "yes")
+    seed_demo_enabled: bool = os.getenv("SHASTHOSETU_SEED_DEMO", "false").lower() in ("true", "1", "yes")
     db_path: Path = Path(os.getenv("SHASTHOSETU_DB_PATH", str(DEFAULT_DB_PATH)))
     session_cookie_name: str = "ss_session"
     csrf_cookie_name: str = "ss_csrf"

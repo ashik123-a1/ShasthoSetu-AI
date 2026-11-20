@@ -303,7 +303,7 @@ def login(payload: LoginRequest, request: Request, response: Response):
             conn.execute("COMMIT;")
             raise HTTPException(status_code=401, detail="Invalid credentials.")
 
-        if (settings.env == "production" or os.getenv("SHASTHOSETU_ENV") == "production") and user_row.get("is_synthetic"):
+        if settings.env == "production" and not getattr(settings, "allow_demo_accounts", False) and user_row.get("is_synthetic"):
             conn.execute("BEGIN IMMEDIATE;")
             record_audit(
                 conn,

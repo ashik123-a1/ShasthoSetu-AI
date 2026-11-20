@@ -472,17 +472,17 @@ def _seed_business_and_six_month_ledger(conn, now: str) -> None:
     banks = [
         (
             "bank-bkash-escrow",
-            "BKASH-MERCHANT-01",
-            "bKash Commercial MFS Escrow",
-            "01711-••••88 (Merchant Escrow)",
+            "DEMO-PAY-MFS-01",
+            "Demo Payment (MFS Escrow)",
+            "01711-••••88 (Demo MFS Escrow)",
             "MFS_GATEWAY",
             "ACTIVE_ONLINE",
         ),
         (
             "bank-nagad-merchant",
-            "NAGAD-MERCHANT-02",
-            "Nagad Merchant Gateway",
-            "01819-••••42 (Merchant Wallet)",
+            "DEMO-PAY-DIR-02",
+            "Demo Payment (Direct Gateway)",
+            "01819-••••42 (Demo Direct Pay)",
             "MFS_GATEWAY",
             "ACTIVE_ONLINE",
         ),

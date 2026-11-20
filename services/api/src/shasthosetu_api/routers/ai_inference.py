@@ -323,7 +323,7 @@ def save_ai_draft(payload: SaveAiDraftRequest, user: dict = Depends(require_role
                 action_type="AI_DRAFT_SAVED",
                 target_resource="ai_inference_drafts",
                 target_id=draft_id,
-                details={"module_key": payload.module_key, "shared_with_doctor": payload.shared_with_doctor},
+                details={"module_key": payload.module_key, "shared_with_doctor": payload.shared_with_doctor, "hash_audit": True},
             )
             conn.execute("COMMIT;")
         except Exception:

@@ -17,6 +17,38 @@ _PH = PasswordHasher(time_cost=2, memory_cost=65536, parallelism=2)
 _DUMMY_PASSWORD_HASH = _PH.hash("ShasthoSetuTimingEqualizer#2026")
 _RATE_LOCK = threading.Lock()
 _RATE_BUCKETS: dict[str, deque[float]] = defaultdict(deque)
+_TRUSTED_PROXIES = {"127.0.0.1", "::1", "localhost", "testclient"}
+
+
+def resolve_client_ip(request: Request | None) -> str:
+    """Securely resolve client IP. Only honors X-Forwarded-For if socket IP is an approved trusted proxy."""
+    if request is None:
+        return "local"
+    direct_ip = (request.client.host if request.client else "") or "unknown"
+    # Never blindly trust X-Forwarded-For from arbitrary direct Internet clients
+    trust_proxy = direct_ip in _TRUSTED_PROXIES or os.getenv("SHASTHOSETU_TRUST_PROXIES", "false").lower() in ("true", "1", "yes")
+    if trust_proxy:
+        fwd = (request.headers.get("x-forwarded-for") or "").strip()
+        if fwd:
+            first_ip = fwd.split(",")[0].strip()
+            if first_ip:
+                return first_ip[:45]
+    return direct_ip[:45]
+
+
+def mask_ip(ip: str | None) -> str:
+    """Dynamically mask client IP for privacy/Zero-PHI audit logs (e.g. 192.168.1.5 -> 192.168.1.x)."""
+    if not ip or ip in ("local", "unknown", "testclient"):
+        return "127.0.0.x"
+    clean = ip.strip()
+    if "." in clean:
+        parts = clean.split(".")
+        if len(parts) == 4:
+            return f"{parts[0]}.{parts[1]}.{parts[2]}.x"
+    if ":" in clean:
+        parts = clean.split(":")
+        return ":".join(parts[:3]) + ":x"
+    return clean[:12] + ".x"
 
 
 def utc_now_iso() -> str:
@@ -68,13 +100,7 @@ def build_rate_limit_key(
     request: Request | None = None,
     identifier: str | None = None,
 ) -> str:
-    ip_part = "local"
-    if request is not None:
-        fwd = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
-        if fwd:
-            ip_part = fwd[:45]
-        elif request.client and request.client.host:
-            ip_part = request.client.host[:45]
+    ip_part = resolve_client_ip(request)
     ident_part = sha256_hex(identifier.strip().lower())[:12] if identifier else "anon"
     return f"{prefix}:{ip_part}:{ident_part}"
 

@@ -894,15 +894,15 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
               )}
 
               <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 p-3.5 text-xs flex flex-wrap items-center justify-between gap-2">
-                <span>SIMULATED / DEMO CHECKOUT: Select ShasthoPay MFS, Digital Direct Pay, or Health Card Demo below when settling pending bookings (zero PIN/OTP/CVV).</span>
+                <span>SIMULATED / DEMO CHECKOUT: Select Demo Payment MFS, Demo Payment Direct, or Health Card Demo below when settling pending bookings (zero PIN/OTP/CVV).</span>
                 <select
                   aria-label="Demo Payment Method"
                   value={checkoutMethod}
                   onChange={(e) => setCheckoutMethod(e.target.value as typeof checkoutMethod)}
                   className="min-h-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 font-semibold text-xs"
                 >
-                  <option value="DEMO_BKASH">ShasthoPay MFS (Simulated)</option>
-                  <option value="DEMO_NAGAD">Digital Direct Pay (Simulated)</option>
+                  <option value="DEMO_BKASH">Demo Payment MFS (Simulated)</option>
+                  <option value="DEMO_NAGAD">Demo Payment Direct (Simulated)</option>
                   <option value="DEMO_CARD">Smart Health Card / Debit Demo</option>
                 </select>
               </div>
@@ -1012,9 +1012,9 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                 {dash.payments.map((p) => {
                   const methodLabel =
                     p.method === "DEMO_BKASH"
-                      ? "ShasthoPay MFS (Simulated)"
+                      ? "Demo Payment MFS (Simulated)"
                       : p.method === "DEMO_NAGAD"
-                      ? "Digital Direct Pay (Simulated)"
+                      ? "Demo Payment Direct (Simulated)"
                       : p.method === "DEMO_CARD"
                       ? "Smart Health Card (Simulated)"
                       : p.method;

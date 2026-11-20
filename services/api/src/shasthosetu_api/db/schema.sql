@@ -952,3 +952,48 @@ CREATE TABLE IF NOT EXISTS platform_transactions (
 CREATE INDEX IF NOT EXISTS idx_platform_txns_month_stream ON platform_transactions(billing_month, revenue_stream, status);
 CREATE INDEX IF NOT EXISTS idx_platform_txns_created ON platform_transactions(created_at_utc DESC);
 
+-- 5. DURABLE CONSULTATION SIGNALING & ROOM STATE (Multi-worker SQLite WAL backed)
+CREATE TABLE IF NOT EXISTS consultation_rooms (
+    room_id TEXT PRIMARY KEY,
+    appointment_id TEXT,
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    intake_json TEXT,
+    status TEXT NOT NULL DEFAULT 'ACTIVE'
+);
+
+CREATE TABLE IF NOT EXISTS consultation_peers (
+    room_id TEXT NOT NULL,
+    peer_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    last_seen_utc REAL NOT NULL,
+    PRIMARY KEY (room_id, peer_id)
+);
+CREATE INDEX IF NOT EXISTS idx_consultation_peers_room ON consultation_peers(room_id, last_seen_utc);
+
+CREATE TABLE IF NOT EXISTS consultation_signals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    room_id TEXT NOT NULL,
+    from_peer TEXT NOT NULL,
+    to_peer TEXT,
+    signal_type TEXT NOT NULL,
+    data_json TEXT NOT NULL,
+    created_at_utc REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_consultation_signals_room ON consultation_signals(room_id, id);
+
+CREATE TABLE IF NOT EXISTS consultation_messages (
+    id TEXT PRIMARY KEY,
+    room_id TEXT NOT NULL,
+    sender_peer_id TEXT NOT NULL,
+    sender_user_id TEXT NOT NULL,
+    sender_role TEXT NOT NULL,
+    sender_name TEXT NOT NULL,
+    message_text TEXT NOT NULL,
+    sent_at_iso TEXT NOT NULL,
+    created_at_utc REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_consultation_messages_room ON consultation_messages(room_id, created_at_utc);
+
+

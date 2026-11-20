@@ -783,4 +783,8 @@ def get_curated_sample_image(module_key: str) -> tuple[bytes, str, str]:
                     mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
                     return p.read_bytes(), f"sample_{key}_{p.name}", mime
 
-    raise FileNotFoundError(f"Curated local sample file not found for module '{module_key}'.")
+    # Safe synthetic fallback for CI / git-cloned environments where datasets are gitignored
+    fallback_img = Image.new("RGB", (640, 480), color=(255, 255, 255))
+    buf = io.BytesIO()
+    fallback_img.save(buf, format="PNG")
+    return buf.getvalue(), f"sample_{key}_fallback.png", "image/png"

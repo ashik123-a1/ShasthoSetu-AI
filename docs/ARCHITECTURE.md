@@ -133,7 +133,7 @@ sequenceDiagram
     participant PRT as Partner (Lab / Doctor / Pharma)
 
     P->>GW: Checkout (Diagnostic Lab / Doctor Consultation / ePharma)
-    GW-->>API: Payment Confirmed (bKash / Nagad / SSLCommerz / City Bank)
+    GW-->>API: Payment Confirmed (Demo Payment MFS / Demo Direct / Cards / Bank)
     API->>API: Compute Dynamic Commission Cut (18% Lab / 15% Doctor / 12% Pharma)
     API->>DB: BEGIN IMMEDIATE: Insert platform_transactions & Update Bank Ledger
     API->>DB: Insert notification (topic = 'FINANCE_TRANSACTION')

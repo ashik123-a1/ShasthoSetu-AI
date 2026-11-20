@@ -41,13 +41,13 @@ export interface MedicalReceiptProps {
 
 export function MedicalReceiptDocument({ receipt, locale, onClose }: MedicalReceiptProps) {
   const methodMap: Record<string, string> = {
-    DEMO_BKASH: "ShasthoPay MFS (Simulated)",
-    DEMO_NAGAD: "Digital Direct Pay (Simulated)",
+    DEMO_BKASH: "Demo Payment MFS (Simulated)",
+    DEMO_NAGAD: "Demo Payment Direct (Simulated)",
     DEMO_CARD: "Smart Health Card / Debit (Simulated)",
     DEMO_FREE: "Govt Health Waiver (Free)",
   };
 
-  const paymentMethodLabel = methodMap[receipt.payment_method || ""] || receipt.payment_method || "ShasthoPay MFS (Simulated)";
+  const paymentMethodLabel = methodMap[receipt.payment_method || ""] || receipt.payment_method || "Demo Payment MFS (Simulated)";
   const feeAmount = Number(receipt.amount_minor_poisha || 50000);
   const formattedFee = formatBdtFromPoisha(feeAmount, locale);
   const dateFormatted = receipt.issued_at_utc

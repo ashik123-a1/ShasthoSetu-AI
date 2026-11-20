@@ -87,8 +87,8 @@ export function SimulatedPaymentCheckoutModal({
     }
     setProcessing(true);
     const methodNames: Record<SimulatedPaymentMethod, string> = {
-      SHASTHOPAY_MFS: "bKash / ShasthoPay MFS Escrow",
-      DIGITAL_DIRECT_PAY: "Nagad Commercial Gateway",
+      SHASTHOPAY_MFS: "Demo Payment MFS (Simulated Escrow)",
+      DIGITAL_DIRECT_PAY: "Demo Payment Direct (Simulated Gateway)",
       SMART_CARD_DEMO: "SSLCommerz Visa / Mastercard",
       CITY_BANK_CORP: "City Bank PLC Corporate Transfer",
     };
@@ -338,14 +338,14 @@ export function SimulatedPaymentCheckoutModal({
                   {[
                     {
                       id: "SHASTHOPAY_MFS" as SimulatedPaymentMethod,
-                      name: "bKash MFS",
-                      sub: "Escrow 01",
+                      name: "Demo Payment MFS",
+                      sub: "Simulated Escrow",
                       icon: Smartphone,
                     },
                     {
                       id: "DIGITAL_DIRECT_PAY" as SimulatedPaymentMethod,
-                      name: "Nagad Pay",
-                      sub: "Merchant 02",
+                      name: "Demo Payment Direct",
+                      sub: "Simulated Gateway",
                       icon: Zap,
                     },
                     {
@@ -393,8 +393,8 @@ export function SimulatedPaymentCheckoutModal({
                 {method === "SHASTHOPAY_MFS" && (
                   <div className="space-y-2">
                     <label className="text-xs text-slate-300 flex justify-between">
-                      <span>bKash / ShasthoPay Wallet Number:</span>
-                      <span className="text-[10px] text-cyan-400 font-mono">Merchant Escrow</span>
+                      <span>Demo Payment MFS Wallet Number:</span>
+                      <span className="text-[10px] text-cyan-400 font-mono">Demo Escrow</span>
                     </label>
                     <input
                       type="text"
@@ -415,10 +415,10 @@ export function SimulatedPaymentCheckoutModal({
                 {method === "DIGITAL_DIRECT_PAY" && (
                   <div className="text-xs text-slate-300 space-y-1.5">
                     <div className="flex items-center gap-2 text-teal-400 font-bold">
-                      <Zap className="w-4 h-4" /> Nagad Instant Commercial Settlement (`NAGAD-MERCHANT-02`)
+                      <Zap className="w-4 h-4" /> Demo Instant Commercial Settlement (`DEMO-DIRECT-02`)
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Settles directly into Nagad Merchant Gateway with automatic {commRate}% platform commission split.
+                      Settles directly into Demo Payment Gateway with automatic {commRate}% platform commission split.
                     </p>
                   </div>
                 )}

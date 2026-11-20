@@ -102,8 +102,8 @@ To demonstrate enterprise financial hygiene, the platform models strict segregat
 ```
 [Simulated Patient Inflow]
        │
-       ├──► bKash Merchant Escrow (01711-••••88) ───► MFS Gateway Holding Model
-       ├──► Nagad Merchant Wallet (01819-••••42) ───► Rural MFS Escrow Model
+       ├──► Demo Payment MFS Escrow (01711-••••88) ───► MFS Gateway Holding Model
+       ├──► Demo Payment Direct Wallet (01819-••••42) ──► Rural MFS Escrow Model
        └──► SSLCommerz Multi-Card (MID-SS-994021) ──► Visa / Mastercard Clearing Model
                                │
                ┌───────────────┴───────────────┐
@@ -121,10 +121,10 @@ To demonstrate enterprise financial hygiene, the platform models strict segregat
 
 *Note: The following accounts are mock ledger entities within the platform database used to demonstrate multi-account balancing and automated settlement algorithms:*
 
-1. **bKash Commercial MFS Escrow Model (`BKASH-MERCHANT-01`)**  
+1. **Demo Payment MFS Escrow Model (`DEMO-PAY-MFS-01`)**  
    - Type: `MFS_GATEWAY` | Status: `ACTIVE_ONLINE`  
    - Purpose: Direct instant checkout for patient appointments and urgent emergency tele-triage simulations.
-2. **Nagad Merchant Gateway Model (`NAGAD-MERCHANT-02`)**  
+2. **Demo Payment Direct Gateway Model (`DEMO-PAY-DIR-02`)**  
    - Type: `MFS_GATEWAY` | Status: `ACTIVE_ONLINE`  
    - Purpose: Low-fee mobile cash-in/checkout simulation catering to rural patients and upazila health complexes.
 3. **SSLCommerz Card Clearing Model (`SSLCOMMERZ-CARD-03`)**  
@@ -209,6 +209,32 @@ TOTAL (6 Months) 48+          ৳ 83,888.00         ৳ 13,132.00             �
 
 1. **Log in as System Admin:** Navigate to [https://shasthosetu.fit/login](https://shasthosetu.fit/login) and select **"Continue as System Admin"** (`admin.demo@shasthosetu.local`).
 2. **Access Live Transactions Tab:** Click **"Live Transactions & Commissions"** (`/admin/transactions`) in the left navigation sidebar.
-3. **Inspect the 5 Bank Account Models:** Verify simulated balances for bKash Escrow, Nagad Merchant, SSLCommerz, City Bank Corporate Treasury, and BRAC Bank Payout.
+3. **Inspect the 5 Bank Account Models:** Verify simulated balances for Demo Payment MFS, Demo Payment Direct, SSLCommerz, City Bank Corporate Treasury, and BRAC Bank Payout.
 4. **Test Live Simulation:** Click any button on the **Live Transaction Simulator** (e.g. `Lab Test (+18%)` or `Doctor Fee (+15%)`).
 5. **Verify Real-Time Notice:** Observe the **green animated transaction alert banner** drop down with the new transaction ID, gross inflow, and commission split, while the ledger automatically prepends the new verified record.
+
+---
+
+## 8. Doctor Wallet, Clinician Payout Ledger & Strict Payment Security Gate
+
+### 8.1 Doctor Earnings & Settlement Mechanics (85% Net Clinician / 15% Platform Split)
+Doctors on ShasthoSetu AI maintain an independent **Clinician Wallet & Earnings Ledger** accessible via their workspace (`/doctor/wallet` and `/doctor/dashboard`):
+- **Gross Consultation Inflow (100%):** Standard telemedicine appointment fees paid by patients via Demo Payment MFS, Demo Payment Direct, or Cards (e.g. ৳ 800 or ৳ 1,000 per tele-call).
+- **Platform Commission (-15%):** Automatically deducted at transaction settlement to cover WebRTC encrypted video servers, AI clinical note drafting, and payment gateway fees.
+- **Net Clinician Payout (+85%):** Retained directly in the doctor's available balance for electronic disbursement.
+- **Disbursement Channel:** Weekly automated BEFTN / NPSB bank transfers via **BRAC Bank PLC Partner Payout Account** (`BRACBANK-SETTLE-05`, A/C `1509-••••-3310`).
+- **Reconciliation Action:** Clinicians can trigger an audited settlement reconciliation request (`POST /v1/doctor/wallet/payout-request`), converting available balance into pending disbursement with an immutable audit event (`DOCTOR_PAYOUT_SETTLEMENT_REQUESTED`).
+- **Consultation Transaction History:** Displays a full tabular breakdown of every completed call (Transaction Ref, Receipt Number, Patient Name, Dhaka Timestamp, Gross Fee, -15% Commission, and +85% Net Credit).
+
+### 8.2 Strict Zero-Guest Payment Security Policy ("No Login, No Payment")
+Under Bangladesh digital health compliance and financial fraud prevention standards, **no anonymous or unauthenticated visitor can execute payments** anywhere on ShasthoSetu AI:
+1. **Frontend Interception Gate (`SimulatedPaymentCheckoutModal.tsx`):**
+   - When an unauthenticated user clicks to purchase an ePharma medicine, book a diagnostic lab test, or schedule a doctor video call, the modal intercepts the action before any gateway interaction.
+   - Renders a prominent amber authentication gate: **`🔒 পেমেন্ট করতে সাইন-ইন আবশ্যক / Sign In Required to Proceed with Payment`**.
+   - Prevents guest token creation and prompts the user with a direct **`Sign In to Pay →`** CTA routing to `/login`.
+2. **Backend Authentication Enforcement (`patient.py`):**
+   - `POST /v1/patient/universal-storefront-checkout` checks `get_optional_user(request)`. If unauthenticated, it immediately terminates with **`HTTP 401 Unauthorized`** (`"Authentication required. Please sign in to proceed with secure payment."`).
+   - `POST /v1/patient/checkout/demo` strictly enforces **`require_role("PATIENT")`**, returning **`HTTP 401`** for unauthenticated users and **`HTTP 403`** for non-patient roles.
+3. **Argon2id Session Hardening & Zero-PHI Segregation:**
+   - All transactions are cryptographically linked to verified user IDs with hashed Argon2id session tokens.
+   - Financial transactions contain Zero-PHI (Protected Health Information) to prevent payment gateway or accounting leakage.
