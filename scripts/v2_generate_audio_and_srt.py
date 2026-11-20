@@ -18,8 +18,8 @@ AUDIO_FINAL_DIR = os.path.join(OUT_ROOT, "audio")
 SUB_DIR = os.path.join(OUT_ROOT, "subtitles")
 FFMPEG = r"C:\Users\ASHIK_CSE\AppData\Local\Programs\Python\Python311\Lib\site-packages\imageio_ffmpeg\binaries\ffmpeg-win-x86_64-v7.1.exe"
 
-VOICE = "en-US-AndrewMultilingualNeural"
-FALLBACK_VOICES = ["en-US-AndrewNeural", "en-US-BrianNeural"]
+VOICE = "en-US-BrianNeural"
+FALLBACK_VOICES = ["en-US-ChristopherNeural", "en-US-AndrewNeural"]
 
 # ---------------------------------------------------------------------------
 # 13-CHAPTER 180-SECOND COMPETITION PITCH SCRIPT
@@ -27,137 +27,134 @@ FALLBACK_VOICES = ["en-US-AndrewNeural", "en-US-BrianNeural"]
 # ---------------------------------------------------------------------------
 PITCH_SEGMENTS = [
     {
-        "id": "s01_preloader",
-        "act": "OPENING",
+        "id": "s01_crisis_hook",
+        "act": "ACT I · THE CRISIS",
+        "label": "170M Citizens · Specialist Deficit, Viral Fevers & Paper Rx Harm",
+        "rate": "+0%",
+        "text": "Across Bangladesh, specialist shortages and unsafe prescriptions put millions at risk.",
+        "pause_after": 0.20,
+    },
+    {
+        "id": "s02_preloader",
+        "act": "LAUNCH",
         "label": "8,600-Particle Bio-Resonance Launch · ShasthoSetu AI",
         "rate": "+0%",
-        "text": (
-            "When minutes divide life from tragedy, care cannot wait. "
-            "From Dhaka, welcome to ShasthoSetu AI."
-        ),
+        "text": "Welcome to Shastho-Setu AI.",
         "pause_after": 0.35,
     },
     {
-        "id": "s02_healthcare_crisis",
-        "act": "ACT I · THE CRISIS",
-        "label": "Acute Specialist Shortage, Viral Outbreaks & Medication Harm",
-        "rate": "+3%",
-        "text": (
-            "Across Bangladesh, a hundred and seventy million people face an acute specialist shortage. "
-            "Children burn with viral fever and rash, women endure undiagnosed PCOS for years, "
-            "dengue surges spark midnight blood searches, and illegible prescriptions risk preventable harm."
-        ),
-        "pause_after": 0.40,
-    },
-    {
-        "id": "s03_team_roster",
-        "act": "ACT I · TEAM ROSTER",
-        "label": "Team ShasthoSetu AI · 5-Engineer Dhaka Leadership",
-        "rate": "+3%",
-        "text": (
-            "Built in Dhaka by Team Leader Nakib Md Ashik and our five-member squad — "
-            "uniting clinical AI, 3D systems, security, and health informatics."
-        ),
-        "pause_after": 0.30,
-    },
-    {
-        "id": "s04_platform_care_map",
+        "id": "s03_platform_care_map",
         "act": "ACT II · NATIONAL PLATFORM",
-        "label": "Bilingual Portal & 8-Division Illuminated Care Map",
-        "rate": "+3%",
+        "label": "Bilingual EN / Bangla Portal & 8-Division Care Atlas",
+        "rate": "+0%",
         "text": (
-            "ShasthoSetu AI unites patients, verified doctors, and auditable AI in Bengali and English — "
-            "letting families explore our eight-division care map and book atomic appointment slots."
-        ),
-        "pause_after": 0.35,
-    },
-    {
-        "id": "s05_pcos_multimodal",
-        "act": "ACT II · M01 & M02 PCOS AI",
-        "label": "Rotterdam-Separated Endocrine XGBoost & Ultrasound ResNet18",
-        "rate": "+3%",
-        "text": (
-            "For women's health, clinical and imaging tracks stay separated under Rotterdam guidelines. "
-            "Model One scores endocrine markers at 94.44 percent holdout accuracy, "
-            "while Model Two evaluates ultrasound morphology with ResNet-18 at 86.67 percent — strictly as clinician decision support."
+            "Shastho-Setu AI connects patients, verified doctors, and auditable clinical AI in Bengali and English, "
+            "featuring an eight-division care map and instant booking."
         ),
         "pause_after": 0.40,
     },
     {
-        "id": "s06_viral_pediatric",
+        "id": "s04_pcos_multimodal",
+        "act": "ACT II · M01 & M02 PCOS AI",
+        "label": "Live Input -> XGBoost & ResNet18 Execution -> Result & Limitations",
+        "rate": "+0%",
+        "text": (
+            "Following Rotterdam guidelines, clinical and imaging tracks run separately. "
+            "Live endocrine inputs execute Model One XGBoost at 94.4 percent accuracy, "
+            "while ultrasound scans run Model Two ResNet-18 at 86.7 percent, "
+            "strictly for non-diagnostic decision support."
+        ),
+        "pause_after": 0.40,
+    },
+    {
+        "id": "s05_viral_pediatric",
         "act": "ACT II · M03 & M06 PEDIATRIC AI",
-        "label": "755-Family Leak-Free Viral Rash & DermoPed Safeguards",
-        "rate": "+3%",
+        "label": "Live Sample Execution · 91.94% Measles Recall & N=22 Limit",
+        "rate": "+0%",
         "text": (
-            "In pediatric triage, Model Three classifies viral rashes across 755 leak-free families "
-            "with 91.94 percent measles recall after quarantining a leaked 99.10 percent split. "
-            "Model Six extends pediatric dermatology while openly disclosing its 22-patient cohort limit."
+            "Loading a real rash scan runs Model Three ResNet-18 across 755 leak-free families "
+            "at 91.9 percent measles recall, after quarantining an earlier leaked split. "
+            "Model Six then evaluates pediatric skin scans while disclosing its 22-patient cohort limit."
         ),
-        "pause_after": 0.35,
+        "pause_after": 0.40,
     },
     {
-        "id": "s07_prescription_ocr",
+        "id": "s06_prescription_ocr",
         "act": "ACT III · M04 SAFE-OCR",
-        "label": "Bilingual EasyOCR & Mandatory HTTP 422 Verification Gate",
-        "rate": "+3%",
+        "label": "Patient Text Acknowledgement vs. Doctor Clinical Authorization",
+        "rate": "+0%",
         "text": (
-            "Our Safe-OCR Studio digitizes bilingual handwritten prescriptions across an audited 1,000-prescription corpus, "
-            "locking medication reminders behind an HTTP 422 barrier until human verification and doctor approval."
+            "Across one thousand audited prescriptions, Safe-OCR separates patient verification from clinical approval. "
+            "Patient confirmation verifies text only behind an HTTP 422 safety lock, "
+            "remaining blocked until an approved doctor authorizes the treatment plan."
         ),
-        "pause_after": 0.35,
+        "pause_after": 0.40,
     },
     {
-        "id": "s08_bangla_voice",
+        "id": "s07_bangla_voice",
         "act": "ACT III · M05 BANGLA VOICE",
-        "label": "Whisper-Small-BN Acoustic Benchmark & Editable Unicode Gate",
-        "rate": "+3%",
+        "label": "Live Bangla Input -> Whisper-Small-BN & 39.09% FLEURS Limit",
+        "rate": "+0%",
         "text": (
-            "Model Five pairs our 3D Voice Studio with Whisper-Small-BN — "
-            "achieving 98.37 percent Bengali Unicode integrity with a mandatory human-editable transcript gate."
+            "Model Five powers our 3D Voice Studio with Whisper Small Bengali, "
+            "answering spoken clinical queries at 98.4 percent Unicode integrity, "
+            "while transparently reporting its 39.1 percent FLEURS benchmark error rate."
         ),
-        "pause_after": 0.35,
+        "pause_after": 0.40,
     },
     {
-        "id": "s09_rag_langgraph",
+        "id": "s08_rag_citations_999",
         "act": "ACT III · CLINICAL RAG & 999 GATE",
-        "label": "Grounded Retrieval, 3D Body Scanner & LangGraph Red-Flag Triage",
-        "rate": "+3%",
+        "label": "Live Q&A, Citation Drawer, 3D Body Scanner & Red-Flag Override",
+        "rate": "+0%",
         "text": (
-            "Our Bilingual Clinical Assistant pairs grounded guidelines with a 3D Body Scanner and LangGraph triage deck — "
-            "overriding chat for immediate emergency routing whenever cardiac red flags appear."
+            "Our Clinical Assistant answers medical questions with verified guideline sources "
+            "in an interactive citation drawer, while pairing a 3D Body Scanner and LangGraph engine "
+            "to trigger immediate 999 emergency routing on cardiac red flags."
         ),
-        "pause_after": 0.35,
+        "pause_after": 0.40,
     },
     {
-        "id": "s10_telemedicine",
+        "id": "s09_telemedicine",
         "act": "ACT IV · TELEMEDICINE WORKSPACE",
         "label": "Approved BMDC Clinician Desk · Notes & Signed e-Prescription",
-        "rate": "+3%",
+        "rate": "+0%",
         "text": (
-            "Inside our approved clinician workspace, verified doctors like Dr. Farhana review pre-triage drafts, "
-            "hold live consultations, and issue signed digital prescriptions."
+            "Inside our approved clinician workspace, verified specialists like Doctor Farhana "
+            "conduct encrypted consultations and issue signed digital prescriptions."
         ),
-        "pause_after": 0.35,
+        "pause_after": 0.40,
     },
     {
-        "id": "s11_blood_connect",
+        "id": "s10_blood_connect",
         "act": "ACT IV · BLOOD CONNECT",
         "label": "5/10/20 km Geo-Radius Matching & Masked Donor Privacy",
-        "rate": "+3%",
+        "rate": "+0%",
         "text": (
-            "During dengue outbreaks and surgical emergencies, Blood Connect maps willing donors within five, ten, "
-            "or twenty kilometers while masking phone numbers until hospital cross-matching."
+            "During dengue emergencies, Blood Connect finds willing donors within five, ten, "
+            "or twenty kilometers, while keeping phone numbers masked until hospital cross-matching."
         ),
-        "pause_after": 0.35,
+        "pause_after": 0.40,
     },
     {
-        "id": "s12_security_zerophi",
+        "id": "s11_security_zerophi",
         "act": "ACT IV · TRUST & ZERO-PHI",
         "label": "5-Role RBAC · HTTP 403 Clinical Isolation · 40/40 Checks Passed",
-        "rate": "+3%",
+        "rate": "+0%",
         "text": (
-            "Every portal enforces five-role access control, a Zero-PHI Support Desk with HTTP 403 clinical barriers, "
-            "and forty passing security checks over strictly synthetic demo data."
+            "Every portal enforces five-role access control, HTTP 403 Zero-PHI support isolation, "
+            "and forty passing security checks over strictly synthetic demo records."
+        ),
+        "pause_after": 0.40,
+    },
+    {
+        "id": "s12_team_brief",
+        "act": "TEAM SHASTHOSETU AI",
+        "label": "5-Engineer Dhaka Squad · AI, 3D Systems & Clinical Security",
+        "rate": "+0%",
+        "text": (
+            "Built in Dhaka by Team Leader Nakib Md Ashik and our five-engineer squad "
+            "across clinical AI, 3D systems, and security."
         ),
         "pause_after": 0.35,
     },
@@ -167,10 +164,10 @@ PITCH_SEGMENTS = [
         "label": "github.com/ashik123-a1/ShasthoSetu-AI · Hugging Face Open Benchmarks",
         "rate": "+0%",
         "text": (
-            "Audited, bilingual, and doctor-governed — ShasthoSetu AI bridges diagnostic delays into safer care "
-            "for Bangladesh and beyond. Explore our repository and clinical benchmarks today."
+            "Audited, bilingual, and doctor-governed. Shastho-Setu AI turns diagnostic delays into safer care. "
+            "Explore our open repository and clinical benchmarks today."
         ),
-        "pause_after": 2.00,
+        "pause_after": 1.35,
     },
 ]
 
@@ -198,6 +195,7 @@ def _normalize_caption_words(words):
         item = dict(w)
         item["word"] = (
             item["word"]
+            .replace("Shastho-Setu", "ShasthoSetu")
             .replace("ShasthoSetu", "ShasthoSetu")
             .replace("ResNet-18", "ResNet18")
         )
@@ -309,11 +307,11 @@ async def synthesize_segment(text: str, rate: str, mp3_path: str, wav_path: str,
     else:
         raise RuntimeError(f"Edge-TTS failed after 4 attempts for {mp3_path}: {last_err}")
 
-    # Broadcast documentary vocal EQ + trim leading silence
+    # Crisp studio broadcast vocal clarity EQ + gentle compression + start-silence trim
     subprocess.run(
         [
             FFMPEG, "-y", "-i", mp3_path,
-            "-af", "highpass=f=80,equalizer=f=190:t=q:w=1.2:g=1.8,equalizer=f=3200:t=q:w=1.4:g=-1.2,treble=g=-1.5:f=9500,silenceremove=start_periods=1:start_duration=0.02:start_threshold=-55dB:detection=peak",
+            "-af", "highpass=f=85,equalizer=f=220:t=q:w=1.4:g=-1.2,equalizer=f=3400:t=q:w=1.2:g=2.4,treble=g=1.6:f=8000,acompressor=threshold=-18dB:ratio=2.4:attack=15:release=180:makeup=2dB,silenceremove=start_periods=1:start_duration=0.02:start_threshold=-55dB:detection=peak",
             "-ar", "48000", "-ac", "2", "-c:a", "pcm_s16le", wav_path,
         ],
         check=True,
@@ -439,7 +437,7 @@ def mix_voice_and_music(segments_meta, music: np.ndarray, ch_times: list, out_wa
         voice_bus[s_idx:e_idx] += wav[: e_idx - s_idx]
 
     v_peak = np.max(np.abs(voice_bus)) or 1.0
-    voice_bus = voice_bus * (0.76 / v_peak)
+    voice_bus = voice_bus * (0.86 / v_peak)
 
     # Subtle transition chime at chapter cuts
     for ct in ch_times[1:]:
@@ -449,16 +447,16 @@ def mix_voice_and_music(segments_meta, music: np.ndarray, ch_times: list, out_wa
         if idx + m >= total_n:
             continue
         lt = np.linspace(0.0, dur_s, m, endpoint=False)
-        chime = np.sin(2 * np.pi * 784.0 * lt) * np.exp(-lt * 16.0) * 0.038
+        chime = np.sin(2 * np.pi * 784.0 * lt) * np.exp(-lt * 16.0) * 0.030
         sfx_bus[idx : idx + m, 0] += chime
         sfx_bus[idx : idx + m, 1] += chime
 
-    # O(N) smooth sidechain ducking
+    # O(N) smooth sidechain ducking — keeps underscore supportive without crowding voice clarity
     v_env = np.abs(voice_bus).mean(axis=1)
     smooth_env = ndimage.uniform_filter1d(v_env, size=int(0.35 * sr))
-    duck = np.clip(1.0 - smooth_env * 16.0, 0.24, 0.72)[:, None]
+    duck = np.clip(1.0 - smooth_env * 25.0, 0.10, 0.45)[:, None]
 
-    mixed = voice_bus + (music * duck * 0.50) + sfx_bus
+    mixed = voice_bus + (music * duck * 0.28) + sfx_bus
     peak = np.max(np.abs(mixed))
     if peak > 0.89:
         mixed = mixed * (0.89 / peak)
@@ -471,11 +469,11 @@ async def main():
     os.makedirs(AUDIO_FINAL_DIR, exist_ok=True)
     os.makedirs(SUB_DIR, exist_ok=True)
 
-    cur_t = 0.35
+    cur_t = 0.25
     meta = []
     all_cues = []
     ch_times = []
-    crisis_end_s = 32.0
+    crisis_end_s = 10.0
 
     for i, seg in enumerate(PITCH_SEGMENTS):
         mp3 = os.path.join(AUDIO_BUILD_DIR, f"v2_{seg['id']}.mp3")
@@ -500,7 +498,7 @@ async def main():
         all_cues.extend(cues)
 
         scene_end = seg_end + seg["pause_after"]
-        if seg["id"] == "s02_healthcare_crisis":
+        if seg["id"] == "s02_preloader":
             crisis_end_s = scene_end
 
         meta.append({
