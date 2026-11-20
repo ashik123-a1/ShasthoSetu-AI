@@ -1,0 +1,13 @@
+{
+  "pipeline": "Bilingual EasyOCR (Bengali + English)",
+  "regression_tests": 9,
+  "regression_passed": 9,
+  "features": [
+    "Spatial line clustering based on dynamic vertical threshold",
+    "Table multi-column tokenization (dose, frequency, duration, strength)",
+    "Latin brand dictionary fuzzy normalization (Zoclar, Napa, Sergel, Vomilast)",
+    "Secondary generic composition subline binding",
+    "Mandatory human review gate (HTTP 422 UNVERIFIED_OCR_FIELDS on unverified plan activation)"
+  ],
+  "status": "PASS"
+}

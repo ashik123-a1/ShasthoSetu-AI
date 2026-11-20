@@ -1,0 +1,23 @@
+{
+  "total_fixes": 12,
+  "files_modified": [
+    "services/api/src/shasthosetu_api/services/ml_inference.py",
+    "services/api/src/shasthosetu_api/services/ocr_service.py",
+    "services/api/src/shasthosetu_api/routers/auth.py",
+    "services/api/tests/conftest.py",
+    "apps/web/src/components/ai/CyberScanWorkbench.tsx",
+    "apps/web/src/test/setup.ts",
+    "apps/web/src/test/designSystem.test.tsx",
+    "docs/BUSINESS_MODEL.md",
+    "services/api/evals/test_ocr_authorization_gate.py",
+    "services/api/evals/test_demo_isolation_security.py",
+    "scripts/test_cpanel_startup.py"
+  ],
+  "files_created": [
+    ".github/workflows/ci.yml",
+    "services/api/tests/test_ocr_regression.py"
+  ],
+  "files_deleted": [
+    ".github/ci.yml"
+  ]
+}

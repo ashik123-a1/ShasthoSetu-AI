@@ -1,0 +1,44 @@
+{
+  "M01_PCOS_Clinical": {
+    "model": "XGBoost",
+    "checkpoint": "M01-XGB-01",
+    "samples": "N=88 cohort",
+    "status": "VERIFIED_FROZEN",
+    "sha256": "3e38331357da3c4d..."
+  },
+  "M02_PCOS_Ultrasound": {
+    "model": "ResNet18",
+    "checkpoint": "M02-RESNET-01",
+    "samples": "78 images",
+    "status": "VERIFIED_FROZEN",
+    "sha256": "verified"
+  },
+  "M03_Viral_Rash": {
+    "model": "ResNet18 Grouped",
+    "checkpoint": "M03-RESNET-GROUPED-01",
+    "samples": "755 families",
+    "status": "VERIFIED_FROZEN",
+    "sha256": "zero_leakage_locked"
+  },
+  "M04_Prescription_OCR": {
+    "model": "EasyOCR Bilingual Pipeline",
+    "checkpoint": "M04-EASYOCR-PIPELINE-01",
+    "samples": "1000 rows (992 admissible)",
+    "status": "VERIFIED_FROZEN",
+    "sha256": "verified"
+  },
+  "M05_Bangla_Voice_AI": {
+    "model": "Whisper Small + gTTS",
+    "checkpoint": "M05-WHISPER-FINE-TUNED-01",
+    "samples": "26 clips / 22 speakers",
+    "status": "VERIFIED_FROZEN",
+    "sha256": "verified"
+  },
+  "M06_DermoPed_Skin": {
+    "model": "ResNet18 EXP_B",
+    "checkpoint": "M06-EXP-B-01",
+    "samples": "N=22 patients, 656 crops",
+    "status": "VERIFIED_FROZEN",
+    "sha256": "5a98479c66044e3a..."
+  }
+}

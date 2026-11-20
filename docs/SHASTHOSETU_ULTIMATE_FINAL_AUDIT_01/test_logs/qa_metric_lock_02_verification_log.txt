@@ -1,0 +1,71 @@
+﻿=================================================================
+SHASTHOSETU AI — RAG METRIC LOCK VERIFICATION (AI-QA-METRIC-LOCK-02)
+=================================================================
+Primary JSON     : docs/evidence/AI_RAG_VOICE_OCR_01/rag_benchmark_results.json (sha256: 584093e9bd1342f6ec0081e05d510ee3ec934ccda4ff5132f2a91262fbdfd47f)
+Pre-Fix JSON     : docs/evidence/AI_RAG_VOICE_OCR_01/pre_fix_rag_benchmark_results.json (sha256: a7bbddd97943c0e88e553fec6c4ebc2b382445bd5653ba3e86d103d5db7dfd8e)
+Provenance CSV   : docs/AI_QA_FIX_01/RAG_CITATION_PROVENANCE_AUDIT.csv (sha256: 2b97443625e8d6d22821594668e015d5f7be46c84b74c055291b44bf7350ac0d)
+Queries Checked  : 26 total (20 unique MEDICAL IDs + 6 separated safety probes)
+Slug Validation  : PASS (100% MEDICAL + EMERGENCY targets in RAG_CITATION_PROVENANCE_AUDIT.csv)
+-----------------------------------------------------------------
+  [DENSE ] Hits@1=18/20 (90.00%) | Hits@3=20/20 (100.00%) | Hits@5=20/20 (100.00%) | MRR=0.950000 (19/20) | Lat(N=20)=236.17ms, Lat(N=26)=215.92ms
+  [BM25  ] Hits@1=16/20 (80.00%) | Hits@3=18/20 (90.00%) | Hits@5=19/20 (95.00%) | MRR=0.854167 (41/48) | Lat(N=20)=2.57ms, Lat(N=26)=2.62ms
+  [HYBRID] Hits@1=19/20 (95.00%) | Hits@3=20/20 (100.00%) | Hits@5=20/20 (100.00%) | MRR=0.975000 (39/40) | Lat(N=20)=140.51ms, Lat(N=26)=141.88ms
+-----------------------------------------------------------------
+Root Cause Locked: EN-06 BM25 primary rank=2 (RR=0.5) was mistyped in manual Markdown table as 1 (1.000).
+-----------------------------------------------------------------
+  [MD-PASS] docs/AI_QA_FIX_01/CORRECTED_RAG_METRICS.md (20/20 rows + summary 100% consistent)
+  [MD-PASS] docs/AI_RAG_VOICE_OCR_01/RAG_EVALUATION_REPORT.md (20/20 rows + summary 100% consistent)
+  [MD-PASS] docs/AI_QA_METRIC_LOCK_02/BM25_ROOT_CAUSE_AND_CORRECTION.md (20/20 rows + summary 100% consistent)
+>>> ALL RAG METRIC LOCK ASSERTIONS PASSED! <<<
+
+--- PYTEST (test_rag_metric_lock_02.py) ---
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.2.0, pluggy-1.7.0 -- F:\Clude cccccccccccccccccccccccc\data we test\_shared\venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: F:\Clude cccccccccccccccccccccccc\data we test\services\api
+configfile: pyproject.toml
+plugins: anyio-4.16.0
+collecting ... collected 4 items
+
+F:\Clude cccccccccccccccccccccccc\data we test\services\api\tests\test_rag_metric_lock_02.py::test_primary_rag_json_consistency_and_eval_validator PASSED [ 25%]
+F:\Clude cccccccccccccccccccccccc\data we test\services\api\tests\test_rag_metric_lock_02.py::test_final_rag_metrics_json_and_csv_match_primary PASSED [ 50%]
+F:\Clude cccccccccccccccccccccccc\data we test\services\api\tests\test_rag_metric_lock_02.py::test_markdown_tables_match_primary_metrics PASSED [ 75%]
+F:\Clude cccccccccccccccccccccccc\data we test\services\api\tests\test_rag_metric_lock_02.py::test_pre_fix_rag_benchmark_preserved PASSED [100%]
+
+============================== 4 passed in 1.57s ==============================
+
+--- FINAL LOCK ---
+=================================================================
+SHASTHOSETU AI — FINAL EVIDENCE LOCK VERIFICATION SUITE
+=================================================================
+
+[TEST 1] Verifying DermoPed Patient Counts (N=22 patients, 3 Pediculosis)...
+  --> PASS: Verified 22 total patients (19 Chickenpox, 3 Pediculosis: pt72, pt71, pt74). 656 crops confirmed.
+
+[TEST 2] Verifying DermoPed Checkpoint File Sizes & SHA-256 Hashes on Disk...
+  --> PASS: EXP_B checkpoint verified (44,790,027 bytes, sha256: 5a98479c66044e3a...).
+  --> PASS: EXP_D checkpoint verified (44,787,896 bytes, sha256: e9ef59b4bc6de88d...).
+
+[TEST 3] Verifying Prescription OCR 1,000-Row Accounting (split_manifest.csv)...
+  --> PASS: Verified 1,000 rows (697 train + 150 val + 152 test + 1 unannotated 0747). Total: 992 admissible, 8 quarantined.
+
+[TEST 4] Verifying Voice Dataset Provenance (26 clips, 22 sentences, 22 speakers)...
+  --> PASS: Verified 26 audio clips across 22 unique sentences and 22 unique speakers.
+
+[TEST 5] Verifying PCOS Clinical Canonical Manifest (pcos_clinical_cleaned.csv)...
+  --> PASS: Canonical manifest verified (11,919 bytes, sha256: 3e38331357da3c4d..., N=88 patients).
+
+[TEST 6] Verifying MCVSLD 755-Family Grouped Split Manifest...
+  --> PASS: 755 families verified (528 train, 113 val, 114 test). Zero leakage.
+
+[TEST 7] Verifying Presence of All Final Lock Deliverables...
+  --> FOUND: FINAL_EVIDENCE_RECONCILIATION.md (12,537 bytes)
+  --> FOUND: DERMOPED_PATIENT_CHECKPOINT_VERIFICATION.csv (2,693 bytes)
+  --> FOUND: CORRECTED_DATASET_COUNTS.csv (4,542 bytes)
+  --> FOUND: FINAL_RESEARCH_MODEL_REGISTER.csv (13,101 bytes)
+  --> FOUND: FINAL_AUDIT_SIGNOFF.md (5,269 bytes)
+  --> PASS: All 5 final lock deliverables verified present and non-empty.
+
+=================================================================
+>>> ALL 7 READ-ONLY VERIFICATION TEST SUITES PASSED! <<<
+=================================================================

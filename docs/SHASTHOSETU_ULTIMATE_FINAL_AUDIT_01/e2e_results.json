@@ -1,0 +1,37 @@
+{
+  "journeys_tested": [
+    {
+      "journey": "Patient Registration & Profile Onboarding",
+      "status": "PASS"
+    },
+    {
+      "journey": "Doctor Application & Pending State Onboarding",
+      "status": "PASS"
+    },
+    {
+      "journey": "Appointment Booking & Availability Collision Locking",
+      "status": "PASS"
+    },
+    {
+      "journey": "Simulated Checkout & 15% Platform Commission Split",
+      "status": "PASS"
+    },
+    {
+      "journey": "WebRTC Multi-worker SQLite WAL Consultation Signaling",
+      "status": "PASS"
+    },
+    {
+      "journey": "Doctor Clinical Notes & e-Prescription Generation",
+      "status": "PASS"
+    },
+    {
+      "journey": "Doctor Wallet Available Balance & Disbursement Ledger",
+      "status": "PASS"
+    },
+    {
+      "journey": "Zero-Guest Payment Interception Gate",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

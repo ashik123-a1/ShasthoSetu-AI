@@ -1,0 +1,8 @@
+Evidence_ID,File_Name,SHA256_Checksum,Category,Description
+EVID-01,rag_benchmark_results.json,584093e9bd1342f6ec0081e05d510ee3ec934ccda4ff5132f2a91262fbdfd47f,RAG Retrieval,Locked 26-query benchmark metrics
+EVID-02,ocr_benchmark_results.json,6a5485ef40dec777171e51ccccab334d0db06dcf126f6d0b39a752c8a209830c,OCR Benchmark,OCR accuracy and CER/WER metrics
+EVID-03,voice_benchmark_results.json,26e2cd5e2865a4fe1cbf45f7634f7e542a3884e1bff65b1da063ab6b315f2b10,Bangla Voice,ASR audio benchmark provenance
+EVID-04,six_ai_tools_live_proof.json,099c52396a50926cf7a76b1e90ff9541ebe5b7c248347a64673e1d26d550abba,AI Tools,All 6 AI modules live inference proof
+EVID-05,mcp_verification_report.json,e03d1b0dec3d92be7aa3807fbad8af6d60dc8f0bc266dab4d96e9bc2612ee1a1,MCP & Tools,6 MCP servers execution proof
+EVID-06,playwright_fullstack_metrics.json,a37492759ca0934a35060b754dd42256fe878ebfeeb65af83738ab602cb7e131,E2E Testing,Browser UI/UX metrics
+EVID-07,ci.yml,6ad85782aa0c4033466ab4a0dc01a41d7d437d494ae5144fa57ced419b60fb7f,CI Configuration,Active GitHub Actions workflow

@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "tested_controls": [
+    {
+      "control": "CSRF_DOUBLE_SUBMIT_COOKIE",
+      "result": "PASS",
+      "description": "State-changing POST/PATCH/DELETE require valid matching X-CSRF-Token header."
+    },
+    {
+      "control": "PRODUCTION_SECURITY_GATE",
+      "result": "PASS",
+      "description": "Synthetic demo accounts strictly return HTTP 403 in production environment."
+    },
+    {
+      "control": "SUPPORT_ZERO_PHI",
+      "result": "PASS",
+      "description": "Support role strictly blocked from patient PHR, clinical notes, and OCR transcripts."
+    },
+    {
+      "control": "HMAC_WEBHOOK_VERIFICATION",
+      "result": "PASS",
+      "description": "SHA-256 HMAC signature and replay window strictly enforced on webhooks (13/13 passed)."
+    },
+    {
+      "control": "PASSWORD_STORAGE",
+      "result": "PASS",
+      "description": "Argon2id with constant-time verification and dummy timing equalizer."
+    },
+    {
+      "control": "CLIENT_IP_MASKING",
+      "result": "PASS",
+      "description": "X-Forwarded-For sanitized; audit logs mask client IPs to /24 subnet."
+    }
+  ]
+}

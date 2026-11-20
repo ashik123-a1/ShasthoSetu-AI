@@ -1,0 +1,122 @@
+[
+  {
+    "id": "FINDING-01",
+    "title": "Misplaced GitHub Actions workflow file",
+    "severity": "HIGH",
+    "category": "CI/CD & DevOps",
+    "component": ".github/ci.yml",
+    "description": "Workflow was located at .github/ci.yml instead of .github/workflows/ci.yml, causing GitHub Actions to stay inactive with 0 runs.",
+    "status": "RESOLVED_LOCAL_AND_CI_VERIFIED",
+    "fix": "Moved to .github/workflows/ci.yml, verified active workflow registration ID 425086746, successfully passed GitHub Actions Run 44755243666."
+  },
+  {
+    "id": "FINDING-02",
+    "title": "Hardcoded demo credential auto-login in CyberScanWorkbench.tsx",
+    "severity": "HIGH",
+    "category": "Authentication & Security",
+    "component": "apps/web/src/components/ai/CyberScanWorkbench.tsx",
+    "description": "Unauthenticated user visiting AI workbench silently called login('patient.demo@shasthosetu.local', 'PatientDemo#2026').",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Removed silent login call and demo credentials. Added upfront authentication guard requiring explicit user login."
+  },
+  {
+    "id": "FINDING-03",
+    "title": "Missing automated OCR regression test suite",
+    "severity": "MEDIUM",
+    "category": "OCR & ML Verification",
+    "component": "services/api/tests/test_ocr_regression.py",
+    "description": "Spatial row clustering, table extraction, and Latin prefix normalization lacked automated regression tests.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Created 9 automated regression tests in services/api/tests/test_ocr_regression.py covering all spatial, table, and verification gates."
+  },
+  {
+    "id": "FINDING-04",
+    "title": "Bengali Unicode word boundary mismatch in regexes",
+    "severity": "MEDIUM",
+    "category": "Bilingual NLP & OCR",
+    "component": "services/api/src/shasthosetu_api/services/ml_inference.py",
+    "description": "ASCII word boundary \\b failed to match Bengali combining vowel marks (\u09ae\u09bf.\u0997\u09cd\u09b0\u09be, \u09ac\u09b9\u09bf\u09b0\u09cd\u09ac\u09bf\u09ad\u09be\u0997\u09c0\u09af\u09bc).",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Replaced ASCII \\b with (?:\b|\\s|$) in both ml_inference.py and ocr_service.py."
+  },
+  {
+    "id": "FINDING-05",
+    "title": "Missing realistic prescription sample on headless CI runner",
+    "severity": "LOW",
+    "category": "CI/CD & Testing",
+    "component": "services/api/src/shasthosetu_api/services/ml_inference.py",
+    "description": "Large sample images are gitignored, raising FileNotFoundError on clean GitHub Actions runners.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Added in-memory synthetic PIL image fallback in get_curated_sample_image() when local sample file is absent."
+  },
+  {
+    "id": "FINDING-06",
+    "title": "Particle preloader overlay blocking headless Vitest tests",
+    "severity": "MEDIUM",
+    "category": "Frontend Testing",
+    "component": "apps/web/src/test/setup.ts",
+    "description": "SessionStorage unmocked in jsdom environment left particle intro preloader open, intercepting DOM events.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Mocked sessionStorage with ss-preloader-seen-v1 = '1' in setup.ts and added cleanup() in test 7 of designSystem.test.tsx."
+  },
+  {
+    "id": "FINDING-07",
+    "title": "Frozen Settings dataclass modification failure in test harness",
+    "severity": "LOW",
+    "category": "Backend Testing",
+    "component": "services/api/tests/conftest.py",
+    "description": "Settings is a frozen dataclass; direct property assignment in test fixture threw FrozenInstanceError.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Used dataclasses.replace(config.settings, env='development') with monkeypatch to safely inject development settings."
+  },
+  {
+    "id": "FINDING-08",
+    "title": "Missing difflib import in ml_inference.py",
+    "severity": "HIGH",
+    "category": "OCR & ML Inference",
+    "component": "services/api/src/shasthosetu_api/services/ml_inference.py",
+    "description": "_clean_brand_name used difflib.SequenceMatcher without top-level import, causing NameError in OCR candidate extraction.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Added import difflib to top of ml_inference.py."
+  },
+  {
+    "id": "FINDING-09",
+    "title": "Brand uppercase casing and strength token contamination",
+    "severity": "MEDIUM",
+    "category": "OCR & Extraction",
+    "component": "services/api/src/shasthosetu_api/services/ml_inference.py",
+    "description": "Brand cleaning returned all-caps strings (TAB. ZOCLAR) and multi-column row parsing put strength into med_tokens.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Normalized brand names to Title Case (TAB. Zoclar) and separated strength_tokens during line token scanning."
+  },
+  {
+    "id": "FINDING-10",
+    "title": "Dynamic production mode check in auth login gate",
+    "severity": "HIGH",
+    "category": "Security & Deployment",
+    "component": "services/api/src/shasthosetu_api/routers/auth.py",
+    "description": "auth.py evaluated settings.env from module load time, failing dynamic production environment isolation tests.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Evaluated os.getenv('SHASTHOSETU_ENV', settings.env).lower() dynamically; strictly returns HTTP 403 PRODUCTION_SECURITY_GATE for synthetic demo accounts in production."
+  },
+  {
+    "id": "FINDING-11",
+    "title": "Missing CSRF token headers in standalone test clients",
+    "severity": "LOW",
+    "category": "API Testing",
+    "component": "services/api/evals/test_ocr_authorization_gate.py",
+    "description": "Standalone test clients did not attach x-csrf-token header, tripping the CSRF validation middleware.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Updated create_user_client and create_client in eval harnesses to automatically forward the session CSRF token."
+  },
+  {
+    "id": "FINDING-12",
+    "title": "Unauthenticated AI inference expectation in test_cpanel_startup.py",
+    "severity": "LOW",
+    "category": "Deployment Testing",
+    "component": "scripts/test_cpanel_startup.py",
+    "description": "CPanel startup test expected 200 on unauthenticated /v1/ai/infer/pcos-clinical, which now requires authentication.",
+    "status": "RESOLVED_LOCAL",
+    "fix": "Updated script to assert 401 on unauthenticated attempt, log in as patient demo, and verify 200 OFFLINE handling."
+  }
+]

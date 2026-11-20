@@ -1,0 +1,14 @@
+{
+  "retrieval_architecture": "Hybrid Reciprocal Rank Fusion (BM25 + BGE-M3 Dense Retrieval)",
+  "canonical_benchmark_metrics": {
+    "dense_mrr": 0.95,
+    "bm25_mrr": 0.854167,
+    "hybrid_rrf_mrr": 0.975,
+    "dense_hits_at_1": "18/20 (90.0%)",
+    "dense_hits_at_3": "20/20 (100.0%)",
+    "hybrid_hits_at_1": "19/20 (95.0%)",
+    "hybrid_hits_at_3": "20/20 (100.0%)"
+  },
+  "query_dataset": "20 unique medical query IDs + 6 separated safety probes (26 total)",
+  "status": "PASS_LOCKED"
+}
