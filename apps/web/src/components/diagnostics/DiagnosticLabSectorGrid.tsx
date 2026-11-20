@@ -12,6 +12,10 @@ import {
 } from "lucide-react";
 import { formatBdtFromPoisha } from "../../lib/formatters";
 import type { Locale } from "../../lib/i18n";
+import {
+  SimulatedPaymentCheckoutModal,
+  type SimulatedPaymentSuccessPayload,
+} from "../billing/SimulatedPaymentCheckoutModal";
 import { DiagnosticTestVisual } from "./DiagnosticTestVisual";
 
 export interface DiagnosticPanelItem {
@@ -45,6 +49,7 @@ export function DiagnosticLabSectorGrid({
 }) {
   const [selectedSector, setSelectedSector] = useState<string>("ALL");
   const [bookedNotice, setBookedNotice] = useState<string | null>(null);
+  const [checkoutTest, setCheckoutTest] = useState<DiagnosticPanelItem | null>(null);
 
   const filteredTests = tests.filter((t) => {
     if (selectedSector === "ALL") return true;
@@ -57,12 +62,7 @@ export function DiagnosticLabSectorGrid({
     if (onBookTest) {
       onBookTest(test);
     } else {
-      setBookedNotice(
-        locale === "bn"
-          ? `সিমুলেটেড ল্যাব টেস্ট বুকিং সম্পন্ন (${test.code})! ডেমো হোম স্যাম্পল কালেকশন নিশ্চিত করা হয়েছে।`
-          : `Simulated Demo Lab Order Placed (${test.code})! Specimen Home Collection confirmed.`
-      );
-      setTimeout(() => setBookedNotice(null), 4000);
+      setCheckoutTest(test);
     }
   };
 
@@ -175,6 +175,27 @@ export function DiagnosticLabSectorGrid({
           </div>
         ))}
       </div>
+
+      <SimulatedPaymentCheckoutModal
+        isOpen={Boolean(checkoutTest)}
+        category="DIAGNOSTIC"
+        title={locale === "bn" ? "ডায়াগনস্টিক ল্যাব টেস্ট ও হোম কালেকশন বুকিং" : "Diagnostic Lab Panel & Home Collection Checkout"}
+        itemDescription={
+          checkoutTest
+            ? `${checkoutTest.code} — ${locale === "bn" ? checkoutTest.name_bn : checkoutTest.name_en} (${checkoutTest.sample_type})`
+            : ""
+        }
+        amountPoisha={checkoutTest?.fee_minor_poisha || 0}
+        onSuccess={(payload: SimulatedPaymentSuccessPayload) => {
+          setBookedNotice(
+            locale === "bn"
+              ? `ল্যাব টেস্ট বুকিং ও পেমেন্ট সফল (${checkoutTest?.code})! রসিদ: ${payload.receiptNumber} (${payload.transactionId}) — অ্যাডমিন ব্যাংক ড্যাশবোর্ডে যুক্ত হয়েছে।`
+              : `Lab Order & Payment Confirmed (${checkoutTest?.code})! Receipt: ${payload.receiptNumber} (${payload.transactionId}) synced to Admin Treasury.`
+          );
+          setCheckoutTest(null);
+        }}
+        onClose={() => setCheckoutTest(null)}
+      />
     </div>
   );
 }

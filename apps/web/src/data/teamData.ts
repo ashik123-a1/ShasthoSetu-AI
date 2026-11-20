@@ -22,6 +22,7 @@ export const TEAM_INFO = {
   region: "Dhaka, Bangladesh",
   teamSize: 5,
   githubRepoUrl: "https://github.com/ashik123-a1/ShasthoSetu-AI",
+  liveWebsiteUrl: "https://shasthosetu.fit/",
   demoHelpline: "+880 9612-SHASTHO (74278)",
 };
 

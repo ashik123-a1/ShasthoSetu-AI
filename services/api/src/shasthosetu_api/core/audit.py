@@ -1,10 +1,38 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
-from .security import new_id, utc_now_iso
+from .security import new_id, sha256_hex, utc_now_iso
 
 _SENSITIVE_KEYS = {"password", "password_hash", "token", "token_hash", "csrf_token", "otp", "pin", "cvv", "pan"}
+_PERSONAL_ID_KEYS = {
+    "email",
+    "phone",
+    "identifier",
+    "contact_phone",
+    "payer_email",
+    "requester_email",
+    "handle_prefix",
+}
+_EMAIL_RE = re.compile(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$")
+
+
+def mask_personal_identifier(value: str | None) -> str:
+    """Hash and mask personal emails/phones before persisting to audit logs."""
+    if not value:
+        return "[NONE]"
+    s = str(value).strip()
+    if not s:
+        return "[NONE]"
+    digest = sha256_hex(s.lower())[:10]
+    if "@" in s:
+        local, _, domain = s.partition("@")
+        prefix = local[:2] if len(local) >= 2 else local[:1]
+        return f"{prefix}***@{domain} [sha256:{digest}]"
+    if len(s) >= 6:
+        return f"{s[:3]}***{s[-2:]} [sha256:{digest}]"
+    return f"*** [sha256:{digest}]"
 
 
 def _redact_dict(data: dict | None) -> str:
@@ -12,8 +40,13 @@ def _redact_dict(data: dict | None) -> str:
         return "{}"
     cleaned = {}
     for k, v in data.items():
-        if k.lower() in _SENSITIVE_KEYS:
+        kl = k.lower()
+        if kl in _SENSITIVE_KEYS:
             cleaned[k] = "[REDACTED]"
+        elif kl in _PERSONAL_ID_KEYS:
+            cleaned[k] = mask_personal_identifier(str(v)) if v is not None else None
+        elif isinstance(v, str) and _EMAIL_RE.match(v.strip()):
+            cleaned[k] = mask_personal_identifier(v)
         else:
             cleaned[k] = v
     return json.dumps(cleaned, ensure_ascii=False)

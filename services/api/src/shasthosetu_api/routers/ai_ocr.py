@@ -143,20 +143,32 @@ async def upload_and_run_ocr(
                 target_pid = owned["id"]
         else:
             # Doctor preview upload requires an explicit patient_profile_id with appointment consent
-            if patient_profile_id:
-                doc = user["doctor_profile"]
-                has_appt = conn.execute(
-                    "SELECT 1 FROM appointments WHERE patient_profile_id = ? AND doctor_id = ? AND consent_shared_with_doctor = 1",
-                    (patient_profile_id, doc["id"]),
-                ).fetchone()
-                if not has_appt:
-                    raise HTTPException(status_code=403, detail="Patient profile not consented to your queue.")
-                target_pid = patient_profile_id
-            else:
-                any_pid = conn.execute("SELECT id FROM patient_profiles WHERE id = 'pp-rahima-self'").fetchone()
-                target_pid = any_pid["id"] if any_pid else conn.execute("SELECT id FROM patient_profiles LIMIT 1").fetchone()["id"]
+            if not patient_profile_id:
+                raise HTTPException(
+                    status_code=422,
+                    detail="patient_profile_id required when a doctor uploads a prescription.",
+                )
+            doc = user["doctor_profile"]
+            has_appt = conn.execute(
+                "SELECT 1 FROM appointments WHERE patient_profile_id = ? AND doctor_id = ? AND consent_shared_with_doctor = 1",
+                (patient_profile_id, doc["id"]),
+            ).fetchone()
+            if not has_appt:
+                raise HTTPException(status_code=403, detail="Patient profile not consented to your queue.")
+            target_pid = patient_profile_id
 
-    data = await file.read()
+    max_bytes = 10 * 1024 * 1024
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(64 * 1024)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(status_code=413, detail="FILE_TOO_LARGE: Uploaded file exceeds 10 MB limit.")
+        chunks.append(chunk)
+    data = b"".join(chunks)
     fname = file.filename or "prescription.jpg"
     try:
         res = run_bilingual_ocr_pipeline(data, fname)

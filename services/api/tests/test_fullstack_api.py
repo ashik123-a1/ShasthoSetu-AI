@@ -462,3 +462,83 @@ def test_public_research_and_pcos_calculator_honesty(isolated_env: Path):
     c = calc.json()
     assert c["classification"] == "RESEARCH_PREVIEW_NON_DIAGNOSTIC"
     assert "NON-DIAGNOSTIC" in c["disclaimer"]
+
+
+def test_repo_review_security_fixes_and_six_month_treasury_support_tnx(isolated_env: Path):
+    anon = TestClient(app)
+
+    # Fix #3: Unauthenticated calls to ML vision endpoints are rejected with 401
+    for path in ("/v1/ai/infer/pcos-ultrasound", "/v1/ai/infer/viral-rash", "/v1/ai/infer/dermoped"):
+        r_unauth = anon.post(path, files={"file": ("test.jpg", b"fake", "image/jpeg")})
+        assert r_unauth.status_code == 401, f"{path} allowed unauthenticated request"
+
+    # Fix #5: ?token= in URL query string is rejected
+    pt = TestClient(app)
+    login_res = _login(pt, "patient.demo@shasthosetu.local", "PatientDemo#2026")
+    assert login_res.status_code == 200
+    raw_session_token = pt.cookies.get("ss_session")
+    assert raw_session_token
+    url_tok_res = anon.get(f"/v1/patient/dashboard?token={raw_session_token}")
+    assert url_tok_res.status_code == 401
+
+    # Fix #2: State-changing request with invalid X-CSRF-Token is rejected with 403
+    bad_csrf = pt.post(
+        "/v1/patient/dependents",
+        json={"display_name": "CSRF Blocked Child", "relationship_type": "CHILD"},
+        headers={"X-CSRF-Token": "wrong-csrf-token"},
+    )
+    assert bad_csrf.status_code == 403
+    assert "CSRF_TOKEN_INVALID" in bad_csrf.text
+
+    # Fix #6: Doctor uploading prescription OCR without patient_profile_id gets 422
+    dr = TestClient(app)
+    assert _login(dr, "dr.farhana@shasthosetu.local", "DoctorDemo#2026").status_code == 200
+    dr_ocr_no_pid = dr.post(
+        "/v1/ai/ocr/upload",
+        files={"file": ("rx.png", b"not-an-image", "image/png")},
+    )
+    assert dr_ocr_no_pid.status_code == 422
+    assert "patient_profile_id required" in dr_ocr_no_pid.text
+
+    # Business, Banking, 6-Month Commission & Support TNX-Only System verification
+    adm = TestClient(app)
+    assert _login(adm, "admin.demo@shasthosetu.local", "AdminDemo#2026").status_code == 200
+    fin_before = adm.get("/v1/admin/finance/overview").json()
+    assert len(fin_before["bank_accounts"]) == 5
+    assert len(fin_before["monthly_six_month_trend"]) >= 6
+    assert len(fin_before["stream_commission_breakdown"]) == 4
+    assert fin_before["kpis"]["total_transactions_count"] >= 48
+    gmv_before = fin_before["kpis"]["gross_gmv_poisha"]
+    comm_before = fin_before["kpis"]["platform_commission_poisha"]
+
+    # User buys ePharma medicines (12% commission) via universal-checkout
+    buy_res = pt.post(
+        "/v1/payments/universal-checkout",
+        json={
+            "revenue_stream": "EPHARMA_SALE",
+            "item_title": "ePharma Cart: Napa Extend + Seclo 20mg + Digital BP Monitor",
+            "amount_minor_poisha": 250000,
+            "gateway_method": "DEMO_BKASH",
+        },
+    )
+    assert buy_res.status_code == 201
+    tx_created = buy_res.json()["transaction"]
+    assert tx_created["gross_amount_minor_poisha"] == 250000
+    assert tx_created["commission_rate_pct"] == 12.0
+    assert tx_created["commission_minor_poisha"] == 30000
+    assert tx_created["net_partner_payout_minor_poisha"] == 220000
+
+    # Admin finance immediately reflects new purchase, commission, and bank settlement balance
+    fin_after = adm.get("/v1/admin/finance/overview").json()
+    assert fin_after["kpis"]["gross_gmv_poisha"] == gmv_before + 250000
+    assert fin_after["kpis"]["platform_commission_poisha"] == comm_before + 30000
+
+    # Support Desk sees ONLY non-PHI transaction metadata (item_title strictly excluded!)
+    sup = TestClient(app)
+    assert _login(sup, "support.demo@shasthosetu.local", "SupportDemo#2026").status_code == 200
+    sup_txns = sup.get(f"/v1/support/transactions?q={tx_created['txn_ref']}").json()["transactions"]
+    assert len(sup_txns) == 1
+    assert sup_txns[0]["txn_ref"] == tx_created["txn_ref"]
+    assert sup_txns[0]["support_safe_label"] == "EPHARMA_ORDER"
+    assert "item_title" not in sup_txns[0]
+

@@ -3,15 +3,142 @@ from __future__ import annotations
 import json
 import sqlite3
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from ..core.audit import notify_user, record_audit
-from ..core.dependencies import require_role
+from ..core.audit import mask_personal_identifier, notify_user, record_audit
+from ..core.dependencies import get_optional_user, require_role
 from ..core.security import new_id, sha256_hex, utc_now_iso
 from ..db.sqlite import get_db_conn, row_to_dict, rows_to_dicts
+from ..seeds.seed_demo import _recompute_bank_balances, _seed_business_and_six_month_ledger
 
 router = APIRouter(prefix="/v1", tags=["Patient Portal, Bookings & Demo Payments"])
+
+_STREAM_COMMISSION_PCT = {
+    "DOCTOR_CONSULTATION": 15.0,
+    "EPHARMA_SALE": 12.0,
+    "DIAGNOSTIC_TEST": 18.0,
+    "HEALTH_PLAN": 20.0,
+}
+
+_STREAM_SAFE_LABEL = {
+    "DOCTOR_CONSULTATION": "DOCTOR_BOOKING_FEE",
+    "EPHARMA_SALE": "EPHARMA_ORDER",
+    "DIAGNOSTIC_TEST": "DIAGNOSTIC_LAB_ORDER",
+    "HEALTH_PLAN": "FAMILY_PLAN_SUBSCRIPTION",
+}
+
+_GATEWAY_TO_BANK = {
+    "DEMO_BKASH": "bank-bkash-escrow",
+    "SHASTHOPAY_MFS": "bank-bkash-escrow",
+    "DEMO_NAGAD": "bank-nagad-merchant",
+    "DIGITAL_DIRECT_PAY": "bank-nagad-merchant",
+    "DEMO_CARD": "bank-ssl-card",
+    "SMART_CARD_DEMO": "bank-ssl-card",
+    "DEMO_BANK": "bank-city-corp",
+    "DEMO_FREE": "bank-city-corp",
+}
+
+
+def record_live_platform_transaction(
+    conn: sqlite3.Connection,
+    *,
+    revenue_stream: str,
+    item_title: str,
+    gross_amount_minor_poisha: int,
+    gateway_method: str,
+    payer_user: dict | None = None,
+    beneficiary_entity: str = "ShasthoSetu Verified Partner",
+    status: str = "PAID",
+    txn_ref: str | None = None,
+    receipt_number: str | None = None,
+    related_appointment_id: str | None = None,
+    related_demo_payment_id: str | None = None,
+    related_order_id: str | None = None,
+    now_iso: str | None = None,
+) -> dict:
+    now = now_iso or utc_now_iso()
+    _seed_business_and_six_month_ledger(conn, now)
+    stream = revenue_stream if revenue_stream in _STREAM_COMMISSION_PCT else "EPHARMA_SALE"
+    comm_pct = _STREAM_COMMISSION_PCT[stream]
+    gross = max(0, int(gross_amount_minor_poisha))
+    comm_poisha = int(round(gross * (comm_pct / 100.0)))
+    net_payout = max(0, gross - comm_poisha)
+
+    gw_norm = gateway_method if gateway_method in ("DEMO_BKASH", "DEMO_NAGAD", "DEMO_CARD", "DEMO_BANK", "DEMO_FREE") else (
+        "DEMO_BKASH" if gateway_method == "SHASTHOPAY_MFS" else (
+            "DEMO_NAGAD" if gateway_method == "DIGITAL_DIRECT_PAY" else "DEMO_CARD"
+        )
+    )
+    bank_id = _GATEWAY_TO_BANK.get(gateway_method, _GATEWAY_TO_BANK.get(gw_norm, "bank-bkash-escrow"))
+    tx_id = new_id("ptx")
+    short_code = tx_id.split("-")[1][:6].upper()
+    prefix = "APT" if stream == "DOCTOR_CONSULTATION" else ("PHM" if stream == "EPHARMA_SALE" else ("DIAG" if stream == "DIAGNOSTIC_TEST" else "PLN"))
+    final_txn_ref = txn_ref or f"TXN-{now[:7].replace('-', '')}-{prefix}-{short_code}"
+    final_rcp = receipt_number or f"DEMO-RCP-{prefix}-{short_code}"
+    billing_month = now[:7]
+
+    if payer_user:
+        masked_id = mask_personal_identifier(payer_user.get("email") or payer_user.get("phone") or payer_user.get("id"))
+        payer_masked = f"{payer_user.get('full_name', 'Patient')} ({masked_id.split(' ')[0]})"
+        payer_uid = payer_user.get("id")
+    else:
+        payer_masked = "রহিমা বেগম • Demo Shopper (pa***@shasthosetu.local)"
+        payer_uid = "usr-pt-demo"
+
+    conn.execute(
+        """
+        INSERT INTO platform_transactions (
+            id, txn_ref, receipt_number, revenue_stream, item_title, support_safe_label,
+            payer_user_id, payer_name_masked, beneficiary_entity, gateway_method,
+            bank_account_id, gross_amount_minor_poisha, commission_rate_pct,
+            commission_minor_poisha, net_partner_payout_minor_poisha, status,
+            billing_month, related_appointment_id, related_demo_payment_id,
+            related_order_id, created_at_utc, updated_at_utc
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            tx_id,
+            final_txn_ref,
+            final_rcp,
+            stream,
+            item_title[:240],
+            _STREAM_SAFE_LABEL[stream],
+            payer_uid,
+            payer_masked,
+            beneficiary_entity[:160],
+            gw_norm,
+            bank_id,
+            gross,
+            comm_pct,
+            comm_poisha,
+            net_payout,
+            status,
+            billing_month,
+            related_appointment_id,
+            related_demo_payment_id,
+            related_order_id,
+            now,
+            now,
+        ),
+    )
+    _recompute_bank_balances(conn, now)
+    return {
+        "id": tx_id,
+        "txn_ref": final_txn_ref,
+        "receipt_number": final_rcp,
+        "revenue_stream": stream,
+        "support_safe_label": _STREAM_SAFE_LABEL[stream],
+        "gateway_method": gw_norm,
+        "bank_account_id": bank_id,
+        "gross_amount_minor_poisha": gross,
+        "commission_rate_pct": comm_pct,
+        "commission_minor_poisha": comm_poisha,
+        "net_partner_payout_minor_poisha": net_payout,
+        "status": status,
+        "billing_month": billing_month,
+        "created_at_utc": now,
+    }
 
 
 def _owned_profile_ids(conn: sqlite3.Connection, user_id: str) -> list[str]:
@@ -60,6 +187,15 @@ class DemoCheckoutRequest(BaseModel):
     method: str = Field(..., pattern="^(DEMO_BKASH|DEMO_NAGAD|DEMO_CARD|DEMO_FREE)$")
     outcome: str = Field(default="SUCCESS", pattern="^(SUCCESS|FAILED|CANCELLED)$")
     idempotency_key: str = Field(..., min_length=4, max_length=120)
+
+
+class UniversalCheckoutRequest(BaseModel):
+    revenue_stream: str = Field(default="EPHARMA_SALE", pattern="^(DOCTOR_CONSULTATION|EPHARMA_SALE|DIAGNOSTIC_TEST|HEALTH_PLAN)$")
+    item_title: str = Field(..., min_length=2, max_length=240)
+    amount_minor_poisha: int = Field(..., ge=0, le=100_000_000)
+    gateway_method: str = Field(default="DEMO_BKASH")
+    beneficiary_entity: Optional[str] = Field(default=None, max_length=160)
+    related_order_id: Optional[str] = Field(default=None, max_length=120)
 
 
 class VerifyOcrFieldRequest(BaseModel):
@@ -556,6 +692,37 @@ def demo_checkout(payload: DemoCheckoutRequest, user: dict = Depends(require_rol
                     title_bn=f"নতুন নিশ্চিতকৃত অ্যাপয়েন্টমেন্ট: {apt['booking_reference']}",
                     title_en=f"New confirmed booking: {apt['booking_reference']}",
                 )
+                record_live_platform_transaction(
+                    conn,
+                    revenue_stream="DOCTOR_CONSULTATION",
+                    item_title=f"Doctor Consultation Booking {apt['booking_reference']}",
+                    gross_amount_minor_poisha=apt["fee_minor_poisha"],
+                    gateway_method=payload.method,
+                    payer_user=user,
+                    beneficiary_entity="Approved Clinician (85% Partner Share)",
+                    status="PAID",
+                    txn_ref=f"TXN-{demo_ref}",
+                    receipt_number=rcp_num,
+                    related_appointment_id=apt["id"],
+                    related_demo_payment_id=pay_id,
+                    now_iso=now,
+                )
+            elif pay_status == "DEMO_FAILED":
+                record_live_platform_transaction(
+                    conn,
+                    revenue_stream="DOCTOR_CONSULTATION",
+                    item_title=f"Failed Checkout Attempt {apt['booking_reference']}",
+                    gross_amount_minor_poisha=apt["fee_minor_poisha"],
+                    gateway_method=payload.method,
+                    payer_user=user,
+                    beneficiary_entity="Approved Clinician (85% Partner Share)",
+                    status="FAILED",
+                    txn_ref=f"TXN-{demo_ref}",
+                    receipt_number=f"DEMO-FAIL-{pay_id.split('-')[1][:6].upper()}",
+                    related_appointment_id=apt["id"],
+                    related_demo_payment_id=pay_id,
+                    now_iso=now,
+                )
             record_audit(conn, actor_user_id=user["id"], actor_role="PATIENT", action_type=f"DEMO_CHECKOUT_{pay_status}", target_resource="demo_payments", target_id=pay_id)
             conn.execute("COMMIT;")
         except Exception:
@@ -988,6 +1155,55 @@ def submit_pediatric_triage(payload: PediatricIntakeRequest, user: dict = Depend
     return {"case_id": cid, "review_state": review_state, "escalation_flags": flags, "deterministic_rule": True}
 
 
+@router.post("/payments/universal-checkout", status_code=201)
+def universal_storefront_checkout(payload: UniversalCheckoutRequest, request: Request):
+    """Records any ePharma medicine purchase, diagnostic lab test booking, consultation, or health plan payment directly into the Admin Bank & Commission Ledger."""
+    user = get_optional_user(request)
+    default_beneficiaries = {
+        "EPHARMA_SALE": "Square / Beximco ePharma Hub (88% Vendor Share)",
+        "DIAGNOSTIC_TEST": "Certified Diagnostic Lab Partner (82% Lab Share)",
+        "DOCTOR_CONSULTATION": "Approved BMDC Specialist (85% Clinician Share)",
+        "HEALTH_PLAN": "ShasthoSetu Care Network Pool (80% Network Share)",
+    }
+    beneficiary = payload.beneficiary_entity or default_beneficiaries.get(payload.revenue_stream, "ShasthoSetu Partner")
+    now = utc_now_iso()
+    with get_db_conn() as conn:
+        conn.execute("BEGIN IMMEDIATE;")
+        try:
+            tx = record_live_platform_transaction(
+                conn,
+                revenue_stream=payload.revenue_stream,
+                item_title=payload.item_title,
+                gross_amount_minor_poisha=payload.amount_minor_poisha,
+                gateway_method=payload.gateway_method,
+                payer_user=user,
+                beneficiary_entity=beneficiary,
+                status="PAID",
+                related_order_id=payload.related_order_id,
+                now_iso=now,
+            )
+            record_audit(
+                conn,
+                actor_user_id=user["id"] if user else "usr-pt-demo",
+                actor_role=user["primary_role"] if user else "PATIENT",
+                action_type=f"UNIVERSAL_CHECKOUT_{payload.revenue_stream}",
+                target_resource="platform_transactions",
+                target_id=tx["id"],
+                details={
+                    "txn_ref": tx["txn_ref"],
+                    "gross_poisha": tx["gross_amount_minor_poisha"],
+                    "commission_poisha": tx["commission_minor_poisha"],
+                    "bank_account_id": tx["bank_account_id"],
+                },
+            )
+            conn.execute("COMMIT;")
+        except Exception:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK;")
+            raise
+    return {"transaction": tx}
+
+
 @router.post("/patient/diagnostics/order", status_code=201)
 def order_demo_diagnostic(payload: DiagnosticOrderRequest, user: dict = Depends(require_role("PATIENT"))):
     with get_db_conn() as conn:
@@ -999,6 +1215,7 @@ def order_demo_diagnostic(payload: DiagnosticOrderRequest, user: dict = Depends(
             raise HTTPException(status_code=404, detail="Diagnostic test not found.")
         oid = new_id("diagord")
         ref = f"DEMO-LAB-{oid.split('-')[1][:6].upper()}"
+        now = utc_now_iso()
         conn.execute("BEGIN IMMEDIATE;")
         conn.execute(
             """
@@ -1007,8 +1224,20 @@ def order_demo_diagnostic(payload: DiagnosticOrderRequest, user: dict = Depends(
             """,
             (oid, ref, pid, test["id"], payload.preferred_date, payload.collection_mode, test["fee_minor_poisha"], payload.notes),
         )
+        tx = record_live_platform_transaction(
+            conn,
+            revenue_stream="DIAGNOSTIC_TEST",
+            item_title=f"Diagnostic Lab Panel: {test['code']} — {test['name_en']} ({payload.collection_mode})",
+            gross_amount_minor_poisha=test["fee_minor_poisha"],
+            gateway_method="DEMO_BKASH",
+            payer_user=user,
+            beneficiary_entity="Popular / icddr,b Diagnostic Lab Partner (82% Share)",
+            status="PAID",
+            related_order_id=oid,
+            now_iso=now,
+        )
         conn.execute("COMMIT;")
-    return {"order_id": oid, "order_ref": ref, "is_simulated": True}
+    return {"order_id": oid, "order_ref": ref, "transaction": tx, "is_simulated": True}
 
 
 @router.post("/patient/tickets", status_code=201)

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 
 from ..config import settings
-from ..core.audit import notify_user, record_audit
+from ..core.audit import mask_personal_identifier, notify_user, record_audit
 from ..core.dependencies import extract_raw_token, get_current_user, get_optional_user
 from ..core.security import (
     enforce_rate_limit,
@@ -16,7 +17,7 @@ from ..core.security import (
     sha256_hex,
     utc_future_iso,
     utc_now_iso,
-    verify_password,
+    verify_password_constant_time,
 )
 from ..db.sqlite import get_db_conn, row_to_dict
 
@@ -80,12 +81,22 @@ def _issue_session(conn, user: dict, request: Request, response: Response) -> di
         ),
     )
     conn.execute("UPDATE users SET last_login_at_utc = ?, updated_at_utc = ? WHERE id = ?", (now, now, user["id"]))
+    is_prod = settings.env == "production" or os.getenv("SHASTHOSETU_ENV") == "production"
     response.set_cookie(
         key=settings.session_cookie_name,
         value=raw_token,
         httponly=True,
         samesite="lax",
-        secure=(settings.env == "production"),
+        secure=is_prod,
+        path="/",
+        max_age=settings.session_ttl_hours * 3600,
+    )
+    response.set_cookie(
+        key=settings.csrf_cookie_name,
+        value=csrf_token,
+        httponly=False,
+        samesite="lax",
+        secure=is_prod,
         path="/",
         max_age=settings.session_ttl_hours * 3600,
     )
@@ -94,13 +105,13 @@ def _issue_session(conn, user: dict, request: Request, response: Response) -> di
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 def register_patient(payload: PatientRegisterRequest, request: Request, response: Response):
-    enforce_rate_limit("auth_register", max_requests=25, window_seconds=60)
+    ident_key = (payload.email or payload.phone or "anon").strip()
+    enforce_rate_limit("auth_register", max_requests=25, window_seconds=60, request=request, identifier=ident_key)
     if not payload.email and not payload.phone:
         raise HTTPException(status_code=422, detail="Either email or phone is required.")
 
     escalation_attempted = bool(payload.role and payload.role.upper() != "PATIENT")
     if escalation_attempted:
-        # Strict SRS V2-T-002 requirement: public signup must never honor client-supplied elevated roles
         with get_db_conn() as conn:
             conn.execute("BEGIN IMMEDIATE;")
             record_audit(
@@ -110,7 +121,7 @@ def register_patient(payload: PatientRegisterRequest, request: Request, response
                 action_type="PRIVILEGE_ESCALATION_BLOCKED",
                 target_resource="users",
                 outcome="DENIED",
-                details={"attempted_role": payload.role, "email": payload.email},
+                details={"attempted_role": payload.role, "email": mask_personal_identifier(payload.email)},
             )
             conn.execute("COMMIT;")
         raise HTTPException(
@@ -127,13 +138,15 @@ def register_patient(payload: PatientRegisterRequest, request: Request, response
     now = utc_now_iso()
 
     with get_db_conn() as conn:
-        if email and conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
-            raise HTTPException(status_code=409, detail="Email is already registered.")
-        if phone and conn.execute("SELECT 1 FROM users WHERE phone = ?", (phone,)).fetchone():
-            raise HTTPException(status_code=409, detail="Phone number is already registered.")
-
         conn.execute("BEGIN IMMEDIATE;")
         try:
+            if email and conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+                conn.execute("ROLLBACK;")
+                raise HTTPException(status_code=409, detail="Registration conflict: unable to register with the provided credentials.")
+            if phone and conn.execute("SELECT 1 FROM users WHERE phone = ?", (phone,)).fetchone():
+                conn.execute("ROLLBACK;")
+                raise HTTPException(status_code=409, detail="Registration conflict: unable to register with the provided credentials.")
+
             conn.execute(
                 """
                 INSERT INTO users (id, email, phone, password_hash, full_name, primary_role, preferred_locale, account_status, is_synthetic, created_at_utc, updated_at_utc)
@@ -166,8 +179,15 @@ def register_patient(payload: PatientRegisterRequest, request: Request, response
             )
             record_audit(conn, actor_user_id=uid, actor_role="PATIENT", action_type="PATIENT_REGISTER", target_resource="users", target_id=uid)
             conn.execute("COMMIT;")
+        except HTTPException:
+            raise
+        except sqlite3.IntegrityError:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK;")
+            raise HTTPException(status_code=409, detail="Registration conflict: unable to register with the provided credentials.")
         except Exception:
-            conn.execute("ROLLBACK;")
+            if conn.in_transaction:
+                conn.execute("ROLLBACK;")
             raise
 
     return {"user": user, "redirect_url": "/patient/dashboard", **ses_meta}
@@ -175,8 +195,8 @@ def register_patient(payload: PatientRegisterRequest, request: Request, response
 
 @router.post("/doctor-apply", status_code=status.HTTP_201_CREATED)
 def apply_doctor(payload: DoctorApplyRequest, request: Request, response: Response):
-    enforce_rate_limit("auth_doctor_apply", max_requests=15, window_seconds=60)
     email = payload.email.strip().lower()
+    enforce_rate_limit("auth_doctor_apply", max_requests=15, window_seconds=60, request=request, identifier=email)
     phone = payload.phone.strip() if payload.phone else None
     uid = new_id("usr")
     doc_id = new_id("doc")
@@ -184,13 +204,15 @@ def apply_doctor(payload: DoctorApplyRequest, request: Request, response: Respon
     now = utc_now_iso()
 
     with get_db_conn() as conn:
-        if conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
-            raise HTTPException(status_code=409, detail="Email is already registered.")
-        if phone and conn.execute("SELECT 1 FROM users WHERE phone = ?", (phone,)).fetchone():
-            raise HTTPException(status_code=409, detail="Phone number is already registered.")
-
         conn.execute("BEGIN IMMEDIATE;")
         try:
+            if conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+                conn.execute("ROLLBACK;")
+                raise HTTPException(status_code=409, detail="Registration conflict: unable to submit application with the provided credentials.")
+            if phone and conn.execute("SELECT 1 FROM users WHERE phone = ?", (phone,)).fetchone():
+                conn.execute("ROLLBACK;")
+                raise HTTPException(status_code=409, detail="Registration conflict: unable to submit application with the provided credentials.")
+
             conn.execute(
                 """
                 INSERT INTO users (id, email, phone, password_hash, full_name, primary_role, preferred_locale, account_status, is_synthetic, created_at_utc, updated_at_utc)
@@ -238,8 +260,15 @@ def apply_doctor(payload: DoctorApplyRequest, request: Request, response: Respon
             ses_meta = _issue_session(conn, user, request, response)
             record_audit(conn, actor_user_id=uid, actor_role="DOCTOR", action_type="DOCTOR_APPLICATION_SUBMITTED", target_resource="doctor_profiles", target_id=doc_id)
             conn.execute("COMMIT;")
+        except HTTPException:
+            raise
+        except sqlite3.IntegrityError:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK;")
+            raise HTTPException(status_code=409, detail="Registration conflict: unable to submit application with the provided credentials.")
         except Exception:
-            conn.execute("ROLLBACK;")
+            if conn.in_transaction:
+                conn.execute("ROLLBACK;")
             raise
 
     return {"user": user, "redirect_url": "/doctor/onboarding-status", **ses_meta}
@@ -247,8 +276,8 @@ def apply_doctor(payload: DoctorApplyRequest, request: Request, response: Respon
 
 @router.post("/login")
 def login(payload: LoginRequest, request: Request, response: Response):
-    enforce_rate_limit("auth_login", max_requests=40, window_seconds=60)
     ident = payload.identifier.strip()
+    enforce_rate_limit("auth_login", max_requests=40, window_seconds=60, request=request, identifier=ident)
     with get_db_conn() as conn:
         user_row = row_to_dict(
             conn.execute(
@@ -256,9 +285,21 @@ def login(payload: LoginRequest, request: Request, response: Response):
                 (ident, ident),
             ).fetchone()
         )
-        if not user_row or not verify_password(payload.password, user_row["password_hash"]):
+        pw_ok = verify_password_constant_time(
+            payload.password,
+            user_row["password_hash"] if user_row else None,
+        )
+        if not user_row or not pw_ok:
             conn.execute("BEGIN IMMEDIATE;")
-            record_audit(conn, actor_user_id=user_row["id"] if user_row else None, actor_role="ANONYMOUS", action_type="LOGIN_FAILED", target_resource="sessions", outcome="DENIED", details={"identifier": ident[:40]})
+            record_audit(
+                conn,
+                actor_user_id=user_row["id"] if user_row else None,
+                actor_role="ANONYMOUS",
+                action_type="LOGIN_FAILED",
+                target_resource="sessions",
+                outcome="DENIED",
+                details={"identifier": mask_personal_identifier(ident)},
+            )
             conn.execute("COMMIT;")
             raise HTTPException(status_code=401, detail="Invalid credentials.")
 
@@ -331,6 +372,7 @@ def logout(request: Request, response: Response):
             conn.execute("UPDATE sessions SET revoked_at_utc = ? WHERE token_hash = ? AND revoked_at_utc IS NULL", (utc_now_iso(), token_hash))
             conn.execute("COMMIT;")
     response.delete_cookie(key=settings.session_cookie_name, path="/")
+    response.delete_cookie(key=settings.csrf_cookie_name, path="/")
     return {"logged_out": True}
 
 
@@ -338,17 +380,24 @@ def logout(request: Request, response: Response):
 def get_me(request: Request):
     user = get_optional_user(request)
     if not user:
-        return {"authenticated": False, "user": None}
-    return {"authenticated": True, "user": user}
+        return {"authenticated": False, "user": None, "csrf_token": None}
+    return {"authenticated": True, "user": user, "csrf_token": user.get("csrf_token")}
 
 
 @router.post("/forgot-password")
-def request_password_reset(payload: DemoPasswordResetRequest):
-    enforce_rate_limit("auth_forgot_pw", max_requests=10, window_seconds=60)
+def request_password_reset(payload: DemoPasswordResetRequest, request: Request):
+    enforce_rate_limit("auth_forgot_pw", max_requests=10, window_seconds=60, request=request, identifier=payload.identifier)
     # Never leak whether an account exists (SRS FR-AUTH-106)
     with get_db_conn() as conn:
         conn.execute("BEGIN IMMEDIATE;")
-        record_audit(conn, actor_user_id=None, actor_role="PUBLIC_ANONYMOUS", action_type="PASSWORD_RESET_REQUESTED", target_resource="users", details={"handle_prefix": payload.identifier[:4]})
+        record_audit(
+            conn,
+            actor_user_id=None,
+            actor_role="PUBLIC_ANONYMOUS",
+            action_type="PASSWORD_RESET_REQUESTED",
+            target_resource="users",
+            details={"identifier": mask_personal_identifier(payload.identifier)},
+        )
         conn.execute("COMMIT;")
     return {
         "accepted": True,

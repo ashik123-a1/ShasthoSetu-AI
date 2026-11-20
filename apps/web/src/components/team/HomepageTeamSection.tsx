@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Check, Copy, Mail, Phone, Sparkles, Users } from "lucide-react";
-import { OFFICIAL_TEAM_MEMBERS } from "../../data/teamData";
+import { Check, Copy, Github, Mail, Phone, Sparkles, Users } from "lucide-react";
+import { OFFICIAL_TEAM_MEMBERS, TEAM_INFO } from "../../data/teamData";
 import { useI18n } from "../../lib/i18n";
 import { TeamRosterModal } from "./TeamRosterModal";
 
@@ -36,14 +36,26 @@ export function HomepageTeamSection() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className="min-h-11 px-5 rounded-full border border-cyan-400/50 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 text-xs font-bold inline-flex items-center gap-2 cursor-pointer shadow-lg transition"
-          >
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span>{locale === "bn" ? "পূর্ণাঙ্গ টিম রোস্টার দেখুন" : "View Full Team Roster"}</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <a
+              href={TEAM_INFO.githubRepoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-h-11 px-5 rounded-full border border-slate-600/80 bg-slate-900/80 hover:bg-slate-800 hover:border-cyan-400/60 text-slate-100 text-xs font-bold inline-flex items-center gap-2 cursor-pointer shadow-lg transition"
+            >
+              <Github className="w-4 h-4 text-cyan-400" />
+              <span>GitHub Repository</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setModalOpen(true)}
+              className="min-h-11 px-5 rounded-full border border-cyan-400/50 bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 text-xs font-bold inline-flex items-center gap-2 cursor-pointer shadow-lg transition"
+            >
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <span>{locale === "bn" ? "পূর্ণাঙ্গ টিম রোস্টার দেখুন" : "View Full Team Roster"}</span>
+            </button>
+          </div>
         </div>
 
         {/* 5 Official Team Member Cards Grid */}

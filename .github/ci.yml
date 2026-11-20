@@ -1,0 +1,76 @@
+name: ShasthoSetu AI — Full-Stack CI & Security Gate
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  backend-pytest:
+    name: FastAPI Backend & Security Tests (Python 3.11)
+    runs-on: ubuntu-latest
+    env:
+      SHASTHOSETU_ENV: development
+      AI_INFERENCE_ENABLED: "false"
+      RAG_INFERENCE_ENABLED: "true"
+      VOICE_AI_ENABLED: "true"
+      OCR_ENABLED: "true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r services/api/requirements.txt
+          pip install pytest httpx
+
+      - name: Compile Python syntax check
+        run: |
+          python -m py_compile services/api/src/shasthosetu_api/main.py
+          python -m py_compile services/api/src/shasthosetu_api/core/security.py
+          python -m py_compile services/api/src/shasthosetu_api/core/dependencies.py
+          python -m py_compile services/api/src/shasthosetu_api/routers/auth.py
+          python -m py_compile services/api/src/shasthosetu_api/routers/admin.py
+          python -m py_compile services/api/src/shasthosetu_api/routers/support.py
+          python -m py_compile services/api/src/shasthosetu_api/routers/patient.py
+
+      - name: Run Backend Pytest Suite
+        env:
+          PYTHONPATH: services/api/src
+        run: |
+          pytest services/api/tests/test_fullstack_api.py -v
+
+  frontend-vitest-build:
+    name: React 19 Frontend Vitest & Production Build (Node 20)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run Vitest unit tests
+        run: npm run test -- --run
+
+      - name: Build production frontend bundle
+        run: npm run build

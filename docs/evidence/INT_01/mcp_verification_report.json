@@ -14,9 +14,9 @@
     {
       "server_id": "guideline-mcp",
       "transport": "stdio",
-      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
+      "command": "_shared//venv//Scripts//python.exe",
       "args": [
-        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\guideline_mcp.py",
+        "services//mcp//guideline_mcp.py",
         "--transport",
         "stdio"
       ],
@@ -67,7 +67,7 @@
                 "section_heading": "পিসিওএস (PCOS) কী এবং সাধারণ লক্ষণ (বাংলা)",
                 "language": "bilingual",
                 "score": 8.5,
-                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide\nSection: পিসিওএস (PCOS) কী এবং সাধারণ লক্ষণ (বাংলা)\n\nপলিসিস্টিক ওভারি সিনড্রোম বা **PCOS** হলো প্রজননক্ষম বয়সী নারী ও কিশোরীদের একটি প্রচলিত হরমোনজনিত ও বিপাকীয় (endocrine & metabolic) অবস্থা। বিশ্ব স্বাস্থ্য সংস্থা (WHO) এবং আন্তর্জাতিক Rotterdam মানদণ্ড অনুযায়ী শুধুমাত্র একটি লক্ষণ বা একটি টেস্টের ভিত্তিতে PCOS নিশ্চিত রোগ নির্ণয় করা য"
+                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide/nSection: পিসিওএস (PCOS) কী এবং সাধারণ লক্ষণ (বাংলা)/n/nপলিসিস্টিক ওভারি সিনড্রোম বা **PCOS** হলো প্রজননক্ষম বয়সী নারী ও কিশোরীদের একটি প্রচলিত হরমোনজনিত ও বিপাকীয় (endocrine & metabolic) অবস্থা। বিশ্ব স্বাস্থ্য সংস্থা (WHO) এবং আন্তর্জাতিক Rotterdam মানদণ্ড অনুযায়ী শুধুমাত্র একটি লক্ষণ বা একটি টেস্টের ভিত্তিতে PCOS নিশ্চিত রোগ নির্ণয় করা য"
               },
               {
                 "chunk_id": "rchk-3c5df829c1bf421d",
@@ -78,7 +78,7 @@
                 "section_heading": "Overview & Common Symptoms (English)",
                 "language": "bilingual",
                 "score": 7.0,
-                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide\nSection: Overview & Common Symptoms (English)\n\nPolycystic ovary syndrome (PCOS) is a common hormonal and metabolic condition affecting women and adolescents of reproductive age. According to World Health Organization (WHO) and international Rotterdam guidance, PCOS cannot be diagnosed from a single symptom or blood test alone; a qualified cl"
+                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide/nSection: Overview & Common Symptoms (English)/n/nPolycystic ovary syndrome (PCOS) is a common hormonal and metabolic condition affecting women and adolescents of reproductive age. According to World Health Organization (WHO) and international Rotterdam guidance, PCOS cannot be diagnosed from a single symptom or blood test alone; a qualified cl"
               },
               {
                 "chunk_id": "rchk-b6cf819c0b584eba",
@@ -86,10 +86,10 @@
                 "source_title": "Ultrasound & PCOM Terminology Explained (Bilingual Guide)",
                 "publisher": "MedlinePlus Diagnostic Tests & International PCOS Evidence Summary",
                 "category": "Ultrasound / PCOM Terminology",
-                "section_heading": "What Does \"PCOM\" Mean on an Ultrasound Report? (English)",
+                "section_heading": "What Does /"PCOM/" Mean on an Ultrasound Report? (English)",
                 "language": "bilingual",
                 "score": 5.0,
-                "excerpt": "Source: Ultrasound & PCOM Terminology Explained (Bilingual Guide)\nSection: What Does \"PCOM\" Mean on an Ultrasound Report? (English)\n\n**PCOM** stands for **Polycystic Ovarian Morphology**. When a pelvic or transvaginal ultrasound report mentions PCOM or \"polycystic ovaries,\" it describes a visual structural pattern—typically an increased number of small antral follicles (often 2–9 mm in size) arranged near the ovarian"
+                "excerpt": "Source: Ultrasound & PCOM Terminology Explained (Bilingual Guide)/nSection: What Does /"PCOM/" Mean on an Ultrasound Report? (English)/n/n**PCOM** stands for **Polycystic Ovarian Morphology**. When a pelvic or transvaginal ultrasound report mentions PCOM or /"polycystic ovaries,/" it describes a visual structural pattern—typically an increased number of small antral follicles (often 2–9 mm in size) arranged near the ovarian"
               }
             ],
             "policy": "Grounded informational excerpts ONLY — never diagnostic or prescribing advice."
@@ -472,9 +472,9 @@
     {
       "server_id": "directory-mcp",
       "transport": "stdio",
-      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
+      "command": "_shared//venv//Scripts//python.exe",
       "args": [
-        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\directory_mcp.py",
+        "services//mcp//directory_mcp.py",
         "--transport",
         "stdio"
       ],
@@ -758,9 +758,9 @@
     {
       "server_id": "care-record-mcp",
       "transport": "stdio",
-      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
+      "command": "_shared//venv//Scripts//python.exe",
       "args": [
-        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\care_record_mcp.py",
+        "services//mcp//care_record_mcp.py",
         "--transport",
         "stdio"
       ],
@@ -890,8 +890,8 @@
         "npx",
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "F:\\Clude cccccccccccccccccccccccc\\data we test\\docs",
-        "F:\\Clude cccccccccccccccccccccccc\\data we test\\SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT\\final_lock"
+        "docs",
+        "SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT//final_lock"
       ],
       "status": "PASS",
       "server_info": {
@@ -924,7 +924,7 @@
           "tool": "list_allowed_directories",
           "arguments": {},
           "is_error": false,
-          "preview": "Allowed directories:\nF:\\Clude cccccccccccccccccccccccc\\data we test\\docs\nF:\\Clude cccccccccccccccccccccccc\\data we test\\SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT\\final_lock"
+          "preview": "Allowed directories:/ndocs/nSHASTHOSETU_FINAL_DATASET_MODEL_AUDIT//final_lock"
         }
       ],
       "latency_ms": 903.2

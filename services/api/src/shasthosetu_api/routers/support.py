@@ -8,6 +8,7 @@ from ..core.audit import notify_user, record_audit
 from ..core.dependencies import require_role
 from ..core.security import new_id, utc_now_iso
 from ..db.sqlite import get_db_conn, row_to_dict, rows_to_dicts
+from ..seeds.seed_demo import _seed_business_and_six_month_ledger
 
 router = APIRouter(prefix="/v1/support", tags=["Support Helpdesk (Zero-PHI Policy)"])
 
@@ -15,6 +16,31 @@ ZERO_PHI_NOTICE = (
     "Zero-PHI Policy Active: Clinical consultation notes, prescriptions, OCR medical documents, "
     "PCOS logs, pediatric symptoms, and visit symptoms are excluded from Support queries."
 )
+
+# Strictly Zero-PHI transaction projection: item_title (clinical/medicine/lab names) is PERMANENTLY EXCLUDED!
+_SUPPORT_TXN_COLUMNS = """
+    pt.id,
+    pt.txn_ref,
+    pt.receipt_number,
+    pt.revenue_stream,
+    pt.support_safe_label,
+    pt.payer_name_masked,
+    pt.gateway_method,
+    pt.bank_account_id,
+    b.account_code AS bank_account_code,
+    b.provider_name AS bank_provider_name,
+    pt.gross_amount_minor_poisha,
+    pt.commission_rate_pct,
+    pt.commission_minor_poisha,
+    pt.status,
+    pt.billing_month,
+    pt.created_at_utc,
+    pt.updated_at_utc
+"""
+
+
+class SupportTxnDisputeRequest(BaseModel):
+    reason: str = Field(default="Support billing inquiry flagged for Admin Treasury reconciliation", max_length=300)
 
 
 class SupportReplyRequest(BaseModel):
@@ -35,6 +61,7 @@ class SupportEscalateRequest(BaseModel):
 @router.get("/dashboard")
 def support_dashboard(user: dict = Depends(require_role("SUPPORT"))):
     with get_db_conn() as conn:
+        _seed_business_and_six_month_ledger(conn, utc_now_iso())
         counts = row_to_dict(
             conn.execute(
                 """
@@ -69,11 +96,114 @@ def support_dashboard(user: dict = Depends(require_role("SUPPORT"))):
                 """
             ).fetchall()
         )
+        txn_kpis = row_to_dict(
+            conn.execute(
+                """
+                SELECT
+                    COUNT(*) AS total_txns,
+                    SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN 1 ELSE 0 END) AS paid_txns,
+                    SUM(CASE WHEN status = 'REFUNDED' THEN 1 ELSE 0 END) AS refunded_txns,
+                    SUM(CASE WHEN status = 'DISPUTED' THEN 1 ELSE 0 END) AS disputed_txns,
+                    COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN gross_amount_minor_poisha ELSE 0 END), 0) AS total_verified_poisha
+                  FROM platform_transactions
+                """
+            ).fetchone()
+        ) or {}
+        recent_txns = rows_to_dicts(
+            conn.execute(
+                f"""
+                SELECT {_SUPPORT_TXN_COLUMNS}
+                  FROM platform_transactions pt
+                  JOIN bank_settlement_accounts b ON b.id = pt.bank_account_id
+                 ORDER BY pt.created_at_utc DESC
+                 LIMIT 25
+                """
+            ).fetchall()
+        )
         return {
             "kpis": counts,
             "recent_tickets": recent_tickets,
+            "transaction_kpis": txn_kpis,
+            "recent_transactions": recent_txns,
             "zero_phi_policy": ZERO_PHI_NOTICE,
         }
+
+
+@router.get("/transactions")
+def list_support_transactions_zero_phi(
+    status: Optional[str] = None,
+    revenue_stream: Optional[str] = None,
+    q: Optional[str] = None,
+    user: dict = Depends(require_role("SUPPORT")),
+):
+    """Support Desk TNX-Only view: returns commercial transaction IDs, receipts, gateway, amount, and status while stripping all medical/clinical item names."""
+    with get_db_conn() as conn:
+        _seed_business_and_six_month_ledger(conn, utc_now_iso())
+        sql = f"""
+            SELECT {_SUPPORT_TXN_COLUMNS}
+              FROM platform_transactions pt
+              JOIN bank_settlement_accounts b ON b.id = pt.bank_account_id
+             WHERE 1=1
+        """
+        params: list = []
+        if status:
+            sql += " AND pt.status = ?"
+            params.append(status)
+        if revenue_stream:
+            sql += " AND pt.revenue_stream = ?"
+            params.append(revenue_stream)
+        if q:
+            like = f"%{q.strip()}%"
+            sql += " AND (pt.txn_ref LIKE ? OR pt.receipt_number LIKE ? OR pt.payer_name_masked LIKE ? OR pt.gateway_method LIKE ?)"
+            params.extend([like, like, like, like])
+        sql += " ORDER BY pt.created_at_utc DESC LIMIT 100"
+        rows = rows_to_dicts(conn.execute(sql, tuple(params)).fetchall())
+        return {
+            "transactions": rows,
+            "redacted_phi_fields": [
+                "item_title_clinical_details",
+                "medicine_skus_and_dosages",
+                "diagnostic_panel_clinical_names",
+                "consultation_notes",
+                "eprescriptions",
+            ],
+            "zero_phi_policy": ZERO_PHI_NOTICE,
+        }
+
+
+@router.post("/transactions/{txn_id}/flag-dispute")
+def flag_support_transaction_dispute(
+    txn_id: str,
+    payload: SupportTxnDisputeRequest,
+    user: dict = Depends(require_role("SUPPORT")),
+):
+    """Allows Support Officer to flag a transaction for Admin billing review without accessing PHI."""
+    with get_db_conn() as conn:
+        tx = row_to_dict(
+            conn.execute(
+                f"SELECT {_SUPPORT_TXN_COLUMNS} FROM platform_transactions pt JOIN bank_settlement_accounts b ON b.id = pt.bank_account_id WHERE pt.id = ?",
+                (txn_id,),
+            ).fetchone()
+        )
+        if not tx:
+            raise HTTPException(status_code=404, detail="Transaction not found.")
+        now = utc_now_iso()
+        conn.execute("BEGIN IMMEDIATE;")
+        conn.execute(
+            "UPDATE platform_transactions SET status = 'DISPUTED', updated_at_utc = ? WHERE id = ?",
+            (now, txn_id),
+        )
+        record_audit(
+            conn,
+            actor_user_id=user["id"],
+            actor_role="SUPPORT",
+            action_type="SUPPORT_TXN_DISPUTE_FLAGGED",
+            target_resource="platform_transactions",
+            target_id=txn_id,
+            details={"txn_ref": tx["txn_ref"], "reason": payload.reason.strip()},
+        )
+        conn.execute("COMMIT;")
+        return {"transaction_id": txn_id, "txn_ref": tx["txn_ref"], "status": "DISPUTED"}
 
 
 @router.get("/tickets")

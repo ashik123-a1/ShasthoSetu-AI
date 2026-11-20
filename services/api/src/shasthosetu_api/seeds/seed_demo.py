@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -9,15 +10,20 @@ from ..core.audit import notify_user, record_audit
 from ..core.security import hash_password, new_id, utc_now_iso
 from ..db.sqlite import SCHEMA_SQL_PATH, apply_schema, get_db_conn
 
+_PT_PW = os.getenv("SHASTHOSETU_DEMO_PATIENT_PASSWORD", "PatientDemo#2026")
+_DR_PW = os.getenv("SHASTHOSETU_DEMO_DOCTOR_PASSWORD", "DoctorDemo#2026")
+_AD_PW = os.getenv("SHASTHOSETU_DEMO_ADMIN_PASSWORD", "AdminDemo#2026")
+_SUP_PW = os.getenv("SHASTHOSETU_DEMO_SUPPORT_PASSWORD", "SupportDemo#2026")
+
 DEMO_ACCOUNTS = {
-    "patient": ("usr-pt-demo", "patient.demo@shasthosetu.local", "PatientDemo#2026", "+8801711000101", "রহিমা বেগম (Rahima Begum)", "PATIENT"),
-    "patient2": ("usr-pt-demo2", "patient2.demo@shasthosetu.local", "PatientDemo#2026", "+8801711000109", "সাকিব হাসান (Sakib Hasan)", "PATIENT"),
-    "dr_farhana": ("usr-dr-farhana", "dr.farhana@shasthosetu.local", "DoctorDemo#2026", "+8801711000201", "ডাঃ ফারহানা রহমান (Dr. Farhana)", "DOCTOR"),
-    "dr_tanvir": ("usr-dr-tanvir", "dr.tanvir@shasthosetu.local", "DoctorDemo#2026", "+8801711000202", "ডাঃ তানভীর আহমেদ (Dr. Tanvir)", "DOCTOR"),
-    "dr_nusrat": ("usr-dr-nusrat", "dr.nusrat@shasthosetu.local", "DoctorDemo#2026", "+8801711000203", "ডাঃ নুসরাত জাহান (Dr. Nusrat)", "DOCTOR"),
-    "dr_pending": ("usr-dr-pending", "dr.pending@shasthosetu.local", "DoctorDemo#2026", "+8801711000204", "ডাঃ কামাল হোসেন (Pending Approval)", "DOCTOR"),
-    "admin": ("usr-ad-demo", "admin.demo@shasthosetu.local", "AdminDemo#2026", "+8801711000301", "সিস্টেম অ্যাডমিন (ShasthoSetu Admin)", "ADMIN"),
-    "support": ("usr-sup-demo", "support.demo@shasthosetu.local", "SupportDemo#2026", "+8801711000401", "সাপোর্ট অফিসার (Support Desk)", "SUPPORT"),
+    "patient": ("usr-pt-demo", "patient.demo@shasthosetu.local", _PT_PW, "+8801711000101", "রহিমা বেগম (Rahima Begum)", "PATIENT"),
+    "patient2": ("usr-pt-demo2", "patient2.demo@shasthosetu.local", _PT_PW, "+8801711000109", "সাকিব হাসান (Sakib Hasan)", "PATIENT"),
+    "dr_farhana": ("usr-dr-farhana", "dr.farhana@shasthosetu.local", _DR_PW, "+8801711000201", "ডাঃ ফারহানা রহমান (Dr. Farhana)", "DOCTOR"),
+    "dr_tanvir": ("usr-dr-tanvir", "dr.tanvir@shasthosetu.local", _DR_PW, "+8801711000202", "ডাঃ তানভীর আহমেদ (Dr. Tanvir)", "DOCTOR"),
+    "dr_nusrat": ("usr-dr-nusrat", "dr.nusrat@shasthosetu.local", _DR_PW, "+8801711000203", "ডাঃ নুসরাত জাহান (Dr. Nusrat)", "DOCTOR"),
+    "dr_pending": ("usr-dr-pending", "dr.pending@shasthosetu.local", _DR_PW, "+8801711000204", "ডাঃ কামাল হোসেন (Pending Approval)", "DOCTOR"),
+    "admin": ("usr-ad-demo", "admin.demo@shasthosetu.local", _AD_PW, "+8801711000301", "সিস্টেম অ্যাডমিন (ShasthoSetu Admin)", "ADMIN"),
+    "support": ("usr-sup-demo", "support.demo@shasthosetu.local", _SUP_PW, "+8801711000401", "সাপোর্ট অফিসার (Support Desk)", "SUPPORT"),
 }
 
 
@@ -400,11 +406,314 @@ def _seed_expanded_doctors_and_catalog(conn, now: str) -> None:
         )
 
 
+def _recompute_bank_balances(conn, now: str) -> None:
+    """Recompute all 5 bank & gateway settlement balances from platform_transactions."""
+    rows = conn.execute(
+        """
+        SELECT bank_account_id,
+               COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN gross_amount_minor_poisha ELSE 0 END), 0) AS inflow,
+               COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN commission_minor_poisha ELSE 0 END), 0) AS comm,
+               COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN net_partner_payout_minor_poisha ELSE 0 END), 0) AS payout
+          FROM platform_transactions
+         GROUP BY bank_account_id
+        """
+    ).fetchall()
+    by_bank = {r["bank_account_id"]: (int(r["inflow"]), int(r["comm"]), int(r["payout"])) for r in rows}
+    total_comm = sum(v[1] for v in by_bank.values())
+    total_payout = sum(v[2] for v in by_bank.values())
+
+    for bid in ("bank-bkash-escrow", "bank-nagad-merchant", "bank-ssl-card", "bank-city-corp", "bank-brac-payout"):
+        inflow, comm, payout = by_bank.get(bid, (0, 0, 0))
+        if bid == "bank-city-corp":
+            # Corporate treasury retains platform commission + direct bank transfers
+            conn.execute(
+                """
+                UPDATE bank_settlement_accounts
+                   SET balance_minor_poisha = ?,
+                       total_inflow_minor_poisha = ?,
+                       total_commission_minor_poisha = ?,
+                       total_payout_minor_poisha = ?,
+                       last_reconciled_at_utc = ?
+                 WHERE id = ?
+                """,
+                (inflow + total_comm, inflow + total_comm, total_comm, payout, now, bid),
+            )
+        elif bid == "bank-brac-payout":
+            # Partner payout clearing pool holds settled doctor/lab/pharma disbursements
+            conn.execute(
+                """
+                UPDATE bank_settlement_accounts
+                   SET balance_minor_poisha = ?,
+                       total_inflow_minor_poisha = ?,
+                       total_commission_minor_poisha = 0,
+                       total_payout_minor_poisha = ?,
+                       last_reconciled_at_utc = ?
+                 WHERE id = ?
+                """,
+                (total_payout, total_payout, total_payout, now, bid),
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE bank_settlement_accounts
+                   SET balance_minor_poisha = ?,
+                       total_inflow_minor_poisha = ?,
+                       total_commission_minor_poisha = ?,
+                       total_payout_minor_poisha = ?,
+                       last_reconciled_at_utc = ?
+                 WHERE id = ?
+                """,
+                (inflow, inflow, comm, payout, now, bid),
+            )
+
+
+def _seed_business_and_six_month_ledger(conn, now: str) -> None:
+    """Seed 5 monitored bank/gateway settlement accounts and a 6-month (Jun-Nov 2026) financial & commission ledger."""
+    banks = [
+        (
+            "bank-bkash-escrow",
+            "BKASH-MERCHANT-01",
+            "bKash Commercial MFS Escrow",
+            "01711-••••88 (Merchant Escrow)",
+            "MFS_GATEWAY",
+            "ACTIVE_ONLINE",
+        ),
+        (
+            "bank-nagad-merchant",
+            "NAGAD-MERCHANT-02",
+            "Nagad Merchant Gateway",
+            "01819-••••42 (Merchant Wallet)",
+            "MFS_GATEWAY",
+            "ACTIVE_ONLINE",
+        ),
+        (
+            "bank-ssl-card",
+            "SSLCOMMERZ-CARD-03",
+            "SSLCommerz Visa / Mastercard Clearing",
+            "MID-SS-994021 (Card Gateway)",
+            "CARD_CLEARING",
+            "SETTLEMENT_READY",
+        ),
+        (
+            "bank-city-corp",
+            "CITYBANK-CORP-04",
+            "City Bank PLC Corporate Treasury",
+            "A/C 1402-••••-9901 (Gulshan Corporate)",
+            "CORPORATE_BANK",
+            "AUDITED",
+        ),
+        (
+            "bank-brac-payout",
+            "BRACBANK-SETTLE-05",
+            "BRAC Bank PLC Partner Payout Account",
+            "A/C 1509-••••-3310 (Doctor / Lab / ePharma)",
+            "PAYOUT_TREASURY",
+            "ACTIVE_ONLINE",
+        ),
+    ]
+    for b_id, code, prov, acct_num, b_type, st in banks:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO bank_settlement_accounts (
+                id, account_code, provider_name, account_number_masked, account_type, settlement_status, last_reconciled_at_utc, created_at_utc
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (b_id, code, prov, acct_num, b_type, st, now, now),
+        )
+
+    existing_tx = conn.execute("SELECT COUNT(*) FROM platform_transactions").fetchone()[0]
+    if existing_tx < 36:
+        # 6 full months (2026-06 through 2026-11), 8 transactions per month = 48 transactions across all 4 revenue verticals
+        months = [
+            ("2026-06", 1.00),
+            ("2026-07", 1.12),
+            ("2026-08", 1.24),
+            ("2026-09", 1.35),
+            ("2026-10", 1.48),
+            ("2026-11", 1.65),
+        ]
+        templates = [
+            (
+                "DOCTOR_CONSULTATION",
+                "OB-GYN & PCOS Specialist Tele-Consultation (Dr. Farhana Rahman)",
+                "DOCTOR_BOOKING_FEE",
+                "usr-pt-demo",
+                "রহিমা বেগম (pa***@shasthosetu.local)",
+                "Dr. Farhana Rahman (85% Clinician Share)",
+                "DEMO_BKASH",
+                "bank-bkash-escrow",
+                80000,
+                15.0,
+                "03",
+            ),
+            (
+                "EPHARMA_SALE",
+                "ePharma Medicine Order (Napa Extend, Seclo 20mg, CoralCal-D)",
+                "EPHARMA_ORDER",
+                "usr-pt-demo",
+                "রহিমা বেগম (pa***@shasthosetu.local)",
+                "Square & Beximco ePharma Hub (88% Vendor Share)",
+                "DEMO_NAGAD",
+                "bank-nagad-merchant",
+                145000,
+                12.0,
+                "06",
+            ),
+            (
+                "DIAGNOSTIC_TEST",
+                "Lab Order: Endocrine Hormone Panel (PCOS-03) + Home Sample",
+                "DIAGNOSTIC_LAB_ORDER",
+                "usr-pt-demo",
+                "রহিমা বেগম (pa***@shasthosetu.local)",
+                "Popular Diagnostic Centre Dhanmondi (82% Lab Share)",
+                "DEMO_CARD",
+                "bank-ssl-card",
+                180000,
+                18.0,
+                "09",
+            ),
+            (
+                "DOCTOR_CONSULTATION",
+                "Pediatric Fever & EPI Consultation (Dr. Tanvir Ahmed)",
+                "DOCTOR_BOOKING_FEE",
+                "usr-pt-demo2",
+                "সাকিব হাসান (pa***@shasthosetu.local)",
+                "Dr. Tanvir Ahmed (85% Clinician Share)",
+                "DEMO_BKASH",
+                "bank-bkash-escrow",
+                70000,
+                15.0,
+                "12",
+            ),
+            (
+                "EPHARMA_SALE",
+                "ePharma Medical Device & Diabetic Care Bundle (BP Monitor + Strips)",
+                "EPHARMA_ORDER",
+                "usr-pt-demo2",
+                "সাকিব হাসান (pa***@shasthosetu.local)",
+                "MedTech BD & CareDiag Pharmacy (88% Vendor Share)",
+                "DEMO_CARD",
+                "bank-ssl-card",
+                265000,
+                12.0,
+                "15",
+            ),
+            (
+                "DIAGNOSTIC_TEST",
+                "Lab Order: Dengue NS1 + CBC Complete Blood Count (Urgent Home Collect)",
+                "DIAGNOSTIC_LAB_ORDER",
+                "usr-pt-demo2",
+                "সাকিব হাসান (pa***@shasthosetu.local)",
+                "icddr,b & Ibn Sina Diagnostic Lab (82% Lab Share)",
+                "DEMO_BKASH",
+                "bank-bkash-escrow",
+                135000,
+                18.0,
+                "18",
+            ),
+            (
+                "HEALTH_PLAN",
+                "Family Care Plus Subscription (4 Family Profiles + Tele-Triage)",
+                "FAMILY_PLAN_SUBSCRIPTION",
+                "usr-pt-demo",
+                "রহিমা বেগম (pa***@shasthosetu.local)",
+                "ShasthoSetu Care Network Pool (80% Network Share)",
+                "DEMO_BANK",
+                "bank-city-corp",
+                120000,
+                20.0,
+                "20",
+            ),
+            (
+                "DOCTOR_CONSULTATION",
+                "Dermatology & Viral Rash Specialist Consultation (Dr. Nusrat Jahan)",
+                "DOCTOR_BOOKING_FEE",
+                "usr-pt-demo2",
+                "সাকিব হাসান (pa***@shasthosetu.local)",
+                "Dr. Nusrat Jahan (85% Clinician Share)",
+                "DEMO_NAGAD",
+                "bank-nagad-merchant",
+                75000,
+                15.0,
+                "22",
+            ),
+        ]
+
+        seq = 1001
+        for m_str, mult in months:
+            for idx_t, (
+                stream,
+                title,
+                safe_lbl,
+                p_uid,
+                p_mask,
+                beneficiary,
+                gw,
+                bank_id,
+                base_poisha,
+                comm_pct,
+                day_str,
+            ) in enumerate(templates):
+                seq += 1
+                gross = int(round((base_poisha * mult) / 1000.0) * 1000)
+                comm = int(round(gross * (comm_pct / 100.0)))
+                net_payout = gross - comm
+                tx_id = f"ptx-{m_str.replace('-', '')}-{idx_t+1:02d}"
+                prefix = "APT" if stream == "DOCTOR_CONSULTATION" else ("PHM" if stream == "EPHARMA_SALE" else ("DIAG" if stream == "DIAGNOSTIC_TEST" else "PLN"))
+                txn_ref = f"TXN-{m_str.replace('-', '')}-{prefix}-{seq}"
+                rcp_num = f"DEMO-RCP-{prefix}-{seq}"
+                created_iso = f"{m_str}-{day_str}T10:{15 + idx_t * 5:02d}:00.000Z"
+                tx_status = "SETTLED" if m_str < "2026-11" else "PAID"
+                rel_apt = "apt-hist-9001" if (m_str == "2026-11" and idx_t == 0) else None
+                rel_pay = "pay-hist-9001" if (m_str == "2026-11" and idx_t == 0) else None
+
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO platform_transactions (
+                        id, txn_ref, receipt_number, revenue_stream, item_title, support_safe_label,
+                        payer_user_id, payer_name_masked, beneficiary_entity, gateway_method,
+                        bank_account_id, gross_amount_minor_poisha, commission_rate_pct,
+                        commission_minor_poisha, net_partner_payout_minor_poisha, status,
+                        billing_month, related_appointment_id, related_demo_payment_id,
+                        created_at_utc, updated_at_utc
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        tx_id,
+                        txn_ref,
+                        rcp_num,
+                        stream,
+                        title,
+                        safe_lbl,
+                        p_uid,
+                        p_mask,
+                        beneficiary,
+                        gw,
+                        bank_id,
+                        gross,
+                        comm_pct,
+                        comm,
+                        net_payout,
+                        tx_status,
+                        m_str,
+                        rel_apt,
+                        rel_pay,
+                        created_iso,
+                        created_iso,
+                    ),
+                )
+
+    _recompute_bank_balances(conn, now)
+
+
 def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dict:
     target = db_path
     if force_reset and target and target.exists():
         target.unlink()
     apply_schema(target)
+
+    if (settings.env == "production" or os.getenv("SHASTHOSETU_ENV") == "production") and not force_reset:
+        return {"seeded": False, "reason": "Demo seeding disabled in production environment."}
 
     with get_db_conn(target) as conn:
         now = utc_now_iso()
@@ -415,17 +724,19 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
                 _seed_blood_and_journal(conn, now)
                 _seed_ai_feature_flags(conn, now)
                 _seed_expanded_doctors_and_catalog(conn, now)
+                _seed_business_and_six_month_ledger(conn, now)
                 conn.execute("COMMIT;")
             except Exception:
                 conn.execute("ROLLBACK;")
                 raise
-            return {"seeded": False, "reason": "Base synthetic records present; ensured Blood Connect, Journal, AI flags & 43-doctor catalog."}
+            return {"seeded": False, "reason": "Base synthetic records present; ensured Blood Connect, Journal, AI flags, 43-doctor catalog & 6-month financial ledger."}
 
         conn.execute("BEGIN IMMEDIATE;")
         try:
             if force_reset:
                 # Clear dependent tables safely in reverse order
                 for tbl in [
+                    "platform_transactions", "bank_settlement_accounts", "rate_limit_buckets",
                     "ai_runtime_snapshots", "ocr_job_artifacts", "ai_feedback", "ai_message_citations",
                     "ai_chat_messages", "ai_chat_sessions", "ai_asr_jobs", "ai_voice_consents",
                     "rag_ingestion_jobs", "rag_chunks", "rag_source_versions", "rag_sources",
@@ -939,6 +1250,7 @@ def seed_database(db_path: Path | None = None, force_reset: bool = False) -> dic
             )
             _seed_blood_and_journal(conn, now)
             _seed_expanded_doctors_and_catalog(conn, now)
+            _seed_business_and_six_month_ledger(conn, now)
 
             conn.execute("COMMIT;")
         except Exception:

@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import json
-import pickle
 import re
 import time
+from pathlib import Path
 from typing import Any
 
 import faiss
 import httpx
 import numpy as np
+from rank_bm25 import BM25Okapi
 
 from ..config import settings
 from ..core.security import new_id, utc_now_iso
@@ -103,10 +104,12 @@ def allowed_scopes_for_role(role: str | None) -> set[str]:
     return {"PUBLIC_MEDICAL", "SUPPORT_FAQ"}
 
 
+_BM25_MEM_CACHE: dict[tuple[str, str, int], BM25Okapi] = {}
+
+
 def _load_local_index_artifacts(index_dir: Path | None = None) -> tuple[list[dict[str, Any]], Any | None, Any | None, dict[str, Any]]:
     idx_dir = index_dir or settings.rag_index_dir
     chunk_map_path = idx_dir / "chunk_map.json"
-    bm25_path = idx_dir / "bm25_index.pkl"
     faiss_path = idx_dir / "faiss_bge_m3.index"
     meta_path = idx_dir / "index_meta.json"
 
@@ -117,9 +120,12 @@ def _load_local_index_artifacts(index_dir: Path | None = None) -> tuple[list[dic
     meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
 
     bm25 = None
-    if bm25_path.exists():
-        with open(bm25_path, "rb") as f:
-            bm25 = pickle.load(f)
+    if chunk_map:
+        cache_key = (str(idx_dir.resolve()), str(meta.get("index_version", "v1")), len(chunk_map))
+        if cache_key not in _BM25_MEM_CACHE:
+            tokenized_corpus = [tokenize_multilingual(c.get("chunk_text", "") or c.get("content", "")) for c in chunk_map]
+            _BM25_MEM_CACHE[cache_key] = BM25Okapi(tokenized_corpus)
+        bm25 = _BM25_MEM_CACHE[cache_key]
 
     faiss_idx = None
     if faiss_path.exists() and meta.get("dense_ready", True):

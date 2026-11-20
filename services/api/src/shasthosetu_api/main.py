@@ -29,8 +29,10 @@ from .seeds.seed_demo import seed_database
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    import os
     apply_schema()
-    seed_database()
+    if settings.env != "production" and os.getenv("SHASTHOSETU_ENV") != "production":
+        seed_database()
     try:
         from .services.rag_ingestion import seed_curated_corpus
         seed_curated_corpus(force_reindex=False)
@@ -54,10 +56,9 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_origin_regex=r"^https?://.*$",
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With"],
     )
 
     app.include_router(auth.router)

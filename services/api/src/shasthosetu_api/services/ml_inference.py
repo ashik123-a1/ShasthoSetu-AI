@@ -100,11 +100,17 @@ def get_compute_device() -> tuple[Any, str]:
     return _DEVICE, _DEVICE_LABEL
 
 
+def _assert_trusted_model_path(path: Path) -> Path:
+    resolved = path.resolve()
+    root_resolved = PROJECT_ROOT.resolve()
+    if not str(resolved).startswith(str(root_resolved)) or not resolved.is_file():
+        raise FileNotFoundError(f"Trusted checkpoint not found inside project root: {path}")
+    return resolved
+
+
 def _load_pcos_xgb():
     if "m01" not in _CACHE:
-        path = PROJECT_ROOT / "01_PCOS_Clinical" / "models" / "model_best.joblib"
-        if not path.exists():
-            raise FileNotFoundError(f"Checkpoint not found: {path}")
+        path = _assert_trusted_model_path(PROJECT_ROOT / "01_PCOS_Clinical" / "models" / "model_best.joblib")
         _CACHE["m01"] = joblib.load(path)
     return _CACHE["m01"]
 
@@ -112,12 +118,10 @@ def _load_pcos_xgb():
 def _load_usg_resnet():
     if "m02" not in _CACHE:
         device, _ = get_compute_device()
-        path = PROJECT_ROOT / "02_PCOS_Ultrasound" / "models" / "resnet18_best.pth"
-        if not path.exists():
-            raise FileNotFoundError(f"Checkpoint not found: {path}")
+        path = _assert_trusted_model_path(PROJECT_ROOT / "02_PCOS_Ultrasound" / "models" / "resnet18_best.pth")
         model = resnet18(weights=None)
         model.fc = nn.Linear(model.fc.in_features, len(M02_CLASSES))
-        ck = torch.load(path, map_location="cpu", weights_only=False)
+        ck = torch.load(path, map_location="cpu", weights_only=True)
         sd = ck.get("model_state_dict", ck.get("state_dict", ck)) if isinstance(ck, dict) else ck
         model.load_state_dict(sd)
         model.eval().to(device)
@@ -129,12 +133,10 @@ def _load_viral_rash_grouped():
     if "m03" not in _CACHE:
         device, _ = get_compute_device()
         # Strictly load leak-free 755-family grouped checkpoint (never contaminated resnet18_best.pth)
-        path = PROJECT_ROOT / "03_Measles_Viral_Rash" / "models" / "resnet18_grouped_best.pth"
-        if not path.exists():
-            raise FileNotFoundError(f"Grouped checkpoint not found: {path}")
+        path = _assert_trusted_model_path(PROJECT_ROOT / "03_Measles_Viral_Rash" / "models" / "resnet18_grouped_best.pth")
         model = resnet18(weights=None)
         model.fc = nn.Sequential(nn.Dropout(0.5), nn.Linear(model.fc.in_features, len(M03_CLASSES)))
-        ck = torch.load(path, map_location="cpu", weights_only=False)
+        ck = torch.load(path, map_location="cpu", weights_only=True)
         sd = ck.get("model_state_dict", ck.get("state_dict", ck)) if isinstance(ck, dict) else ck
         model.load_state_dict(sd)
         model.eval().to(device)
@@ -145,10 +147,8 @@ def _load_viral_rash_grouped():
 def _load_dermoped_exp_b():
     if "m06" not in _CACHE:
         device, _ = get_compute_device()
-        path = PROJECT_ROOT / "06_DermoPed_Pediatric_Skin" / "proofs" / "EXP_B" / "model_best.pth"
-        if not path.exists():
-            raise FileNotFoundError(f"Checkpoint not found: {path}")
-        ck = torch.load(path, map_location="cpu", weights_only=False)
+        path = _assert_trusted_model_path(PROJECT_ROOT / "06_DermoPed_Pediatric_Skin" / "proofs" / "EXP_B" / "model_best.pth")
+        ck = torch.load(path, map_location="cpu", weights_only=True)
         classes = ck.get("class_names", M06_DEFAULT_CLASSES) if isinstance(ck, dict) else M06_DEFAULT_CLASSES
         model = resnet18(weights=None)
         model.fc = nn.Sequential(nn.Dropout(0.5), nn.Linear(model.fc.in_features, len(classes)))

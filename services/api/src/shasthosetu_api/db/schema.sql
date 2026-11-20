@@ -899,3 +899,56 @@ CREATE TABLE IF NOT EXISTS ai_runtime_snapshots (
     detail_json TEXT NOT NULL DEFAULT '{}',
     updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
+
+-- =========================================================================
+-- 20. BANKING, GATEWAY SETTLEMENTS, 6-MONTH COMMISSION LEDGER & RATE LIMITS
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS rate_limit_buckets (
+    bucket_key TEXT NOT NULL,
+    hit_ts REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limit_key_ts ON rate_limit_buckets(bucket_key, hit_ts);
+
+CREATE TABLE IF NOT EXISTS bank_settlement_accounts (
+    id TEXT PRIMARY KEY,
+    account_code TEXT NOT NULL UNIQUE,
+    provider_name TEXT NOT NULL,
+    account_number_masked TEXT NOT NULL,
+    account_type TEXT NOT NULL CHECK (account_type IN ('MFS_GATEWAY', 'CARD_CLEARING', 'CORPORATE_BANK', 'PAYOUT_TREASURY')),
+    balance_minor_poisha INTEGER NOT NULL DEFAULT 0,
+    total_inflow_minor_poisha INTEGER NOT NULL DEFAULT 0,
+    total_commission_minor_poisha INTEGER NOT NULL DEFAULT 0,
+    total_payout_minor_poisha INTEGER NOT NULL DEFAULT 0,
+    settlement_status TEXT NOT NULL DEFAULT 'ACTIVE_ONLINE' CHECK (settlement_status IN ('ACTIVE_ONLINE', 'SETTLEMENT_READY', 'AUDITED')),
+    last_reconciled_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+
+CREATE TABLE IF NOT EXISTS platform_transactions (
+    id TEXT PRIMARY KEY,
+    txn_ref TEXT NOT NULL UNIQUE,
+    receipt_number TEXT NOT NULL UNIQUE,
+    revenue_stream TEXT NOT NULL CHECK (revenue_stream IN ('DOCTOR_CONSULTATION', 'EPHARMA_SALE', 'DIAGNOSTIC_TEST', 'HEALTH_PLAN')),
+    item_title TEXT NOT NULL,
+    support_safe_label TEXT NOT NULL,
+    payer_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+    payer_name_masked TEXT NOT NULL,
+    beneficiary_entity TEXT NOT NULL,
+    gateway_method TEXT NOT NULL CHECK (gateway_method IN ('DEMO_BKASH', 'DEMO_NAGAD', 'DEMO_CARD', 'DEMO_BANK', 'DEMO_FREE')),
+    bank_account_id TEXT NOT NULL REFERENCES bank_settlement_accounts(id) ON DELETE RESTRICT,
+    gross_amount_minor_poisha INTEGER NOT NULL CHECK (gross_amount_minor_poisha >= 0),
+    commission_rate_pct REAL NOT NULL CHECK (commission_rate_pct >= 0 AND commission_rate_pct <= 100),
+    commission_minor_poisha INTEGER NOT NULL CHECK (commission_minor_poisha >= 0),
+    net_partner_payout_minor_poisha INTEGER NOT NULL CHECK (net_partner_payout_minor_poisha >= 0),
+    status TEXT NOT NULL DEFAULT 'PAID' CHECK (status IN ('PAID', 'REFUNDED', 'SETTLED', 'DISPUTED', 'FAILED')),
+    billing_month TEXT NOT NULL,
+    related_appointment_id TEXT REFERENCES appointments(id) ON DELETE SET NULL,
+    related_demo_payment_id TEXT REFERENCES demo_payments(id) ON DELETE SET NULL,
+    related_order_id TEXT,
+    created_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+    updated_at_utc TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_platform_txns_month_stream ON platform_transactions(billing_month, revenue_stream, status);
+CREATE INDEX IF NOT EXISTS idx_platform_txns_created ON platform_transactions(created_at_utc DESC);
+

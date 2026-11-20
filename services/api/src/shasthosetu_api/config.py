@@ -32,13 +32,14 @@ class Settings:
     env: str = os.getenv("SHASTHOSETU_ENV", "development")
     db_path: Path = Path(os.getenv("SHASTHOSETU_DB_PATH", str(DEFAULT_DB_PATH)))
     session_cookie_name: str = "ss_session"
+    csrf_cookie_name: str = "ss_csrf"
     session_ttl_hours: int = 24
-    allow_demo_login_banner: bool = os.getenv("SHASTHOSETU_SHOW_DEMO_CREDENTIALS", "true").lower() == "true"
+    allow_demo_login_banner: bool = os.getenv("SHASTHOSETU_SHOW_DEMO_CREDENTIALS", "false").lower() == "true"
     cors_origins: list[str] = field(default_factory=_parse_origins)
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
     ollama_chat_model: str = os.getenv("OLLAMA_CHAT_MODEL", "qwen2.5:7b")
     ollama_embed_model: str = os.getenv("OLLAMA_EMBED_MODEL", "bge-m3")
-    hf_home: str = os.getenv("HF_HOME", r"G:\hf_cache")
+    hf_home: str = os.getenv("HF_HOME", str(DEFAULT_DATA_DIR / "hf_cache"))
     rag_index_dir: Path = Path(os.getenv("RAG_INDEX_DIR", str(DEFAULT_RAG_INDEX_DIR)))
     ocr_vault_dir: Path = Path(os.getenv("OCR_VAULT_DIR", str(DEFAULT_OCR_VAULT_DIR)))
     rag_corpus_dir: Path = Path(os.getenv("RAG_CORPUS_DIR", str(DEFAULT_RAG_CORPUS_DIR)))

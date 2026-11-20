@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { TEAM_INFO } from "../../data/teamData";
 import { useI18n } from "../../lib/i18n";
 
 interface RadialMenuItem {
@@ -15,6 +16,7 @@ interface RadialMenuItem {
   label: string;
   shortLabel: string;
   sublabel: string;
+  href?: string;
   action: () => void;
   icon: React.ReactNode;
   accentColor: string;
@@ -23,12 +25,16 @@ interface RadialMenuItem {
 export function ShasthoSetuRadialMenu({
   onOpenTeamModal,
   onStartVoiceCall,
-  githubUrl = "https://github.com/ashik123-a1/ShasthoSetu-AI",
+  githubUrl = TEAM_INFO.githubRepoUrl,
 }: {
   onOpenTeamModal: () => void;
   onStartVoiceCall: () => void;
   githubUrl?: string;
 }) {
+  const resolvedGithubUrl =
+    githubUrl && githubUrl.trim().length > 0
+      ? githubUrl.trim()
+      : "https://github.com/ashik123-a1/ShasthoSetu-AI";
   const { locale } = useI18n();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -72,9 +78,9 @@ export function ShasthoSetuRadialMenu({
       label: "GitHub Repository",
       shortLabel: "GitHub",
       sublabel: locale === "bn" ? "অফিসিয়াল ওপেন-সোর্স কোডবেস" : "Official Project Source Code",
+      href: resolvedGithubUrl,
       action: () => {
         setIsOpen(false);
-        window.open(githubUrl, "_blank", "noopener,noreferrer");
       },
       icon: <Github className="w-3.5 h-3.5" />,
       accentColor: "#38BDF8",
@@ -221,66 +227,132 @@ export function ShasthoSetuRadialMenu({
               pointerEvents: "none",
             }}
           >
-            <button
-              type="button"
-              onClick={item.action}
-              aria-label={item.label}
-              onMouseEnter={(e) => {
-                setHoveredItem(item);
-                e.currentTarget.style.transform = `translateY(-${radius}px) rotate(${-angle}deg) scale(1.15)`;
-                e.currentTarget.style.borderColor = item.accentColor;
-                e.currentTarget.style.boxShadow = `0 8px 22px rgba(0, 0, 0, 0.6), 0 0 16px ${item.accentColor}70`;
-              }}
-              onMouseLeave={(e) => {
-                setHoveredItem(null);
-                e.currentTarget.style.transform = `translateY(-${radius}px) rotate(${-angle}deg) scale(1)`;
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.25)";
-                e.currentTarget.style.boxShadow = `0 6px 18px rgba(0, 0, 0, 0.45), 0 0 12px ${item.accentColor}25`;
-              }}
-              style={{
-                position: "absolute",
-                top: "1px",
-                left: "1px",
-                width: "44px",
-                height: "44px",
-                borderRadius: "50%",
-                display: isOpen ? "flex" : "none",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "1px",
-                background: "rgba(8, 22, 48, 0.94)",
-                backdropFilter: "blur(14px)",
-                WebkitBackdropFilter: "blur(14px)",
-                border: "1px solid rgba(255, 255, 255, 0.25)",
-                boxShadow: `0 6px 18px rgba(0, 0, 0, 0.45), 0 0 12px ${item.accentColor}25`,
-                color: "#FFFFFF",
-                cursor: "pointer",
-                opacity: isOpen ? 1 : 0,
-                pointerEvents: isOpen ? "auto" : "none",
-                transition:
-                  "transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
-                transitionDelay: isOpen ? `${delay}ms` : "0ms",
-                transform: isOpen
-                  ? `translateY(-${radius}px) rotate(${-angle}deg) scale(1)`
-                  : `translateY(0px) rotate(${-angle}deg) scale(0.35)`,
-              }}
-            >
-              <span style={{ color: item.accentColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {item.icon}
-              </span>
-              <span
+            {item.href ? (
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={item.action}
+                aria-label={item.label}
+                onMouseEnter={(e) => {
+                  setHoveredItem(item);
+                  e.currentTarget.style.transform = `translateY(-${radius}px) rotate(${-angle}deg) scale(1.15)`;
+                  e.currentTarget.style.borderColor = item.accentColor;
+                  e.currentTarget.style.boxShadow = `0 8px 22px rgba(0, 0, 0, 0.6), 0 0 16px ${item.accentColor}70`;
+                }}
+                onMouseLeave={(e) => {
+                  setHoveredItem(null);
+                  e.currentTarget.style.transform = `translateY(-${radius}px) rotate(${-angle}deg) scale(1)`;
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.25)";
+                  e.currentTarget.style.boxShadow = `0 6px 18px rgba(0, 0, 0, 0.45), 0 0 12px ${item.accentColor}25`;
+                }}
                 style={{
-                  fontSize: "0.48rem",
-                  fontWeight: 700,
-                  letterSpacing: "0.01em",
-                  color: "#E2E8F0",
-                  lineHeight: 1,
+                  position: "absolute",
+                  top: "1px",
+                  left: "1px",
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  display: isOpen ? "flex" : "none",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "1px",
+                  background: "rgba(8, 22, 48, 0.94)",
+                  backdropFilter: "blur(14px)",
+                  WebkitBackdropFilter: "blur(14px)",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                  boxShadow: `0 6px 18px rgba(0, 0, 0, 0.45), 0 0 12px ${item.accentColor}25`,
+                  color: "#FFFFFF",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  opacity: isOpen ? 1 : 0,
+                  pointerEvents: isOpen ? "auto" : "none",
+                  transition:
+                    "transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+                  transitionDelay: isOpen ? `${delay}ms` : "0ms",
+                  transform: isOpen
+                    ? `translateY(-${radius}px) rotate(${-angle}deg) scale(1)`
+                    : `translateY(0px) rotate(${-angle}deg) scale(0.35)`,
                 }}
               >
-                {item.shortLabel}
-              </span>
-            </button>
+                <span style={{ color: item.accentColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {item.icon}
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.48rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.01em",
+                    color: "#E2E8F0",
+                    lineHeight: 1,
+                  }}
+                >
+                  {item.shortLabel}
+                </span>
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={item.action}
+                aria-label={item.label}
+                onMouseEnter={(e) => {
+                  setHoveredItem(item);
+                  e.currentTarget.style.transform = `translateY(-${radius}px) rotate(${-angle}deg) scale(1.15)`;
+                  e.currentTarget.style.borderColor = item.accentColor;
+                  e.currentTarget.style.boxShadow = `0 8px 22px rgba(0, 0, 0, 0.6), 0 0 16px ${item.accentColor}70`;
+                }}
+                onMouseLeave={(e) => {
+                  setHoveredItem(null);
+                  e.currentTarget.style.transform = `translateY(-${radius}px) rotate(${-angle}deg) scale(1)`;
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.25)";
+                  e.currentTarget.style.boxShadow = `0 6px 18px rgba(0, 0, 0, 0.45), 0 0 12px ${item.accentColor}25`;
+                }}
+                style={{
+                  position: "absolute",
+                  top: "1px",
+                  left: "1px",
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "50%",
+                  display: isOpen ? "flex" : "none",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "1px",
+                  background: "rgba(8, 22, 48, 0.94)",
+                  backdropFilter: "blur(14px)",
+                  WebkitBackdropFilter: "blur(14px)",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                  boxShadow: `0 6px 18px rgba(0, 0, 0, 0.45), 0 0 12px ${item.accentColor}25`,
+                  color: "#FFFFFF",
+                  cursor: "pointer",
+                  opacity: isOpen ? 1 : 0,
+                  pointerEvents: isOpen ? "auto" : "none",
+                  transition:
+                    "transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
+                  transitionDelay: isOpen ? `${delay}ms` : "0ms",
+                  transform: isOpen
+                    ? `translateY(-${radius}px) rotate(${-angle}deg) scale(1)`
+                    : `translateY(0px) rotate(${-angle}deg) scale(0.35)`,
+                }}
+              >
+                <span style={{ color: item.accentColor, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {item.icon}
+                </span>
+                <span
+                  style={{
+                    fontSize: "0.48rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.01em",
+                    color: "#E2E8F0",
+                    lineHeight: 1,
+                  }}
+                >
+                  {item.shortLabel}
+                </span>
+              </button>
+            )}
           </div>
         );
       })}

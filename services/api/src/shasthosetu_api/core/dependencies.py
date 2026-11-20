@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import secrets
 from typing import Callable
 from fastapi import Depends, HTTPException, Request, status
 
@@ -8,18 +9,41 @@ from ..db.sqlite import get_db_conn, row_to_dict
 from .audit import record_audit
 from .security import sha256_hex, utc_now_iso
 
+_STATE_CHANGING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+
 
 def extract_raw_token(request: Request) -> str | None:
+    """Extract session token strictly from Authorization Bearer header or HttpOnly session cookie (never URL ?token=)."""
     auth_header = request.headers.get("authorization", "")
     if auth_header.lower().startswith("bearer "):
         return auth_header[7:].strip()
     cookie_val = request.cookies.get(settings.session_cookie_name)
     if cookie_val:
         return cookie_val.strip()
-    token_param = request.query_params.get("token")
-    if token_param:
-        return token_param.strip()
     return None
+
+
+def verify_csrf_token(request: Request, user: dict) -> None:
+    """Enforce per-session X-CSRF-Token header check on all cookie-authenticated state-changing requests."""
+    if request.method.upper() not in _STATE_CHANGING_METHODS:
+        return
+    # Requests authenticated explicitly via Authorization: Bearer are not ambient cookie requests
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        return
+    expected_csrf = user.get("csrf_token")
+    if not expected_csrf:
+        return
+    supplied_csrf = (
+        request.headers.get("X-CSRF-Token")
+        or request.headers.get("x-csrf-token")
+        or ""
+    ).strip()
+    if not supplied_csrf or not secrets.compare_digest(supplied_csrf, str(expected_csrf)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRF_TOKEN_INVALID: Missing or invalid X-CSRF-Token header for state-changing request.",
+        )
 
 
 def get_optional_user(request: Request) -> dict | None:
@@ -63,6 +87,7 @@ def get_current_user(request: Request) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required.",
         )
+    verify_csrf_token(request, user)
     return user
 
 

@@ -1,16 +1,124 @@
 from __future__ import annotations
 
 import json
+import sqlite3
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from ..core.audit import notify_user, record_audit
+from ..core.audit import mask_personal_identifier, notify_user, record_audit
 from ..core.dependencies import require_role
 from ..core.security import hash_password, new_id, utc_now_iso
 from ..db.sqlite import get_db_conn, row_to_dict, rows_to_dicts
+from ..seeds.seed_demo import _recompute_bank_balances, _seed_business_and_six_month_ledger
 
 router = APIRouter(prefix="/v1/admin", tags=["Admin Governance, Approvals & Audit"])
+
+_MONTH_LABELS = {
+    "2026-06": "Jun 2026",
+    "2026-07": "Jul 2026",
+    "2026-08": "Aug 2026",
+    "2026-09": "Sep 2026",
+    "2026-10": "Oct 2026",
+    "2026-11": "Nov 2026",
+}
+
+
+def _build_admin_finance_snapshot(
+    conn: sqlite3.Connection,
+    *,
+    status_filter: Optional[str] = None,
+    stream_filter: Optional[str] = None,
+    month_filter: Optional[str] = None,
+) -> dict:
+    now = utc_now_iso()
+    _seed_business_and_six_month_ledger(conn, now)
+
+    kpis = row_to_dict(
+        conn.execute(
+            """
+            SELECT
+                COUNT(*) AS total_transactions_count,
+                SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN 1 ELSE 0 END) AS paid_transactions_count,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN gross_amount_minor_poisha ELSE 0 END), 0) AS gross_gmv_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN commission_minor_poisha ELSE 0 END), 0) AS platform_commission_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN net_partner_payout_minor_poisha ELSE 0 END), 0) AS net_partner_payout_poisha,
+                COALESCE(SUM(CASE WHEN status = 'REFUNDED' THEN gross_amount_minor_poisha ELSE 0 END), 0) AS refunded_poisha,
+                ROUND(COALESCE(AVG(commission_rate_pct), 15.0), 2) AS avg_commission_rate_pct
+              FROM platform_transactions
+            """
+        ).fetchone()
+    ) or {}
+
+    bank_accounts = rows_to_dicts(
+        conn.execute("SELECT * FROM bank_settlement_accounts ORDER BY id ASC").fetchall()
+    )
+
+    month_rows = rows_to_dicts(
+        conn.execute(
+            """
+            SELECT
+                billing_month,
+                COUNT(*) AS tx_count,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') AND revenue_stream = 'DOCTOR_CONSULTATION' THEN gross_amount_minor_poisha ELSE 0 END), 0) AS consultation_gmv_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') AND revenue_stream = 'EPHARMA_SALE' THEN gross_amount_minor_poisha ELSE 0 END), 0) AS epharma_sales_gmv_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') AND revenue_stream = 'DIAGNOSTIC_TEST' THEN gross_amount_minor_poisha ELSE 0 END), 0) AS diagnostic_test_gmv_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') AND revenue_stream = 'HEALTH_PLAN' THEN gross_amount_minor_poisha ELSE 0 END), 0) AS health_plan_gmv_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN gross_amount_minor_poisha ELSE 0 END), 0) AS total_gmv_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN commission_minor_poisha ELSE 0 END), 0) AS total_commission_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN net_partner_payout_minor_poisha ELSE 0 END), 0) AS net_payout_poisha
+              FROM platform_transactions
+             GROUP BY billing_month
+             ORDER BY billing_month ASC
+            """
+        ).fetchall()
+    )
+    for mr in month_rows:
+        mr["month_label"] = _MONTH_LABELS.get(mr["billing_month"], mr["billing_month"])
+
+    stream_rows = rows_to_dicts(
+        conn.execute(
+            """
+            SELECT
+                revenue_stream,
+                COUNT(*) AS tx_count,
+                ROUND(AVG(commission_rate_pct), 1) AS commission_rate_pct,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN gross_amount_minor_poisha ELSE 0 END), 0) AS gross_gmv_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN commission_minor_poisha ELSE 0 END), 0) AS commission_poisha,
+                COALESCE(SUM(CASE WHEN status IN ('PAID', 'SETTLED') THEN net_partner_payout_minor_poisha ELSE 0 END), 0) AS net_partner_payout_poisha
+              FROM platform_transactions
+             GROUP BY revenue_stream
+             ORDER BY gross_gmv_poisha DESC
+            """
+        ).fetchall()
+    )
+
+    tx_sql = """
+        SELECT pt.*, b.account_code AS bank_account_code, b.provider_name AS bank_provider_name
+          FROM platform_transactions pt
+          JOIN bank_settlement_accounts b ON b.id = pt.bank_account_id
+         WHERE 1=1
+    """
+    tx_params: list = []
+    if status_filter:
+        tx_sql += " AND pt.status = ?"
+        tx_params.append(status_filter)
+    if stream_filter:
+        tx_sql += " AND pt.revenue_stream = ?"
+        tx_params.append(stream_filter)
+    if month_filter:
+        tx_sql += " AND pt.billing_month = ?"
+        tx_params.append(month_filter)
+    tx_sql += " ORDER BY pt.created_at_utc DESC LIMIT 120"
+    txns = rows_to_dicts(conn.execute(tx_sql, tuple(tx_params)).fetchall())
+
+    return {
+        "kpis": kpis,
+        "bank_accounts": bank_accounts,
+        "monthly_six_month_trend": month_rows,
+        "stream_commission_breakdown": stream_rows,
+        "platform_transactions": txns,
+    }
 
 
 class DoctorVerifyRequest(BaseModel):
@@ -127,11 +235,16 @@ def admin_dashboard(user: dict = Depends(require_role("ADMIN"))):
         recent_audit = rows_to_dicts(
             conn.execute("SELECT * FROM audit_logs ORDER BY created_at_utc DESC LIMIT 15").fetchall()
         )
+        finance = _build_admin_finance_snapshot(conn)
+        payment_counts["gross_six_month_gmv_poisha"] = finance["kpis"].get("gross_gmv_poisha", 0)
+        payment_counts["platform_commission_poisha"] = finance["kpis"].get("platform_commission_poisha", 0)
+        payment_counts["net_partner_payout_poisha"] = finance["kpis"].get("net_partner_payout_poisha", 0)
         return {
             "users": user_counts,
             "doctors": doctor_counts,
             "appointments": appt_counts,
             "demo_payments": payment_counts,
+            "finance_summary": finance,
             "escalated_tickets_count": escalated_count,
             "recent_audit_logs": recent_audit,
         }
@@ -299,45 +412,57 @@ def provision_staff_user(payload: StaffProvisionRequest, user: dict = Depends(re
     pw_hash = hash_password(payload.password)
 
     with get_db_conn() as conn:
-        dup = conn.execute(
-            "SELECT 1 FROM users WHERE email = ? OR (? IS NOT NULL AND phone = ?)",
-            (email, phone, phone),
-        ).fetchone()
-        if dup:
-            raise HTTPException(status_code=409, detail="Email or phone already exists.")
         conn.execute("BEGIN IMMEDIATE;")
-        conn.execute(
-            """
-            INSERT INTO users (id, email, phone, password_hash, full_name, primary_role, preferred_locale, account_status, is_synthetic, created_at_utc, updated_at_utc)
-            VALUES (?, ?, ?, ?, ?, ?, 'bn', 'ACTIVE', 0, ?, ?)
-            """,
-            (new_uid, email, phone, pw_hash, payload.full_name.strip(), payload.role, now, now),
-        )
-        conn.execute(
-            """
-            INSERT INTO role_memberships (id, user_id, role, approval_state, granted_by_user_id)
-            VALUES (?, ?, ?, 'APPROVED', ?)
-            """,
-            (new_id("role"), new_uid, payload.role, user["id"]),
-        )
-        if payload.role == "PATIENT":
+        try:
+            dup = conn.execute(
+                "SELECT 1 FROM users WHERE email = ? OR (? IS NOT NULL AND phone = ?)",
+                (email, phone, phone),
+            ).fetchone()
+            if dup:
+                conn.execute("ROLLBACK;")
+                raise HTTPException(status_code=409, detail="Email or phone already exists.")
             conn.execute(
                 """
-                INSERT INTO patient_profiles (id, owner_user_id, display_name, relationship_type, district, preferred_locale, is_synthetic)
-                VALUES (?, ?, ?, 'SELF', 'Dhaka', 'bn', 0)
+                INSERT INTO users (id, email, phone, password_hash, full_name, primary_role, preferred_locale, account_status, is_synthetic, created_at_utc, updated_at_utc)
+                VALUES (?, ?, ?, ?, ?, ?, 'bn', 'ACTIVE', 0, ?, ?)
                 """,
-                (new_id("pat"), new_uid, payload.full_name.strip()),
+                (new_uid, email, phone, pw_hash, payload.full_name.strip(), payload.role, now, now),
             )
-        record_audit(
-            conn,
-            actor_user_id=user["id"],
-            actor_role="ADMIN",
-            action_type="ADMIN_PROVISIONED_ACCOUNT",
-            target_resource="users",
-            target_id=new_uid,
-            details={"role": payload.role, "email": email},
-        )
-        conn.execute("COMMIT;")
+            conn.execute(
+                """
+                INSERT INTO role_memberships (id, user_id, role, approval_state, granted_by_user_id)
+                VALUES (?, ?, ?, 'APPROVED', ?)
+                """,
+                (new_id("role"), new_uid, payload.role, user["id"]),
+            )
+            if payload.role == "PATIENT":
+                conn.execute(
+                    """
+                    INSERT INTO patient_profiles (id, owner_user_id, display_name, relationship_type, district, preferred_locale, is_synthetic)
+                    VALUES (?, ?, ?, 'SELF', 'Dhaka', 'bn', 0)
+                    """,
+                    (new_id("pat"), new_uid, payload.full_name.strip()),
+                )
+            record_audit(
+                conn,
+                actor_user_id=user["id"],
+                actor_role="ADMIN",
+                action_type="ADMIN_PROVISIONED_ACCOUNT",
+                target_resource="users",
+                target_id=new_uid,
+                details={"role": payload.role, "email": mask_personal_identifier(email)},
+            )
+            conn.execute("COMMIT;")
+        except HTTPException:
+            raise
+        except sqlite3.IntegrityError:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK;")
+            raise HTTPException(status_code=409, detail="Email or phone already exists.")
+        except Exception:
+            if conn.in_transaction:
+                conn.execute("ROLLBACK;")
+            raise
         return {"user_id": new_uid, "email": email, "role": payload.role}
 
 
@@ -414,7 +539,12 @@ def override_appointment_status(
 
 
 @router.get("/payments")
-def list_admin_payments(status: Optional[str] = None, user: dict = Depends(require_role("ADMIN"))):
+def list_admin_payments(
+    status: Optional[str] = None,
+    revenue_stream: Optional[str] = None,
+    billing_month: Optional[str] = None,
+    user: dict = Depends(require_role("ADMIN")),
+):
     sql = """
         SELECT dp.*, a.booking_reference, u.full_name AS payer_name, u.email AS payer_email,
                dr.receipt_number
@@ -430,7 +560,97 @@ def list_admin_payments(status: Optional[str] = None, user: dict = Depends(requi
         params.append(status)
     sql += " ORDER BY dp.created_at_utc DESC LIMIT 100"
     with get_db_conn() as conn:
-        return {"payments": rows_to_dicts(conn.execute(sql, tuple(params)).fetchall())}
+        legacy_payments = rows_to_dicts(conn.execute(sql, tuple(params)).fetchall())
+        finance = _build_admin_finance_snapshot(
+            conn,
+            status_filter=status,
+            stream_filter=revenue_stream,
+            month_filter=billing_month,
+        )
+        return {
+            "payments": legacy_payments,
+            **finance,
+        }
+
+
+@router.get("/finance/overview")
+def get_admin_finance_overview(
+    status: Optional[str] = None,
+    revenue_stream: Optional[str] = None,
+    billing_month: Optional[str] = None,
+    user: dict = Depends(require_role("ADMIN")),
+):
+    with get_db_conn() as conn:
+        return _build_admin_finance_snapshot(
+            conn,
+            status_filter=status,
+            stream_filter=revenue_stream,
+            month_filter=billing_month,
+        )
+
+
+@router.post("/finance/transactions/{txn_id}/refund")
+def refund_platform_transaction(txn_id: str, payload: DemoRefundRequest, user: dict = Depends(require_role("ADMIN"))):
+    with get_db_conn() as conn:
+        tx = row_to_dict(conn.execute("SELECT * FROM platform_transactions WHERE id = ?", (txn_id,)).fetchone())
+        if not tx:
+            raise HTTPException(status_code=404, detail="Platform transaction not found.")
+        if tx["status"] == "REFUNDED":
+            raise HTTPException(status_code=409, detail="Transaction is already refunded.")
+        now = utc_now_iso()
+        conn.execute("BEGIN IMMEDIATE;")
+        conn.execute(
+            "UPDATE platform_transactions SET status = 'REFUNDED', updated_at_utc = ? WHERE id = ?",
+            (now, txn_id),
+        )
+        if tx.get("related_demo_payment_id"):
+            conn.execute(
+                "UPDATE demo_payments SET status = 'DEMO_REFUNDED', version = version + 1, updated_at_utc = ? WHERE id = ?",
+                (now, tx["related_demo_payment_id"]),
+            )
+        _recompute_bank_balances(conn, now)
+        record_audit(
+            conn,
+            actor_user_id=user["id"],
+            actor_role="ADMIN",
+            action_type="ADMIN_PLATFORM_TXN_REFUNDED",
+            target_resource="platform_transactions",
+            target_id=txn_id,
+            details={"txn_ref": tx["txn_ref"], "gross_poisha": tx["gross_amount_minor_poisha"], "reason": payload.reason},
+        )
+        conn.execute("COMMIT;")
+        return {"transaction_id": txn_id, "txn_ref": tx["txn_ref"], "status": "REFUNDED"}
+
+
+@router.post("/finance/banks/{bank_id}/settle")
+def settle_bank_account(bank_id: str, user: dict = Depends(require_role("ADMIN"))):
+    with get_db_conn() as conn:
+        bank = row_to_dict(conn.execute("SELECT * FROM bank_settlement_accounts WHERE id = ?", (bank_id,)).fetchone())
+        if not bank:
+            raise HTTPException(status_code=404, detail="Bank settlement account not found.")
+        now = utc_now_iso()
+        conn.execute("BEGIN IMMEDIATE;")
+        conn.execute(
+            "UPDATE platform_transactions SET status = 'SETTLED', updated_at_utc = ? WHERE bank_account_id = ? AND status = 'PAID'",
+            (now, bank_id),
+        )
+        conn.execute(
+            "UPDATE bank_settlement_accounts SET settlement_status = 'AUDITED', last_reconciled_at_utc = ? WHERE id = ?",
+            (now, bank_id),
+        )
+        _recompute_bank_balances(conn, now)
+        record_audit(
+            conn,
+            actor_user_id=user["id"],
+            actor_role="ADMIN",
+            action_type="ADMIN_BANK_SETTLEMENT_RECONCILED",
+            target_resource="bank_settlement_accounts",
+            target_id=bank_id,
+            details={"account_code": bank["account_code"], "balance_poisha": bank["balance_minor_poisha"]},
+        )
+        conn.execute("COMMIT;")
+        updated = row_to_dict(conn.execute("SELECT * FROM bank_settlement_accounts WHERE id = ?", (bank_id,)).fetchone())
+        return {"bank_account": updated}
 
 
 @router.post("/payments/{payment_id}/refund")

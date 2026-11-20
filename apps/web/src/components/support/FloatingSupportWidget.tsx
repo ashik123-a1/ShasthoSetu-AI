@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronRight,
+  Github,
   MessageCircle,
   Mic,
   MicOff,
@@ -14,6 +15,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
+import { TEAM_INFO } from "../../data/teamData";
 import { useI18n } from "../../lib/i18n";
 import { MedicalAiChatbotOrb } from "./MedicalAiChatbotOrb";
 import { ShasthoSetuRadialMenu } from "./ShasthoSetuRadialMenu";
@@ -376,6 +378,7 @@ export function FloatingSupportWidget() {
       {/* Radial Menu Trigger (AgriSense Orbit Pattern: anchored at bottom 76px, right 28px) */}
       {!open && stage === "docked" && (
         <ShasthoSetuRadialMenu
+          githubUrl={TEAM_INFO.githubRepoUrl}
           onOpenTeamModal={() => setTeamModalOpen(true)}
           onStartVoiceCall={() => {
             setOpen(true);
@@ -518,13 +521,24 @@ export function FloatingSupportWidget() {
                   <ChevronRight className="w-4 h-4 text-emerald-400 shrink-0" />
                 </button>
 
-                <Link
-                  to="/support/dashboard"
-                  onClick={() => setOpen(false)}
-                  className="block text-center text-[11px] font-semibold text-cyan-300 hover:text-cyan-200 pt-1"
-                >
-                  Open Full Ticket History Portal →
-                </Link>
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <Link
+                    to="/support/dashboard"
+                    onClick={() => setOpen(false)}
+                    className="text-[11px] font-semibold text-cyan-300 hover:text-cyan-200"
+                  >
+                    Open Full Ticket History Portal →
+                  </Link>
+                  <a
+                    href={TEAM_INFO.githubRepoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/90 border border-slate-700 hover:border-cyan-400 text-[11px] font-semibold text-slate-200 hover:text-white transition"
+                  >
+                    <Github className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>GitHub Repo</span>
+                  </a>
+                </div>
               </div>
             )}
 

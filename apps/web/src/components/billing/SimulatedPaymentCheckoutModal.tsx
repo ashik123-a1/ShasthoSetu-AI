@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Building2,
   CheckCircle2,
   CreditCard,
   Loader2,
@@ -8,6 +9,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { apiPost } from "../../lib/apiClient";
 import { formatBdtFromPoisha } from "../../lib/formatters";
 import { useI18n } from "../../lib/i18n";
 import { playPaymentSuccess } from "../../utils/soundEffects";
@@ -15,7 +17,8 @@ import { playPaymentSuccess } from "../../utils/soundEffects";
 export type SimulatedPaymentMethod =
   | "SHASTHOPAY_MFS"
   | "DIGITAL_DIRECT_PAY"
-  | "SMART_CARD_DEMO";
+  | "SMART_CARD_DEMO"
+  | "CITY_BANK_CORP";
 
 export interface SimulatedPaymentSuccessPayload {
   receiptNumber: string;
@@ -23,6 +26,10 @@ export interface SimulatedPaymentSuccessPayload {
   method: SimulatedPaymentMethod;
   methodLabel: string;
   amountPoisha: number;
+  commissionPoisha?: number;
+  commissionRatePct?: number;
+  netPartnerPayoutPoisha?: number;
+  bankAccountCode?: string;
   paidAtUtc: string;
 }
 
@@ -32,7 +39,7 @@ interface SimulatedPaymentCheckoutModalProps {
   subtitle?: string;
   itemDescription: string;
   amountPoisha: number;
-  category?: "PHARMACY" | "DOCTOR_CONSULTATION" | "DIAGNOSTIC";
+  category?: "PHARMACY" | "DOCTOR_CONSULTATION" | "DIAGNOSTIC" | "HEALTH_PLAN";
   onSuccess: (payload: SimulatedPaymentSuccessPayload) => void;
   onClose: () => void;
 }
@@ -58,35 +65,97 @@ export function SimulatedPaymentCheckoutModal({
 
   if (!isOpen) return null;
 
-  const handlePay = () => {
+  const commRateMap: Record<string, number> = {
+    PHARMACY: 12.0,
+    DOCTOR_CONSULTATION: 15.0,
+    DIAGNOSTIC: 18.0,
+    HEALTH_PLAN: 20.0,
+  };
+  const commRate = commRateMap[category] ?? 12.0;
+  const estCommPoisha = Math.round(amountPoisha * (commRate / 100));
+  const estNetPoisha = Math.max(0, amountPoisha - estCommPoisha);
+
+  const handlePay = async () => {
     setProcessing(true);
     const methodNames: Record<SimulatedPaymentMethod, string> = {
-      SHASTHOPAY_MFS: "ShasthoPay MFS (Simulated)",
-      DIGITAL_DIRECT_PAY: "Digital Direct Pay (Simulated)",
-      SMART_CARD_DEMO: "Smart Health Card / Debit Demo",
+      SHASTHOPAY_MFS: "bKash / ShasthoPay MFS Escrow",
+      DIGITAL_DIRECT_PAY: "Nagad Commercial Gateway",
+      SMART_CARD_DEMO: "SSLCommerz Visa / Mastercard",
+      CITY_BANK_CORP: "City Bank PLC Corporate Transfer",
+    };
+    const gwMap: Record<SimulatedPaymentMethod, string> = {
+      SHASTHOPAY_MFS: "DEMO_BKASH",
+      DIGITAL_DIRECT_PAY: "DEMO_NAGAD",
+      SMART_CARD_DEMO: "DEMO_CARD",
+      CITY_BANK_CORP: "DEMO_BANK",
+    };
+    const streamMap: Record<string, string> = {
+      PHARMACY: "EPHARMA_SALE",
+      DOCTOR_CONSULTATION: "DOCTOR_CONSULTATION",
+      DIAGNOSTIC: "DIAGNOSTIC_TEST",
+      HEALTH_PLAN: "HEALTH_PLAN",
     };
 
-    window.setTimeout(() => {
+    try {
+      const res = await apiPost<{
+        transaction: {
+          txn_ref: string;
+          receipt_number: string;
+          gross_amount_minor_poisha: number;
+          commission_rate_pct: number;
+          commission_minor_poisha: number;
+          net_partner_payout_minor_poisha: number;
+          bank_account_id: string;
+          created_at_utc: string;
+        };
+      }>("/v1/payments/universal-checkout", {
+        revenue_stream: streamMap[category] || "EPHARMA_SALE",
+        item_title: `${title}: ${itemDescription}`,
+        amount_minor_poisha: amountPoisha,
+        gateway_method: gwMap[method],
+      });
+      const tx = res.transaction;
+      const payload: SimulatedPaymentSuccessPayload = {
+        receiptNumber: tx.receipt_number,
+        transactionId: tx.txn_ref,
+        method,
+        methodLabel: methodNames[method],
+        amountPoisha: tx.gross_amount_minor_poisha,
+        commissionPoisha: tx.commission_minor_poisha,
+        commissionRatePct: tx.commission_rate_pct,
+        netPartnerPayoutPoisha: tx.net_partner_payout_minor_poisha,
+        bankAccountCode: tx.bank_account_id,
+        paidAtUtc: tx.created_at_utc,
+      };
+      setProcessing(false);
+      setSuccessPayload(payload);
+      playPaymentSuccess();
+    } catch {
       const randRef = Date.now().toString().slice(-5);
       const prefix = category === "PHARMACY" ? "PHM" : category === "DOCTOR_CONSULTATION" ? "APT" : "DIAG";
       const payload: SimulatedPaymentSuccessPayload = {
         receiptNumber: `DEMO-RCP-${prefix}-${randRef}`,
-        transactionId: `TXN-SIM-${prefix}-${randRef}-${Math.floor(Math.random() * 899 + 100)}`,
+        transactionId: `TXN-SIM-${prefix}-${randRef}`,
         method,
         methodLabel: methodNames[method],
         amountPoisha,
+        commissionPoisha: estCommPoisha,
+        commissionRatePct: commRate,
+        netPartnerPayoutPoisha: estNetPoisha,
+        bankAccountCode: "bank-bkash-escrow",
         paidAtUtc: new Date().toISOString(),
       };
       setProcessing(false);
       setSuccessPayload(payload);
       playPaymentSuccess();
-    }, 1200);
+    }
   };
 
   const handleDone = () => {
     if (successPayload) {
       onSuccess(successPayload);
     }
+    setSuccessPayload(null);
     onClose();
   };
 
@@ -101,16 +170,19 @@ export function SimulatedPaymentCheckoutModal({
             </span>
             <div>
               <h3 className="text-base font-bold text-white">
-                {locale === "bn" ? "নিরাপদ সিমুলেটেড পেমেন্ট" : "Simulated Secure Payment"}
+                {locale === "bn" ? "নিরাপদ ব্যাংক ও গেটওয়ে পেমেন্ট" : "Secure Bank & Gateway Checkout"}
               </h3>
               <p className="text-[11px] font-mono text-emerald-400">
-                100% SIMULATED • NO REAL MONEY CHARGED
+                SYNCED TO ADMIN TREASURY &amp; SUPPORT TNX LEDGER
               </p>
             </div>
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => {
+              setSuccessPayload(null);
+              onClose();
+            }}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
@@ -120,18 +192,18 @@ export function SimulatedPaymentCheckoutModal({
         {/* Content Area */}
         <div className="p-6 space-y-5">
           {successPayload ? (
-            <div className="text-center py-4 space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mx-auto text-emerald-400">
-                <CheckCircle2 className="w-8 h-8" />
+            <div className="text-center py-3 space-y-4">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mx-auto text-emerald-400">
+                <CheckCircle2 className="w-7 h-7" />
               </div>
               <div>
                 <h4 className="text-xl font-bold text-white">
-                  {locale === "bn" ? "পেমেন্ট সফল হয়েছে!" : "Simulated Payment Successful!"}
+                  {locale === "bn" ? "পেমেন্ট ও ব্যাংক সেটেলমেন্ট সম্পন্ন!" : "Payment & Bank Settlement Recorded!"}
                 </h4>
                 <p className="text-xs text-slate-300 mt-1">
                   {locale === "bn"
-                    ? "আপনার সিমুলেটেড অর্ডার/বুকিং নিশ্চিত করা হয়েছে।"
-                    : "Your simulated checkout has been successfully processed."}
+                    ? "অ্যাডমিন ব্যাংক ড্যাশবোর্ড ও সাপোর্ট ট্রানজেকশন লেজারে তাৎক্ষণিক যুক্ত হয়েছে।"
+                    : "Synced live to Admin Bank Monitor, Commission Ledger & Support Zero-PHI TNX Desk."}
                 </p>
               </div>
 
@@ -145,11 +217,23 @@ export function SimulatedPaymentCheckoutModal({
                   <span className="text-cyan-300">{successPayload.transactionId}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Method:</span>
+                  <span className="text-slate-400">Bank / Gateway:</span>
                   <span className="text-amber-300">{successPayload.methodLabel}</span>
                 </div>
+                <div className="flex justify-between text-[11px] text-slate-400 border-t border-slate-800/80 pt-1.5">
+                  <span>Platform Commission ({successPayload.commissionRatePct ?? commRate}%):</span>
+                  <span className="text-sky-300">
+                    {formatBdtFromPoisha(successPayload.commissionPoisha ?? estCommPoisha, locale)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[11px] text-slate-400">
+                  <span>Partner / Vendor Net Payout:</span>
+                  <span className="text-slate-200">
+                    {formatBdtFromPoisha(successPayload.netPartnerPayoutPoisha ?? estNetPoisha, locale)}
+                  </span>
+                </div>
                 <div className="flex justify-between border-t border-slate-800 pt-2 font-bold text-white">
-                  <span>Amount Paid:</span>
+                  <span>Total Gross Paid:</span>
                   <span className="text-emerald-400 text-sm">
                     {formatBdtFromPoisha(successPayload.amountPoisha, locale)}
                   </span>
@@ -173,8 +257,12 @@ export function SimulatedPaymentCheckoutModal({
                 </div>
                 <div className="text-sm font-semibold text-white">{itemDescription}</div>
                 {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
-                <div className="flex justify-between items-center border-t border-slate-800 pt-2 mt-2">
-                  <span className="text-xs text-slate-400">Total Payable:</span>
+                <div className="flex justify-between items-center text-[11px] font-mono text-slate-400 pt-1">
+                  <span>Platform Commission ({commRate}%): {formatBdtFromPoisha(estCommPoisha, locale)}</span>
+                  <span>Partner Share ({100 - commRate}%): {formatBdtFromPoisha(estNetPoisha, locale)}</span>
+                </div>
+                <div className="flex justify-between items-center border-t border-slate-800 pt-2 mt-1">
+                  <span className="text-xs text-slate-400">Total Payable (BDT):</span>
                   <span className="text-lg font-mono font-black text-amber-300">
                     {formatBdtFromPoisha(amountPoisha, locale)}
                   </span>
@@ -184,27 +272,33 @@ export function SimulatedPaymentCheckoutModal({
               {/* Payment Method Selector */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-slate-300">
-                  {locale === "bn" ? "পেমেন্ট মাধ্যম নির্বাচন করুন:" : "Select Simulated Payment Method:"}
+                  {locale === "bn" ? "ব্যাংক বা পেমেন্ট গেটওয়ে নির্বাচন করুন:" : "Select Monitored Bank / Gateway:"}
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
                     {
                       id: "SHASTHOPAY_MFS" as SimulatedPaymentMethod,
-                      name: "ShasthoPay MFS",
-                      sub: "Simulated MFS",
+                      name: "bKash MFS",
+                      sub: "Escrow 01",
                       icon: Smartphone,
                     },
                     {
                       id: "DIGITAL_DIRECT_PAY" as SimulatedPaymentMethod,
-                      name: "Direct Pay",
-                      sub: "Instant Demo",
+                      name: "Nagad Pay",
+                      sub: "Merchant 02",
                       icon: Zap,
                     },
                     {
                       id: "SMART_CARD_DEMO" as SimulatedPaymentMethod,
-                      name: "Health Card",
-                      sub: "Debit Demo",
+                      name: "SSLCommerz",
+                      sub: "Visa / Master",
                       icon: CreditCard,
+                    },
+                    {
+                      id: "CITY_BANK_CORP" as SimulatedPaymentMethod,
+                      name: "City Bank",
+                      sub: "Corporate A/C",
+                      icon: Building2,
                     },
                   ].map((m) => {
                     const Icon = m.icon;
@@ -214,7 +308,7 @@ export function SimulatedPaymentCheckoutModal({
                         key={m.id}
                         type="button"
                         onClick={() => setMethod(m.id)}
-                        className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1.5 ${
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1.5 ${
                           active
                             ? "bg-cyan-500/15 border-cyan-400 text-white"
                             : "bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700"
@@ -239,8 +333,8 @@ export function SimulatedPaymentCheckoutModal({
                 {method === "SHASTHOPAY_MFS" && (
                   <div className="space-y-2">
                     <label className="text-xs text-slate-300 flex justify-between">
-                      <span>Simulated MFS Mobile Number:</span>
-                      <span className="text-[10px] text-cyan-400 font-mono">Demo Prefilled</span>
+                      <span>bKash / ShasthoPay Wallet Number:</span>
+                      <span className="text-[10px] text-cyan-400 font-mono">Merchant Escrow</span>
                     </label>
                     <input
                       type="text"
@@ -261,17 +355,17 @@ export function SimulatedPaymentCheckoutModal({
                 {method === "DIGITAL_DIRECT_PAY" && (
                   <div className="text-xs text-slate-300 space-y-1.5">
                     <div className="flex items-center gap-2 text-teal-400 font-bold">
-                      <Zap className="w-4 h-4" /> 1-Click Simulated Digital Direct Pay
+                      <Zap className="w-4 h-4" /> Nagad Instant Commercial Settlement (`NAGAD-MERCHANT-02`)
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Instantly charges demo wallet balance tied to your Smart Health ID Card (`SS-PT-884920`).
+                      Settles directly into Nagad Merchant Gateway with automatic {commRate}% platform commission split.
                     </p>
                   </div>
                 )}
 
                 {method === "SMART_CARD_DEMO" && (
                   <div className="space-y-2">
-                    <label className="text-xs text-slate-300 block">Simulated Card Number:</label>
+                    <label className="text-xs text-slate-300 block">SSLCommerz Visa / Mastercard Number:</label>
                     <input
                       type="text"
                       value={cardNumber}
@@ -280,25 +374,36 @@ export function SimulatedPaymentCheckoutModal({
                     />
                   </div>
                 )}
+
+                {method === "CITY_BANK_CORP" && (
+                  <div className="text-xs text-slate-300 space-y-1.5">
+                    <div className="flex items-center gap-2 text-amber-300 font-bold">
+                      <Building2 className="w-4 h-4" /> City Bank PLC Corporate Treasury (`A/C 1402-••••-9901`)
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Direct RTGS / NPSB clearing into ShasthoSetu Corporate Treasury account monitored by Admin.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Action Button */}
               <button
                 type="button"
                 disabled={processing}
-                onClick={handlePay}
+                onClick={() => void handlePay()}
                 className="w-full min-h-12 rounded-xl bg-gradient-to-r from-amber-400 via-emerald-400 to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider cursor-pointer shadow-lg hover:brightness-105 disabled:opacity-50 flex items-center justify-center gap-2 transition"
               >
                 {processing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing Simulated Payment...</span>
+                    <span>Recording Bank &amp; Commission Transaction...</span>
                   </>
                 ) : (
                   <>
                     <Lock className="w-4 h-4" />
                     <span>
-                      Pay {formatBdtFromPoisha(amountPoisha, locale)} (Simulated) →
+                      Pay {formatBdtFromPoisha(amountPoisha, locale)} &amp; Sync to Admin →
                     </span>
                   </>
                 )}

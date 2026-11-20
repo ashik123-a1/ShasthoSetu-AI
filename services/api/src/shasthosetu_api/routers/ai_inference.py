@@ -4,7 +4,7 @@ import hashlib
 import json
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
 from pydantic import BaseModel, Field
 
 from ..core.audit import notify_user, record_audit
@@ -14,9 +14,10 @@ from ..core.dependencies import (
     require_approved_doctor,
     require_role,
 )
-from ..core.security import new_id, utc_now_iso
+from ..core.security import enforce_rate_limit, new_id, utc_now_iso
 from ..db.sqlite import get_db_conn, row_to_dict, rows_to_dicts
 from ..services.ml_inference import (
+    MAX_UPLOAD_BYTES,
     get_curated_sample_image,
     infer_dermoped,
     infer_pcos_clinical,
@@ -26,6 +27,26 @@ from ..services.ml_inference import (
 )
 
 router = APIRouter(prefix="/v1/ai", tags=["Real AI Model Inference & Clinician Draft Review"])
+
+
+async def _read_upload_bounded(file: UploadFile, max_bytes: int = MAX_UPLOAD_BYTES) -> bytes:
+    """Stream upload in 64 KB chunks and abort immediately if size exceeds max_bytes (prevents OOM DoS)."""
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await file.read(64 * 1024)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail=f"FILE_TOO_LARGE: Uploaded file exceeds {max_bytes // (1024 * 1024)} MB maximum size limit.",
+            )
+        chunks.append(chunk)
+    if total == 0:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+    return b"".join(chunks)
 
 
 class PcosClinicalInferPayload(BaseModel):
@@ -67,7 +88,12 @@ class DoctorReviewDraftRequest(BaseModel):
 
 
 @router.post("/infer/pcos-clinical")
-def run_pcos_clinical(payload: PcosClinicalInferPayload):
+def run_pcos_clinical(
+    payload: PcosClinicalInferPayload,
+    request: Request,
+    user: dict = Depends(get_current_user),
+):
+    enforce_rate_limit("ai_infer_pcos_clinical", max_requests=25, window_seconds=60, request=request, identifier=user["id"])
     try:
         return infer_pcos_clinical(payload.model_dump())
     except FileNotFoundError as exc:
@@ -77,8 +103,13 @@ def run_pcos_clinical(payload: PcosClinicalInferPayload):
 
 
 @router.post("/infer/pcos-ultrasound")
-async def run_pcos_ultrasound(file: UploadFile = File(...)):
-    data = await file.read()
+async def run_pcos_ultrasound(
+    request: Request,
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    enforce_rate_limit("ai_infer_pcos_usg", max_requests=20, window_seconds=60, request=request, identifier=user["id"])
+    data = await _read_upload_bounded(file)
     try:
         return infer_pcos_ultrasound(data, file.filename or "ultrasound.jpg")
     except ValueError as exc:
@@ -88,8 +119,13 @@ async def run_pcos_ultrasound(file: UploadFile = File(...)):
 
 
 @router.post("/infer/viral-rash")
-async def run_viral_rash(file: UploadFile = File(...)):
-    data = await file.read()
+async def run_viral_rash(
+    request: Request,
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    enforce_rate_limit("ai_infer_viral_rash", max_requests=20, window_seconds=60, request=request, identifier=user["id"])
+    data = await _read_upload_bounded(file)
     try:
         return infer_viral_rash(data, file.filename or "rash.jpg")
     except ValueError as exc:
@@ -99,8 +135,13 @@ async def run_viral_rash(file: UploadFile = File(...)):
 
 
 @router.post("/infer/dermoped")
-async def run_dermoped(file: UploadFile = File(...)):
-    data = await file.read()
+async def run_dermoped(
+    request: Request,
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    enforce_rate_limit("ai_infer_dermoped", max_requests=20, window_seconds=60, request=request, identifier=user["id"])
+    data = await _read_upload_bounded(file)
     try:
         return infer_dermoped(data, file.filename or "skin.png")
     except ValueError as exc:
@@ -111,12 +152,14 @@ async def run_dermoped(file: UploadFile = File(...)):
 
 @router.post("/infer/prescription-ocr")
 async def run_prescription_ocr(
+    request: Request,
     file: UploadFile = File(...),
     persist_to_queue: bool = Form(default=False),
     patient_profile_id: Optional[str] = Form(default=None),
-    user: Optional[dict] = Depends(get_optional_user),
+    user: dict = Depends(get_current_user),
 ):
-    data = await file.read()
+    enforce_rate_limit("ai_infer_rx_ocr", max_requests=20, window_seconds=60, request=request, identifier=user["id"])
+    data = await _read_upload_bounded(file)
     fname = file.filename or "prescription.jpg"
     try:
         result = infer_prescription_ocr(data, fname)
