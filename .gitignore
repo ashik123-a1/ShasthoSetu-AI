@@ -2,13 +2,15 @@
 # ShasthoSetu AI — Git Ignore Policy
 # Heavy clinical datasets (~9 GB) & checkpoints are hosted on Hugging Face:
 #   https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets
-# Ready-to-test sample QA pack lives inside testingmainapps/ (tracked in Git).
+# Lightweight reproducible ML research code lives in research/01..06 (tracked).
+# Curated 5-system QA sample pack lives inside testingmainapps/ (tracked).
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
 # 1. Python Virtual Environments, Caches & Test Artifacts
 # ------------------------------------------------------------------------------
-_shared/venv/
+_shared/
+_reports/
 .venv/
 venv/
 **/venv/
@@ -49,27 +51,17 @@ services/data/
 LIVE_ONLINE_LINK.txt
 
 # ------------------------------------------------------------------------------
-# 4. Heavy Clinical Datasets (Hosted on Hugging Face Hub)
+# 4. Raw Local ML Module Workspaces (Clean Subset Lives in research/)
 # ------------------------------------------------------------------------------
-01_PCOS_Clinical/data/raw/*
-01_PCOS_Clinical/data/processed/*
-02_PCOS_Ultrasound/data/raw/*
-02_PCOS_Ultrasound/data/processed/*
-03_Measles_Viral_Rash/data/raw/*
-03_Measles_Viral_Rash/data/processed/*
-04_Prescription_OCR/data/raw/*
-04_Prescription_OCR/data/processed/*
-05_Bangla_Voice_AI/data/raw/*
-05_Bangla_Voice_AI/data/processed/*
-06_DermoPed_Pediatric_Skin/data/raw/*
-06_DermoPed_Pediatric_Skin/data/processed/*
-
-# Preserve directory placeholders
-!**/data/raw/.gitkeep
-!**/data/processed/.gitkeep
+01_PCOS_Clinical/
+02_PCOS_Ultrasound/
+03_Measles_Viral_Rash/
+04_Prescription_OCR/
+05_Bangla_Voice_AI/
+06_DermoPed_Pediatric_Skin/
 
 # ------------------------------------------------------------------------------
-# 5. Model Checkpoints, Training Runs & Proof Archives
+# 5. Model Checkpoints, Weights, Heavy Media & Archives
 # ------------------------------------------------------------------------------
 *.pth
 *.pt
@@ -82,17 +74,14 @@ LIVE_ONLINE_LINK.txt
 *.pkl
 *.zip
 *.tar.gz
-02_PCOS_Ultrasound/runs/*
-03_Measles_Viral_Rash/runs/*
-04_Prescription_OCR/runs/*
-02_PCOS_Ultrasound/proofs/outputs/gradcam_visualizations.png
-03_Measles_Viral_Rash/proofs/gradcam_visualizations.png
+*.wav
 
 # ------------------------------------------------------------------------------
-# 6. Reference Repo Clones & Unused Duplicate / Scratch Media
+# 6. Legacy Prototype Demos, Reference Repos & Duplicate Unused Media
 # ------------------------------------------------------------------------------
+demo/
+submission/
 _reference_repos/
-04_Prescription_OCR/page.html
 apps/web/public/images/hero/hero-doctors-cutout.png
 apps/web/public/images/hero/hero-doctors-back-to-back-cutout.png
 apps/web/public/images/team/team_docx_image_*.jpg
@@ -102,11 +91,20 @@ apps/web/public/images/team/mynuddin_ahmed.jpg
 apps/web/public/images/team/nakib_md_ashik.jpg
 
 # ------------------------------------------------------------------------------
-# 7. Internal Self-Audit Scratchpads, Bulk Generators & IDE / Agent Configs
+# 7. Internal Self-Audit Scratchpads, Old Screenshots, Video Scripts & IDE Files
 # ------------------------------------------------------------------------------
 docs/UI_REFERENCE_RESEARCH/
-docs/SHASTHOSETU_COMPETITION_VIDEO_SECURITY_01/audio/
+docs/SHASTHOSETU_COMPETITION_VIDEO_SECURITY_01/
 docs/HF_DATASET_PROVENANCE_AUDIT_01/03_REPOSITORY_FILE_INVENTORY.csv
+docs/AGRISENSE_ANIMATIONS_AND_DATA_VISUALIZATIONS_CATALOG.md
+docs/DOCTIME_INSPIRED_REQUIREMENTS_ADDENDUM.md
+docs/COMPETITION_AND_SRS_GAP_PLAN.md
+docs/FRONTEND_AI_TOOLS_PLAYBOOK.md
+docs/PROJECT_PROGRESS_AND_COMPETITION_TRACKER.md
+docs/UI_01_IMPLEMENTATION_REPORT.md
+docs/FULLSTACK_01_IMPLEMENTATION_REPORT.md
+docs/FULLSTACK_01_ACCEPTANCE_MATRIX.md
+docs/competition/
 docs/COMPETITION_AUDIT_01/
 docs/COMPETITION_QA_LOCK_02/
 docs/COMP_IMPLEMENTATION_FIX_03/
@@ -116,10 +114,17 @@ docs/PROJECT_RELEASE_AUDIT_01/
 docs/PROJECT_RELEASE_EVIDENCE_CORRECTION_02/
 docs/PROJECT_FINAL_DEMO_GATE_03/
 docs/PROJECT_FINAL_EVIDENCE_REPAIR_04/
+docs/evidence/FULLSTACK_01/screenshots/
+docs/evidence/UI_01/screenshots/
+docs/evidence/AI_RAG_VOICE_OCR_01/screenshots/
 scripts/generate_*
 scripts/build_comp*
 scripts/build_cat3*
 scripts/update_audit_01*
+scripts/capture_video_scenes.js
+scripts/synthesize_narration.py
+scripts/verify_video_privacy_screening.py
+scripts/debug_combo_rag.py
 .cursor/
 .kiro/
 .specify/

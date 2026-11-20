@@ -45,7 +45,7 @@ export function TeamRosterModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col rounded-3xl border border-cyan-500/40 bg-gradient-to-b from-[#09152e] via-[#050d1e] to-[#030712] shadow-2xl overflow-hidden text-slate-100">
+      <div className="relative w-full max-w-6xl max-h-[92vh] flex flex-col rounded-3xl border border-cyan-500/40 bg-gradient-to-b from-[#09152e] via-[#050d1e] to-[#030712] shadow-2xl overflow-hidden text-slate-100">
         {/* Modal Top Header */}
         <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between gap-3 bg-[#0a1835]/80 shrink-0">
           <div className="flex items-center gap-3">
@@ -78,12 +78,12 @@ export function TeamRosterModal({
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {OFFICIAL_TEAM_MEMBERS.map((member) => (
               <div
                 key={member.id}
-                className={`relative rounded-3xl border transition-all duration-300 p-5 flex flex-col justify-between gap-4 overflow-hidden group ${
+                className={`relative rounded-2xl border transition-all duration-300 p-3.5 sm:p-4 flex flex-col justify-between gap-2.5 overflow-hidden group ${
                   member.isLeader
                     ? "border-cyan-400/60 bg-gradient-to-br from-cyan-950/40 via-slate-900/80 to-slate-950/90 shadow-[0_0_25px_rgba(56,189,248,0.18)]"
                     : "border-slate-800 hover:border-cyan-500/40 bg-slate-950/80 hover:bg-slate-900/60"
@@ -100,7 +100,7 @@ export function TeamRosterModal({
                     <img
                       src={member.image}
                       alt={member.name}
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover object-top border-2 border-cyan-400/60 shadow-lg group-hover:scale-105 transition"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover object-top border-2 border-cyan-400/60 shadow-lg group-hover:scale-105 transition"
                     />
                     {member.isLeader && (
                       <span className="absolute -bottom-2 -right-1 px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 font-black text-[9px] font-mono tracking-wider shadow">
@@ -140,12 +140,12 @@ export function TeamRosterModal({
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed border-t border-white/10 pt-3">
+                <p className="text-[11.5px] text-slate-300 leading-snug line-clamp-3 border-t border-white/10 pt-2">
                   {locale === "bn" ? member.bioBn : member.bio}
                 </p>
 
                 {/* Contact and copy action bar */}
-                <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-1.5 text-xs">
                   <button
                     type="button"
                     onClick={() => copyToClipboard(member.phone, member.id)}

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="100%" height="320">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#030816"/>
+      <stop offset="50%" stop-color="#07192e"/>
+      <stop offset="100%" stop-color="#04151f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="79%" cy="46%" r="44%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.24"/>
+      <stop offset="52%" stop-color="#10b981" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#030816" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orbCore" cx="38%" cy="34%" r="65%">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="35%" stop-color="#38bdf8"/>
+      <stop offset="78%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </radialGradient>
+    <pattern id="grid" width="38" height="38" patternUnits="userSpaceOnUse">
+      <path d="M 38 0 L 0 0 0 38" fill="none" stroke="#38bdf8" stroke-opacity="0.065" stroke-width="1"/>
+      <circle cx="0" cy="0" r="1.2" fill="#38bdf8" fill-opacity="0.16"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="320" rx="16" fill="url(#bg)"/>
+  <rect width="1200" height="320" rx="16" fill="url(#grid)"/>
+  <rect width="1200" height="320" rx="16" fill="url(#glow1)"/>
+  <rect x="1" y="1" width="1198" height="318" rx="15" fill="none" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="1.5"/>
+
+  <!-- Right-side Vector Gyroscopic 3D Medical Care Orb & ECG Waveform -->
+  <g transform="translate(972, 154)">
+    <!-- Outer halo rings -->
+    <circle cx="0" cy="0" r="108" fill="none" stroke="#38bdf8" stroke-opacity="0.14" stroke-width="1"/>
+    <circle cx="0" cy="0" r="88" fill="none" stroke="#10b981" stroke-opacity="0.18" stroke-dasharray="6 5" stroke-width="1.2"/>
+
+    <!-- Gyroscopic counter-tilted ellipses -->
+    <ellipse cx="0" cy="0" rx="128" ry="44" fill="none" stroke="#38bdf8" stroke-opacity="0.52" stroke-width="1.8" transform="rotate(-24)"/>
+    <ellipse cx="0" cy="0" rx="128" ry="44" fill="none" stroke="#10b981" stroke-opacity="0.48" stroke-width="1.8" stroke-dasharray="8 4" transform="rotate(24)"/>
+
+    <!-- Orbital nodes -->
+    <circle cx="-118" cy="48" r="4.5" fill="#38bdf8"/>
+    <circle cx="118" cy="-48" r="4.5" fill="#34d399"/>
+    <circle cx="-92" cy="-70" r="3.5" fill="#fbbf24"/>
+
+    <!-- Glowing Clinical Orb Core -->
+    <circle cx="0" cy="0" r="44" fill="url(#orbCore)" opacity="0.95"/>
+    <ellipse cx="-14" cy="-16" rx="15" ry="9" fill="#ffffff" fill-opacity="0.42" transform="rotate(-28 -14 -16)"/>
+
+    <!-- Crisp Medical Cross inside core -->
+    <rect x="-5" y="-17" width="10" height="34" rx="2.5" fill="#031122" fill-opacity="0.88"/>
+    <rect x="-17" y="-5" width="34" height="10" rx="2.5" fill="#031122" fill-opacity="0.88"/>
+    <rect x="-3.5" y="-15" width="7" height="30" rx="2" fill="#e0f2fe"/>
+    <rect x="-15" y="-3.5" width="30" height="7" rx="2" fill="#e0f2fe"/>
+
+    <!-- Crisp ECG Pulse Waveform along base -->
+    <path d="M -142 86 L -78 86 L -64 68 L -52 104 L -38 56 L -22 96 L -10 86 L 24 86 L 34 74 L 44 98 L 56 64 L 68 92 L 78 86 L 142 86"
+          fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+  </g>
+
+  <!-- Top Eyebrow Pill -->
+  <rect x="64" y="44" width="510" height="28" rx="14" fill="#0284c7" fill-opacity="0.16" stroke="#38bdf8" stroke-opacity="0.42" stroke-width="1"/>
+  <circle cx="82" cy="58" r="4" fill="#34d399"/>
+  <text x="96" y="63" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="700" letter-spacing="1.4" fill="#bae6fd">BANGLADESH BILINGUAL CLINICAL AI · OFFLINE-FIRST TELEMEDICINE</text>
+
+  <!-- Main Title -->
+  <text x="64" y="136" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="60" font-weight="800" letter-spacing="-1.2" fill="#f8fafc">ShasthoSetu <tspan fill="url(#accent)">AI</tspan></text>
+
+  <!-- Tagline -->
+  <text x="64" y="178" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="21" font-weight="500" fill="#cbd5e1">Smart Health. Accessible Care. Built for 170M Citizens.</text>
+
+  <!-- Subtitle -->
+  <text x="64" y="212" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="14" fill="#94a3b8">Hybrid BM25+BGE-M3 RAG · Qwen 2.5 7B Edge LLM · 6 Audited Clinical Models · Safe-OCR 422 · 3 Custom MCPs</text>
+
+  <!-- Bottom Telemetry Strip -->
+  <line x1="64" y1="244" x2="788" y2="244" stroke="#1e293b" stroke-width="1.2"/>
+  <text x="64" y="274" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12.5" font-weight="600" fill="#34d399">139 FASTAPI ENDPOINTS · 55 SQLITE TABLES</text>
+  <text x="392" y="274" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12.5" font-weight="600" fill="#38bdf8">53/53 AUTOMATED TESTS PASS</text>
+  <text x="615" y="274" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12.5" font-weight="600" fill="#fbbf24">35,641 AUDITED HF FILES</text>
+</svg>

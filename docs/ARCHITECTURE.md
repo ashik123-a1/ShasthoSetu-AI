@@ -1,77 +1,119 @@
-# ShasthoSetu AI — System Architecture Guide
+# ShasthoSetu AI — System Architecture Guide (`Colorful Mermaid Topology`)
 
 This document details the six architectural layers connecting the **React 19 + Three.js frontend**, **FastAPI 15-router API gateway**, **Hybrid RAG & LangGraph orchestration**, **MCP hub**, **6 clinical ML/DL prototypes**, and **55-table SQLite WAL persistence engine**.
 
 ---
 
-## 1. End-to-End Topology
+## 1. End-to-End 6-Layer System Topology
 
 ```mermaid
 flowchart TB
-    subgraph Client["Layer 1: Presentation & 3D Web Client (apps/web · :5173)"]
-        UI["Public Portal + 4 Role Portals"]
-        THREE["Three.js Care Lattice · Holographic Body Scanner · MedicalAiChatbotOrb"]
-        MAP["Leaflet GeoJSON 8-Division Healthcare & Blood Atlas"]
+    classDef uiLayer fill:#0c4a6e,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef apiLayer fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
+    classDef secLayer fill:#7f1d1d,stroke:#f87171,stroke-width:2px,color:#f8fafc;
+    classDef aiLayer fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#f8fafc;
+    classDef mlLayer fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#f8fafc;
+    classDef dbLayer fill:#451a03,stroke:#fbbf24,stroke-width:2px,color:#f8fafc;
+
+    subgraph L1["1. PRESENTATION & 3D WEB CLIENT (apps/web · :5173)"]
+        UI["<b>React 19 + Tailwind + i18n</b><br/>Public · Patient · Doctor · Support · Admin"]:::uiLayer
+        THREE["<b>Three.js WebGL &amp; Leaflet Atlas</b><br/>Care Lattice · Body Scanner · 8-Div BD Map"]:::uiLayer
     end
 
-    subgraph Gateway["Layer 2: FastAPI ASGI Gateway (services/api · :8000)"]
-        AUTH["Auth & Session Cookie Middleware (Argon2id + ss_session)"]
-        ROUTERS["15 Domain Routers · 139 Route Handlers"]
-        CORS["Per-Origin Tunnel & LAN CORS Guard"]
+    subgraph L2["2. FASTAPI ASGI GATEWAY (services/api · :8000)"]
+        ROUTERS["<b>15 Domain Routers · 139 Endpoints</b><br/>REST · WebRTC Signaling · Multipart OCR"]:::apiLayer
     end
 
-    subgraph AI["Layer 3 & 4: Clinical Safety, RAG, Agents & MCP"]
-        GUARD["safety_guard.py (bn/en/Banglish Injection & Code 999 Gate)"]
-        RAG["Hybrid RAG (BM25Okapi + BGE-M3 Dense + RRF) · Graph RAG"]
-        AGENT["LangGraph Deterministic State Machine + Multi-Framework Adapters"]
-        MCP["3 Custom MCP Servers (guideline, directory, care_record) + 4 Public/Ext MCPs"]
+    subgraph L3["3. SECURITY & CLINICAL SAFETY GUARDRAILS"]
+        SEC["<b>Argon2id + ss_session + RBAC</b><br/>HTTP 403 Zero-PHI · HTTP 422 OCR Lock · 999 Guard"]:::secLayer
     end
 
-    subgraph Models["Layer 5: Diagnostic & Speech Prototypes"]
-        ML["XGBoost PCOS · ResNet-18 Ultrasound & Viral Rash · DermoPed"]
-        OCR["EasyOCR ['bn','en'] + Line-Clustering + HTTP 422 Gate"]
-        VOICE["Whisper-Small-BN + Whisper-Base Bilingual Auto-Routing"]
+    subgraph L4["4. HYBRID RAG, LANGGRAPH &amp; MCP HUB"]
+        RAG["<b>Hybrid RRF (BM25Okapi + BGE-M3 Dense)</b><br/>Recall@1 95% · Recall@3 100% · MRR 0.975"]:::aiLayer
+        MCP["<b>3 Custom MCP Servers + LangGraph</b><br/>guideline · directory · care_record"]:::aiLayer
     end
 
-    subgraph Data["Layer 6: Local-First Storage"]
-        DB["SQLite WAL Database (55 Tables · BEGIN IMMEDIATE Locks)"]
-        VAULT["Local RAG Index & Encrypted-Path OCR Artifact Store"]
+    subgraph L5["5. AUDITED CLINICAL ML &amp; SPEECH ENGINES"]
+        ML["<b>XGBoost PCOS · ResNet-18 Ultrasound &amp; Rash</b><br/>EasyOCR ['bn','en'] · Whisper-Small-BN + Base"]:::mlLayer
     end
 
-    Client -->|"REST JSON + WebRTC Signaling + Audio"| Gateway
-    Gateway --> AI & Models
-    AI & Models --> Data
-    RAG -.->|"127.0.0.1:11434"| OLL["Local Ollama Runtime (qwen2.5:7b · bge-m3)"]
+    subgraph L6["6. LOCAL-FIRST PERSISTENCE &amp; EDGE LLM"]
+        DB[("<b>SQLite 55 Tables (WAL Mode)</b><br/>PRAGMA foreign_keys=ON · BEGIN IMMEDIATE")]:::dbLayer
+        OLL["<b>Ollama Local Runtime (:11434)</b><br/>Qwen 2.5 7B + bge-m3"]:::dbLayer
+    end
+
+    L1 -->|"HTTPS / Cookies / Vite /v1 Proxy"| L2
+    L2 --> L3
+    L3 --> L4 & L5
+    L4 -.-> OLL
+    L4 & L5 --> DB
 ```
 
 ---
 
 ## 2. Database Engine & Concurrency (`services/api/src/shasthosetu_api/db/`)
 
-- **Schema Scope:** **55 SQLite tables** defined in [`schema.sql`](../services/api/src/shasthosetu_api/db/schema.sql) spanning authentication (`users`, `sessions`, `role_memberships`), clinician directory (`doctor_profiles`, 43 verified clinicians), appointments, simulated fee receipts, prescriptions (`ocr_job_artifacts`, `medication_plans`), PCOS logs, Blood Connect requests across 8 divisions, support tickets, RAG governance (`rag_sources`, `rag_chunks`), and immutable audit trails (`audit_logs`).
+- **Schema Scope:** **55 SQLite tables** (`54` defined in [`schema.sql`](../services/api/src/shasthosetu_api/db/schema.sql) + `webhook_replay_nonces` created in [`agents_and_automation.py`](../services/api/src/shasthosetu_api/routers/agents_and_automation.py)). Full catalog documented in [`DATABASE.md`](DATABASE.md).
 - **Write-Ahead Logging (`sqlite.py`):** Every connection executes `PRAGMA journal_mode = WAL`, `PRAGMA synchronous = NORMAL`, `PRAGMA foreign_keys = ON`, and `PRAGMA busy_timeout = 5000`.
-- **Atomic Booking Locks:** Slot reservations and critical state transitions execute inside explicit `BEGIN IMMEDIATE` transactions (`begin_immediate`) so concurrent patients cannot double-book the same doctor slot (`HTTP 409 Conflict`).
+- **Atomic Slot Locks:** Appointment bookings wrap inside explicit `BEGIN IMMEDIATE` transactions (`begin_immediate`) preventing concurrent slot collisions (`HTTP 409 Conflict`).
 
 ---
 
-## 3. Bilingual Hybrid RAG & LangGraph State Machine
+## 3. Bilingual Hybrid RAG & Safety Triage Flow
 
-- **Corpus & Chunks:** 14 admin-approved bilingual reference documents segmented into 35 audited chunks (11 medical DGHS/WHO summaries + 3 platform guides).
-- **Hybrid Reciprocal Rank Fusion (`rag_engine.py`):** Combines `BM25Okapi` lexical ranking (`2.62 ms` mean latency) with 1024-dimensional `bge-m3` dense embeddings (`FAISS`), reaching **95.00% Recall@1**, **100.00% Recall@3**, and **0.9750 MRR** on the 20-query medical benchmark.
-- **Language Routing (`detect_script_language`):** Distinguishes Bengali script (`bn`), English (`en`), Romanized Banglish (`banglish`), and code-switched queries (`mixed`) prior to prompt synthesis.
-- **Multi-Agent Orchestration (`services/agents/`):** Runs a deterministic **LangGraph** triage workflow live at `/v1/agents/orchestrate`, alongside offline cross-audit adapters for **AutoGen**, **CrewAI**, and **OpenAI Agents SDK**.
+```mermaid
+flowchart LR
+    classDef inp fill:#0c4a6e,stroke:#38bdf8,stroke-width:2px,color:#fff;
+    classDef guard fill:#451a03,stroke:#fbbf24,stroke-width:2px,color:#fff;
+    classDef danger fill:#7f1d1d,stroke:#f87171,stroke-width:2px,color:#fff;
+    classDef ret fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#fff;
+    classDef synth fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#fff;
+
+    U["User Voice / Text<br/>BN · EN · Banglish"]:::inp --> PHI["Heuristic PHI Redactor<br/>&amp; Script Detector"]:::guard
+    PHI --> CHK{"Code 999 Crisis or<br/>Prompt Injection?"}:::guard
+    CHK -->|"Red-Flag Symptoms"| EM["Immediate 999 Emergency Escalation"]:::danger
+    CHK -->|"Injection / Prescribe"| REF["Fail-Closed Policy Refusal (0.1 ms)"]:::danger
+    CHK -->|"Safe Clinical Query"| BM["BM25Okapi Lexical<br/>(2.62 ms avg)"]:::ret
+    CHK -->|"Safe Clinical Query"| DENSE["BGE-M3 FAISS Vector<br/>(1024-d Dense)"]:::ret
+    BM & DENSE --> RRF["Reciprocal Rank Fusion (RRF)<br/>Recall@1: 95% · MRR: 0.975"]:::ret
+    RRF --> LLM["Qwen 2.5 7B Grounded Synthesis<br/>+ DGHS / WHO Citations"]:::synth
+```
 
 ---
 
-## 4. Two-Device WebRTC Telemedicine Signaling (`routers/consultations.py`)
+## 4. Safe-OCR `HTTP 422` Verification & Telemedicine Flow
 
-- **Payment-Before-Call Enforcement:** Unpaid appointments cannot enter active teleconsultation rooms; patients complete simulated fee payment and `ConsultationPreparationModal` intake first.
-- **Room Signaling Lifecycle (`/v1/consultations/rooms/{room_id}/*`):** Supports peer join with stale-peer eviction (`> 60s`), typed SDP/ICE signal relay (`offer`, `answer`, `ice`, `ready`, `call_mode`, `end_call`), and synchronized in-room clinical chat (`apt-demo-9001`).
+```mermaid
+sequenceDiagram
+    autonumber
+    actor P as Patient / User
+    participant API as FastAPI Safe-OCR Service
+    participant DB as SQLite Medication Plans
+    participant MD as Approved Clinician
+
+    P->>API: POST /v1/ai/ocr/extract (PDF / JPG / PNG)
+    API->>API: EasyOCR (['bn','en']) + Line Clustering + Confidence Audit
+    API-->>P: RAW_OCR Tokens + Uncertain Span Warnings
+
+    rect rgb(75, 18, 28)
+        Note over P,API: Safety Interlock — Unverified Dosages Blocked
+        P->>API: Attempt Automated Reminder Activation (Unconfirmed)
+        API-->>P: HTTP 422 Unprocessable Entity (Blocked Until Confirmation)
+    end
+
+    rect rgb(12, 58, 45)
+        Note over P,MD: Human Verification Unlocked
+        P->>API: Explicit Draft Confirmation (or Route to MD)
+        MD->>API: Clinician Verification Sign-off
+        API->>DB: Save Authorized Plan + Audit Trail
+        API-->>P: 201 Created — Verified Medication Routine Active
+    end
+```
 
 ---
 
 ## 5. Frontend 3D Twins, Gyroscopic Orb & White/Dark Themes (`apps/web/src/`)
 
-- **Three.js / React Three Fiber Scenes:** `HeroCareLattice.tsx`, `AiModuleScene3D.tsx`, and `HolographicBodyScanner3D.tsx` render interactive clinical geometries with motion-pause fallback (`prefers-reduced-motion` / user toggle).
-- **Gyroscopic `MedicalAiChatbotOrb.tsx`:** Uses a 60 FPS `requestAnimationFrame` SVG loop rotating counter-spinning rings cleanly around `(50, 50)`, with cursor-tracking pupils, natural blink intervals, reactive audio bars, and an expandable radial menu (`ShasthoSetuRadialMenu.tsx`) linking to the 5-member team modal and GitHub.
-- **Bilingual & Theme System (`tokens.css` & `preferences.tsx`):** Persists `en`/`bn` locale and **Obsidian Dark** vs **Clinical Daylight White Mode** across the public navbar and all four authenticated portal shells.
+- **Three.js / React Three Fiber Scenes:** `HeroCareLattice.tsx`, `AiModuleScene3D.tsx`, and `HolographicBodyScanner3D.tsx` render interactive clinical geometries with motion-pause fallback (`prefers-reduced-motion` / manual toggle).
+- **Gyroscopic `MedicalAiChatbotOrb.tsx`:** Uses a 60 FPS `requestAnimationFrame` SVG loop rotating counter-spinning rings cleanly around `(50, 50)`, with cursor-tracking pupils, natural blink intervals, reactive audio bars, and an expandable radial menu (`ShasthoSetuRadialMenu.tsx`) linking to the 5-member `TeamRosterModal` and GitHub.
+- **Bilingual & Theme System (`tokens.css` & `preferences.tsx`):** Persists `en`/`bn` locale and **Obsidian Dark** vs **Clinical Daylight White Mode** across public and portal headers.

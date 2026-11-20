@@ -1,5 +1,0 @@
-dataset,class_label,is_confirmed_diagnosis,independent_patients,patient_level_cv_possible,pediatric_ratio,source_provenance
-Mendeley_MCVSLD,Measles,Unverified (Web-search tag),UNKNOWN (No IDs),False,Unknown,Web scraped / online literature
-Mendeley_MCVSLD,Chickenpox,Unverified (Web-search tag),UNKNOWN (No IDs),False,Unknown,Web scraped / online literature
-DermoPed_Zenodo,chickenpox,Clinical diagnosis (Varicella),19,True,"17/19 verified pediatric (2 adult, 1 unknown)",Bologna University Hospital
-DermoPed_Zenodo,morbilliform_exanthema,Morphology ONLY (NOT confirmed Measles),Estimated 15-25 pediatric patients in archive,True,Pediatric hospital cohort,Bologna University Hospital
