@@ -93,6 +93,67 @@ class EPrescriptionCreateRequest(BaseModel):
     followup_date: Optional[str] = None
 
 
+def _build_doctor_wallet(conn: sqlite3.Connection, doc_id: str, profile: dict) -> dict:
+    doc_name_base = (profile.get("display_name") or "").replace(" (Demo)", "").strip()
+    # Fetch consultation transactions for this clinician
+    txs = rows_to_dicts(
+        conn.execute(
+            """
+            SELECT pt.id, pt.txn_ref, pt.receipt_number, pt.item_title, pt.revenue_stream,
+                   pt.payer_name_masked, pt.gross_amount_minor_poisha, pt.commission_rate_pct,
+                   pt.commission_minor_poisha, pt.net_partner_payout_minor_poisha,
+                   pt.status, pt.gateway_method, pt.billing_month, pt.created_at_utc,
+                   COALESCE(a.booking_reference, 'TELE-DIRECT') AS booking_reference,
+                   COALESCE(pp.display_name, pt.payer_name_masked) AS patient_name
+              FROM platform_transactions pt
+              LEFT JOIN appointments a ON a.id = pt.related_appointment_id
+              LEFT JOIN patient_profiles pp ON pp.id = a.patient_profile_id
+             WHERE pt.revenue_stream = 'DOCTOR_CONSULTATION'
+               AND (
+                    pt.beneficiary_entity LIKE ?
+                    OR (pt.related_appointment_id IS NOT NULL AND a.doctor_id = ?)
+               )
+             ORDER BY pt.created_at_utc DESC
+            """,
+            (f"%{doc_name_base}%", doc_id),
+        ).fetchall()
+    )
+
+    gross_poisha = sum(t["gross_amount_minor_poisha"] for t in txs)
+    comm_poisha = sum(t["commission_minor_poisha"] for t in txs)
+    net_earned_poisha = sum(t["net_partner_payout_minor_poisha"] for t in txs)
+    settled_poisha = sum(t["net_partner_payout_minor_poisha"] for t in txs if t["status"] == "SETTLED")
+    available_balance_poisha = sum(t["net_partner_payout_minor_poisha"] for t in txs if t["status"] in ("PAID", "SETTLED"))
+    pending_payout_poisha = sum(t["net_partner_payout_minor_poisha"] for t in txs if t["status"] == "PAID")
+
+    payout_account = row_to_dict(
+        conn.execute("SELECT * FROM bank_settlement_accounts WHERE id = 'bank-brac-payout'").fetchone()
+    ) or {
+        "account_code": "BRACBANK-SETTLE-05",
+        "provider_name": "BRAC Bank PLC Partner Payout Account",
+        "account_number_masked": "A/C 1509-••••-3310 (Doctor / Lab / ePharma)",
+    }
+
+    return {
+        "doctor_id": doc_id,
+        "doctor_name": profile.get("display_name"),
+        "bmdc_reg": profile.get("bmdc_demo_reg"),
+        "consultation_fee_bdt": (profile.get("consultation_fee_minor_poisha") or 50000) / 100,
+        "commission_rate_pct": 15.0,
+        "clinician_payout_pct": 85.0,
+        "total_consultations_count": len(txs),
+        "gross_consultations_poisha": gross_poisha,
+        "platform_commission_poisha": comm_poisha,
+        "net_earned_poisha": net_earned_poisha,
+        "available_balance_poisha": available_balance_poisha,
+        "settled_payout_poisha": settled_poisha,
+        "pending_payout_poisha": pending_payout_poisha,
+        "payout_account": payout_account,
+        "payout_schedule": "Weekly Automatic Settlement (Every Sunday 10:00 AM)",
+        "transactions": txs,
+    }
+
+
 @router.get("/dashboard")
 def doctor_dashboard(user: dict = Depends(require_role("DOCTOR"))):
     doc_id = _doctor_id_of(user)
@@ -160,6 +221,7 @@ def doctor_dashboard(user: dict = Depends(require_role("DOCTOR"))):
                 (doc_id,),
             ).fetchall()
         )
+        wallet = _build_doctor_wallet(conn, doc_id, profile)
         return {
             "approved": True,
             "verification_status": profile["verification_status"],
@@ -170,8 +232,74 @@ def doctor_dashboard(user: dict = Depends(require_role("DOCTOR"))):
                 "completed_consultations": counts_row.get("completed_count") or 0,
                 "open_slots": open_slots_count,
                 "simulated_gross_poisha": demo_payout_row[0] if demo_payout_row else 0,
+                "net_earned_poisha": wallet["net_earned_poisha"],
+                "available_balance_poisha": wallet["available_balance_poisha"],
             },
+            "wallet": wallet,
             "upcoming_queue": upcoming_queue,
+        }
+
+
+@router.get("/wallet")
+def get_doctor_wallet(user: dict = Depends(require_role("DOCTOR"))):
+    """Returns the authenticated clinician's balance, payout stats, 15% platform commission cut, and consultation transaction history."""
+    doc_id = _doctor_id_of(user)
+    with get_db_conn() as conn:
+        profile = row_to_dict(
+            conn.execute("SELECT * FROM doctor_profiles WHERE id = ?", (doc_id,)).fetchone()
+        )
+        if not profile:
+            raise HTTPException(status_code=404, detail="Doctor profile not found.")
+        return _build_doctor_wallet(conn, doc_id, profile)
+
+
+@router.post("/wallet/payout-request")
+def request_doctor_payout(user: dict = Depends(require_role("DOCTOR"))):
+    """Reconciles and requests settlement of pending consultation fees to the doctor's partner payout bank account."""
+    doc_id = _doctor_id_of(user)
+    with get_db_conn() as conn:
+        profile = row_to_dict(
+            conn.execute("SELECT * FROM doctor_profiles WHERE id = ?", (doc_id,)).fetchone()
+        )
+        if not profile:
+            raise HTTPException(status_code=404, detail="Doctor profile not found.")
+        wallet = _build_doctor_wallet(conn, doc_id, profile)
+        if wallet["pending_payout_poisha"] <= 0:
+            return {
+                "message": "All consultation balances are already reconciled and settled to your BRAC Bank partner account.",
+                "wallet": wallet,
+            }
+
+        doc_name_base = (profile.get("display_name") or "").replace(" (Demo)", "").strip()
+        now = utc_now_iso()
+        conn.execute("BEGIN IMMEDIATE;")
+        conn.execute(
+            """
+            UPDATE platform_transactions
+               SET status = 'SETTLED', updated_at_utc = ?
+             WHERE revenue_stream = 'DOCTOR_CONSULTATION'
+               AND status = 'PAID'
+               AND (
+                    beneficiary_entity LIKE ?
+                    OR related_appointment_id IN (SELECT id FROM appointments WHERE doctor_id = ?)
+               )
+            """,
+            (now, f"%{doc_name_base}%", doc_id),
+        )
+        record_audit(
+            conn,
+            actor_user_id=user["id"],
+            actor_role="DOCTOR",
+            action_type="DOCTOR_PAYOUT_SETTLEMENT_REQUESTED",
+            target_resource="doctor_profiles",
+            target_id=doc_id,
+            details={"disbursed_poisha": wallet["pending_payout_poisha"], "channel": "BRAC Bank Partner Payout"},
+        )
+        conn.execute("COMMIT;")
+        fresh_wallet = _build_doctor_wallet(conn, doc_id, profile)
+        return {
+            "message": f"Successfully settled ৳{(wallet['pending_payout_poisha'] / 100):.2f} to {wallet['payout_account']['provider_name']}.",
+            "wallet": fresh_wallet,
         }
 
 

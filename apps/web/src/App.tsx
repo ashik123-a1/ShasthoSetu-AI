@@ -147,6 +147,7 @@ function AppRoutes() {
         <Route path="/doctor" element={<Navigate to="/doctor/dashboard" replace />} />
         <Route path="/doctor/onboarding-status" element={<RequireRole allowedRoles={["DOCTOR"]} allowPendingDoctor><DoctorPortalPage section="dashboard" /></RequireRole>} />
         <Route path="/doctor/dashboard" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="dashboard" /></RequireRole>} />
+        <Route path="/doctor/wallet" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="wallet" /></RequireRole>} />
         <Route path="/doctor/availability" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="availability" /></RequireRole>} />
         <Route path="/doctor/calendar" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="calendar" /></RequireRole>} />
         <Route path="/doctor/appointments" element={<RequireRole allowedRoles={["DOCTOR"]}><DoctorPortalPage section="appointments" /></RequireRole>} />

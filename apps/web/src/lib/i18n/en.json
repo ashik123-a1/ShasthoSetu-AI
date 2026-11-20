@@ -57,6 +57,7 @@
     },
     "doctor": {
       "dashboard": "Practice Overview",
+      "wallet": "Wallet & Consultation Earnings",
       "onboarding": "Approval Gate Status",
       "availability": "Weekly Availability",
       "calendar": "Schedule Calendar",

@@ -24,6 +24,7 @@ import {
   Stethoscope,
   UserCheck,
   Users,
+  Wallet,
 } from "lucide-react";
 
 export type AppRole = "PATIENT" | "DOCTOR" | "ADMIN" | "SUPPORT";
@@ -54,6 +55,7 @@ export const FOUR_ROLE_NAV_CONFIG: Record<AppRole, RoleNavItem[]> = {
   ],
   DOCTOR: [
     { id: "dr-dash", labelKey: "nav.doctor.dashboard", previewPath: "/doctor/dashboard", icon: LayoutDashboard },
+    { id: "dr-wallet", labelKey: "nav.doctor.wallet", previewPath: "/doctor/wallet", icon: Wallet, sampleBadge: "85%" },
     { id: "dr-gate", labelKey: "nav.doctor.onboarding", previewPath: "/doctor/onboarding-status", icon: ShieldCheck },
     { id: "dr-avail", labelKey: "nav.doctor.availability", previewPath: "/doctor/availability", icon: CalendarClock },
     { id: "dr-cal", labelKey: "nav.doctor.calendar", previewPath: "/doctor/calendar", icon: CalendarCheck },

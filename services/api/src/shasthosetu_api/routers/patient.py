@@ -1173,6 +1173,11 @@ def submit_pediatric_triage(payload: PediatricIntakeRequest, user: dict = Depend
 def universal_storefront_checkout(payload: UniversalCheckoutRequest, request: Request):
     """Records any ePharma medicine purchase, diagnostic lab test booking, consultation, or health plan payment directly into the Admin Bank & Commission Ledger."""
     user = get_optional_user(request)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please sign in to proceed with secure payment.",
+        )
     default_beneficiaries = {
         "EPHARMA_SALE": "Square / Beximco ePharma Hub (88% Vendor Share)",
         "DIAGNOSTIC_TEST": "Certified Diagnostic Lab Partner (82% Lab Share)",

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Building2,
   CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { apiPost } from "../../lib/apiClient";
+import { useAuth } from "../../lib/authContext";
 import { formatBdtFromPoisha } from "../../lib/formatters";
 import { useI18n } from "../../lib/i18n";
 import { playPaymentSuccess } from "../../utils/soundEffects";
@@ -55,6 +57,8 @@ export function SimulatedPaymentCheckoutModal({
   onClose,
 }: SimulatedPaymentCheckoutModalProps) {
   const { locale } = useI18n();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [method, setMethod] = useState<SimulatedPaymentMethod>("SHASTHOPAY_MFS");
   const [walletPhone, setWalletPhone] = useState("+880 1711-000101");
@@ -76,6 +80,11 @@ export function SimulatedPaymentCheckoutModal({
   const estNetPoisha = Math.max(0, amountPoisha - estCommPoisha);
 
   const handlePay = async () => {
+    if (!user) {
+      onClose();
+      navigate("/login");
+      return;
+    }
     setProcessing(true);
     const methodNames: Record<SimulatedPaymentMethod, string> = {
       SHASTHOPAY_MFS: "bKash / ShasthoPay MFS Escrow",
@@ -191,7 +200,58 @@ export function SimulatedPaymentCheckoutModal({
 
         {/* Content Area */}
         <div className="p-6 space-y-5">
-          {successPayload ? (
+          {!user ? (
+            <div className="text-center py-6 space-y-4" data-testid="payment-login-required-gate">
+              <div className="w-16 h-16 rounded-full bg-amber-500/15 border-2 border-amber-400/40 flex items-center justify-center mx-auto text-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.25)]">
+                <Lock className="w-8 h-8" />
+              </div>
+              <div className="space-y-1.5">
+                <span className="font-mono text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  SECURITY &amp; PHI PROTECTION GATE
+                </span>
+                <h4 className="text-lg font-bold text-white mt-1">
+                  {locale === "bn" ? "পেমেন্ট করতে সাইন-ইন আবশ্যক" : "Sign In Required to Proceed with Payment"}
+                </h4>
+                <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                  {locale === "bn"
+                    ? "নিরাপত্তার স্বার্থে এবং ডিজিটাল প্রেসক্রিপশন ও ভেরিফাইড রসিদ আপনার পার্সোনাল হেলথ ভল্টে সুরক্ষিত রাখতে পেমেন্টের পূর্বে সাইন-ইন আবশ্যক।"
+                    : "For financial safety, Zero-PHI accountability, and to bind your verified digital receipt to your Health Vault, please sign in before paying."}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-950/80 border border-slate-800 p-3.5 text-left font-mono text-xs space-y-1.5 max-w-sm mx-auto">
+                <div className="flex justify-between text-slate-400">
+                  <span>Service:</span>
+                  <span className="text-white font-bold truncate max-w-[200px]">{title}</span>
+                </div>
+                <div className="flex justify-between text-slate-400">
+                  <span>Payable Total:</span>
+                  <span className="text-emerald-400 font-bold">{formatBdtFromPoisha(amountPoisha, locale)}</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                <button
+                  type="button"
+                  data-testid="pay-signin-redirect-btn"
+                  onClick={() => {
+                    onClose();
+                    navigate("/login");
+                  }}
+                  className="w-full sm:w-auto min-h-11 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold text-xs uppercase tracking-wider hover:brightness-110 cursor-pointer shadow-lg shadow-cyan-500/20"
+                >
+                  {locale === "bn" ? "লগইন করুন / Sign In Now →" : "Sign In to Pay →"}
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full sm:w-auto min-h-11 px-4 rounded-xl border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-semibold cursor-pointer"
+                >
+                  {locale === "bn" ? "বাতিল" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          ) : successPayload ? (
             <div className="text-center py-3 space-y-4">
               <div className="w-14 h-14 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mx-auto text-emerald-400">
                 <CheckCircle2 className="w-7 h-7" />

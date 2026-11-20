@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  Building2,
+  CreditCard,
   FileSignature,
   Pill,
+  RefreshCw,
   ShieldAlert,
+  TrendingUp,
   Video,
+  Wallet,
+  Zap,
 } from "lucide-react";
 import { ApiError, apiDelete, apiGet, apiPatch, apiPost } from "../lib/apiClient";
 import { formatBdtFromPoisha, formatDhakaDateTime } from "../lib/formatters";
@@ -28,12 +34,62 @@ interface DoctorAiDraft {
   created_at_utc: string;
 }
 
+export interface DoctorTransactionItem {
+  id: string;
+  txn_ref: string;
+  receipt_number: string;
+  item_title: string;
+  revenue_stream: string;
+  payer_name_masked: string;
+  patient_name: string;
+  booking_reference: string;
+  gross_amount_minor_poisha: number;
+  commission_rate_pct: number;
+  commission_minor_poisha: number;
+  net_partner_payout_minor_poisha: number;
+  status: string;
+  gateway_method: string;
+  billing_month: string;
+  created_at_utc: string;
+}
+
+export interface DoctorWallet {
+  doctor_id: string;
+  doctor_name: string;
+  bmdc_reg: string;
+  consultation_fee_bdt: number;
+  commission_rate_pct: number;
+  clinician_payout_pct: number;
+  total_consultations_count: number;
+  gross_consultations_poisha: number;
+  platform_commission_poisha: number;
+  net_earned_poisha: number;
+  available_balance_poisha: number;
+  settled_payout_poisha: number;
+  pending_payout_poisha: number;
+  payout_account: {
+    account_code: string;
+    provider_name: string;
+    account_number_masked: string;
+  };
+  payout_schedule: string;
+  transactions: DoctorTransactionItem[];
+}
+
 interface DoctorDashResponse {
   approved: boolean;
   verification_status: string;
   doctor_profile: Record<string, unknown>;
   verification_events: Array<{ id: string; to_status: string; reason: string; created_at_utc: string }>;
-  kpis?: { active_queue: number; completed_consultations: number; open_slots: number; simulated_gross_poisha: number };
+  kpis?: {
+    active_queue: number;
+    completed_consultations: number;
+    open_slots: number;
+    simulated_gross_poisha: number;
+    net_earned_poisha?: number;
+    available_balance_poisha?: number;
+  };
+  wallet?: DoctorWallet;
   upcoming_queue?: Array<Record<string, unknown>>;
 }
 
@@ -50,6 +106,9 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
   const [workspace, setWorkspace] = useState<Record<string, unknown> | null>(null);
   const [aiDraftQueue, setAiDraftQueue] = useState<DoctorAiDraft[]>([]);
   const [draftNotes, setDraftNotes] = useState<Record<string, string>>({});
+  const [wallet, setWallet] = useState<DoctorWallet | null>(null);
+  const [walletFilter, setWalletFilter] = useState<string>("ALL");
+  const [settlingPayout, setSettlingPayout] = useState(false);
 
   // Form inputs
   const [slotDate, setSlotDate] = useState("2027-02-10");
@@ -70,13 +129,19 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
     try {
       const d = await apiGet<DoctorDashResponse>("/v1/doctor/dashboard");
       setDash(d);
+      if (d.wallet) {
+        setWallet(d.wallet);
+      }
       setBioText(String(d.doctor_profile?.bio || ""));
       setFeeBdt(Math.round(Number(d.doctor_profile?.consultation_fee_minor_poisha || 50000) / 100));
 
       if (d.approved) {
         const qRes = await apiGet<{ drafts: DoctorAiDraft[] }>("/v1/ai/drafts/doctor-queue");
         setAiDraftQueue(qRes.drafts || []);
-        if (section === "availability" || section === "calendar") {
+        if (section === "wallet") {
+          const w = await apiGet<DoctorWallet>("/v1/doctor/wallet");
+          setWallet(w);
+        } else if (section === "availability" || section === "calendar") {
           setAvailability(await apiGet("/v1/doctor/availability"));
         } else if (section === "appointments" || section === "referrals") {
           const ap = await apiGet<{ appointments: Array<Record<string, unknown>> }>("/v1/doctor/appointments");
@@ -185,6 +250,212 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
       )}
     </div>
   );
+
+  const handleRequestPayout = async () => {
+    setSettlingPayout(true);
+    try {
+      const res = await apiPost<{ message: string; wallet: DoctorWallet }>("/v1/doctor/wallet/payout-request", {});
+      setWallet(res.wallet);
+      pushToast({ title: "Settlement Requested", description: res.message, tone: "success" });
+      await loadData();
+    } catch (err) {
+      pushToast({ title: "Settlement Failed", description: err instanceof ApiError ? err.detail : "Error", tone: "danger" });
+    } finally {
+      setSettlingPayout(false);
+    }
+  };
+
+  const renderDoctorWalletAndHistory = (compact = false) => {
+    const w = wallet || dash?.wallet;
+    if (!w) {
+      return (
+        <div className="bento-card rounded-2xl p-6 text-center text-slate-400 font-mono text-xs">
+          Loading clinician balance ledger...
+        </div>
+      );
+    }
+
+    const filteredTransactions = (w.transactions || []).filter((tx) => {
+      if (walletFilter === "ALL") return true;
+      return tx.status === walletFilter;
+    });
+
+    return (
+      <div className="space-y-6" data-testid="doctor-wallet-balance-system">
+        {/* 4 Balance & Payout Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bento-card rounded-2xl p-4 border border-emerald-500/35 bg-emerald-950/20">
+            <div className="flex items-center justify-between text-xs font-mono text-emerald-300">
+              <span>{locale === "bn" ? "উত্তোলনযোগ্য ব্যালেন্স" : "AVAILABLE PAYOUT BALANCE"}</span>
+              <Wallet className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="text-2xl font-black font-mono text-white mt-1.5" data-testid="doctor-available-balance">
+              {formatBdtFromPoisha(w.available_balance_poisha, locale)}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              85% Net Clinician Share (Ready for BRAC Bank EFT)
+            </p>
+          </div>
+
+          <div className="bento-card rounded-2xl p-4 border border-cyan-500/35 bg-cyan-950/20">
+            <div className="flex items-center justify-between text-xs font-mono text-cyan-300">
+              <span>{locale === "bn" ? "সর্বমোট অর্জিত আয়" : "LIFETIME NET EARNINGS"}</span>
+              <TrendingUp className="w-4 h-4 text-cyan-400" />
+            </div>
+            <div className="text-2xl font-black font-mono text-cyan-300 mt-1.5" data-testid="doctor-lifetime-earnings">
+              {formatBdtFromPoisha(w.net_earned_poisha, locale)}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {w.total_consultations_count} Paid Video Consultations
+            </p>
+          </div>
+
+          <div className="bento-card rounded-2xl p-4 border border-amber-500/35 bg-amber-950/20">
+            <div className="flex items-center justify-between text-xs font-mono text-amber-300">
+              <span>{locale === "bn" ? "প্ল্যাটফর্ম ফি কর্তন" : "PLATFORM COMMISSION (-15%)"}</span>
+              <Building2 className="w-4 h-4 text-amber-400" />
+            </div>
+            <div className="text-2xl font-black font-mono text-amber-300 mt-1.5" data-testid="doctor-platform-fee">
+              {formatBdtFromPoisha(w.platform_commission_poisha, locale)}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              15% ShasthoSetu Server, WebRTC &amp; Escrow Fee
+            </p>
+          </div>
+
+          <div className="bento-card rounded-2xl p-4 border border-indigo-500/35 bg-indigo-950/20">
+            <div className="flex items-center justify-between text-xs font-mono text-indigo-300">
+              <span>{locale === "bn" ? "মোট গ্রস ফি" : "GROSS PATIENT INFLOW"}</span>
+              <CreditCard className="w-4 h-4 text-indigo-400" />
+            </div>
+            <div className="text-2xl font-black font-mono text-white mt-1.5">
+              {formatBdtFromPoisha(w.gross_consultations_poisha, locale)}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Standard Fee: ৳{w.consultation_fee_bdt} / Tele-call
+            </p>
+          </div>
+        </div>
+
+        {/* Bank Disbursement Info & Settlement Action Card */}
+        <div className="bento-card rounded-3xl p-5 border border-cyan-500/30 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center shrink-0">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold uppercase">
+                  SETTLEMENT CHANNEL: {w.payout_account.account_code}
+                </span>
+                <span className="font-mono text-[10px] text-emerald-400 font-bold">
+                  85% CLINICIAN / 15% PLATFORM
+                </span>
+              </div>
+              <h3 className="text-base font-bold text-white mt-0.5">
+                {w.payout_account.provider_name}
+              </h3>
+              <p className="text-xs font-mono text-slate-400">
+                {w.payout_account.account_number_masked} • {w.payout_schedule}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              disabled={settlingPayout}
+              onClick={() => void handleRequestPayout()}
+              className="min-h-10 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:brightness-110 text-slate-950 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-lg disabled:opacity-50"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              {settlingPayout ? "Processing Settlement..." : (locale === "bn" ? "ব্যালেন্স সেটেলমেন্ট করুন" : "Reconcile & Request Payout")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void loadData()}
+              className="min-h-10 px-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-slate-200 inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Detailed Consultation Transaction History Table */}
+        {!compact && (
+          <div className="bento-card rounded-3xl p-5 space-y-4 border border-slate-800">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-cyan-300">
+                  {locale === "bn" ? "কনসালটেশন ও আয় ইতিহাস" : "CONSULTATION EARNINGS & TRANSACTION HISTORY"} ({filteredTransactions.length} RECORDS)
+                </span>
+                <h3 className="text-base font-bold text-white mt-0.5">
+                  {locale === "bn"
+                    ? "প্রতিটি ভিডিও কলের ফি, প্ল্যাটফর্ম কমিশন (১৫%) ও চিকিৎসকের প্রকৃত প্রাপ্য (৮৫%)"
+                    : "Individual Consultation Fees, 15% Platform Deduction & 85% Net Clinician Credit"}
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={walletFilter}
+                  onChange={(e) => setWalletFilter(e.target.value)}
+                  className="min-h-9 rounded-xl bg-slate-900 border border-slate-700 px-3 text-xs text-white"
+                >
+                  <option value="ALL">All Statuses ({w.transactions.length})</option>
+                  <option value="SETTLED">Settled via BRAC Bank</option>
+                  <option value="PAID">Paid / Ready for Payout</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
+              {filteredTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  data-testid={`doctor-txn-row-${tx.txn_ref}`}
+                  className="rounded-2xl bg-slate-950/90 border border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3 text-xs"
+                >
+                  <div className="space-y-1 max-w-xl">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono font-bold text-cyan-300">{tx.txn_ref}</span>
+                      <span className="font-mono text-[11px] text-emerald-300">({tx.receipt_number})</span>
+                      <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-200 border border-cyan-500/30">
+                        {tx.gateway_method}
+                      </span>
+                      <span className="font-mono text-[10px] text-slate-400">
+                        {tx.billing_month}
+                      </span>
+                    </div>
+                    <div className="font-semibold text-white">{tx.item_title}</div>
+                    <div className="text-[11px] text-slate-400">
+                      Patient: <strong className="text-slate-200">{tx.patient_name}</strong> • Time:{" "}
+                      <span className="font-mono text-slate-300">{formatDhakaDateTime(tx.created_at_utc, locale)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="text-right font-mono">
+                      <div className="text-[11px] text-slate-400">
+                        Gross Fee: {formatBdtFromPoisha(tx.gross_amount_minor_poisha, locale)}
+                      </div>
+                      <div className="text-[10px] text-amber-400">
+                        Platform Comm (-15%): -{formatBdtFromPoisha(tx.commission_minor_poisha, locale)}
+                      </div>
+                      <div className="text-sm font-black text-emerald-400">
+                        Net Payout (+85%): {formatBdtFromPoisha(tx.net_partner_payout_minor_poisha, locale)}
+                      </div>
+                    </div>
+                    <StatusBadge status={tx.status === "SETTLED" || tx.status === "PAID" ? "CONFIRMED" : "CANCELLED"} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const saveNote = async (state: "DRAFT" | "SIGNED") => {
     if (!appointmentId) return;
@@ -336,6 +607,21 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Doctor Balance & Earnings Overview (Compact) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-bold text-base text-white">Consultation Earnings & Payout Overview</h2>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/doctor/wallet")}
+                    className="text-xs text-cyan-400 hover:underline font-mono"
+                  >
+                    View Full Transaction History →
+                  </button>
+                </div>
+                {renderDoctorWalletAndHistory(true)}
               </div>
 
               {/* Patient-Consented AI Research Draft Review Queue */}
@@ -506,6 +792,9 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
               </button>
             </form>
           )}
+
+          {/* DOCTOR WALLET & BALANCE SYSTEM */}
+          {section === "wallet" && renderDoctorWalletAndHistory(false)}
         </div>
       )}
     </PortalLayout>
