@@ -1,10 +1,11 @@
 <p align="center">
-  <a href="https://github.com/ashik123-a1/ShasthoSetu-AI">
-    <img src="docs/readme/banner.svg" alt="ShasthoSetu AI — Animated Particle Preloader & Live Platform Showcase" width="100%" />
+  <a href="https://shasthosetu.fit/">
+    <img src="docs/readme/banner.svg" alt="ShasthoSetu AI — Animated Particle Preloader & Live Platform Showcase (https://shasthosetu.fit/)" width="100%" />
   </a>
 </p>
 
 <p align="center">
+  <a href="https://shasthosetu.fit/"><img alt="Live Platform shasthosetu.fit" src="https://img.shields.io/badge/LIVE_PLATFORM-shasthosetu.fit-06B6D4?style=for-the-badge&logo=googlechrome&logoColor=white"/></a>
   <a href="https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets"><img alt="Open Data on Hugging Face" src="https://img.shields.io/badge/OPEN_DATA-Hugging_Face_(35,641_Files)-F59E0B?style=for-the-badge&logo=huggingface&logoColor=white"/></a>
   <a href="docs/TESTING.md"><img alt="Automated Tests" src="https://img.shields.io/badge/TESTS-53%2F53_Passed_(38_Pytest_%2B_15_Vitest)-10B981?style=for-the-badge&logo=pytest&logoColor=white"/></a>
   <a href="docs/mcp_architecture.md"><img alt="MCP Architecture" src="https://img.shields.io/badge/MCP-3_Built_%2B_4_Integrated-8B5CF6?style=for-the-badge&logo=anthropic&logoColor=white"/></a>
@@ -30,6 +31,7 @@
 </p>
 
 <p align="center">
+  <a href="https://shasthosetu.fit/"><b>🌐 Live Web App (shasthosetu.fit)</b></a> ·
   <a href="#-executive-overview--problem-statement"><b>Overview</b></a> ·
   <a href="#-visual-product-tour--verified-ui"><b>Visual Tour</b></a> ·
   <a href="#-ai-models--clinical-research-deep-dive"><b>Models &amp; Research</b></a> ·

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Copy, ExternalLink, Github, Mail, Phone, ShieldCheck, Users, X } from "lucide-react";
+import { Check, Copy, ExternalLink, Github, Globe, Mail, Phone, ShieldCheck, Users, X } from "lucide-react";
 import { OFFICIAL_TEAM_MEMBERS, TEAM_INFO } from "../../data/teamData";
 import { useI18n } from "../../lib/i18n";
 
@@ -185,16 +185,29 @@ export function TeamRosterModal({
             <span>Verified Core Engineering Directory • Zero 3rd-Party Dependencies</span>
           </div>
 
-          <a
-            href={TEAM_INFO.githubRepoUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="min-h-9 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold inline-flex items-center gap-2 cursor-pointer transition"
-          >
-            <Github className="w-4 h-4" />
-            <span>GitHub Repository</span>
-            <ExternalLink className="w-3 h-3 text-slate-400" />
-          </a>
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href={TEAM_INFO.liveWebsiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-h-9 px-3.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-200 font-bold inline-flex items-center gap-1.5 cursor-pointer transition"
+            >
+              <Globe className="w-3.5 h-3.5 text-cyan-400" />
+              <span>shasthosetu.fit</span>
+              <ExternalLink className="w-3 h-3 text-cyan-300" />
+            </a>
+
+            <a
+              href={TEAM_INFO.githubRepoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-h-9 px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold inline-flex items-center gap-2 cursor-pointer transition"
+            >
+              <Github className="w-4 h-4" />
+              <span>GitHub Repository</span>
+              <ExternalLink className="w-3 h-3 text-slate-400" />
+            </a>
+          </div>
         </div>
       </div>
     </div>

@@ -161,7 +161,7 @@
     <circle cx="72" cy="55" r="4" fill="#fbbf24"/>
     <circle cx="86" cy="55" r="4" fill="#34d399"/>
     <rect x="104" y="47" width="448" height="16" rx="8" fill="#030816" stroke="#1e293b" stroke-width="0.8"/>
-    <text x="116" y="58.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#94a3b8">https://shasthosetu.ai/  ·  Home &amp; Interactive 3D Care Lattice</text>
+    <text x="116" y="58.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#94a3b8">https://shasthosetu.fit/  ·  Home &amp; Interactive 3D Care Lattice</text>
     <rect x="562" y="47.5" width="54" height="15" rx="7.5" fill="#38bdf8" fill-opacity="0.18" stroke="#38bdf8" stroke-opacity="0.45" stroke-width="0.8"/>
     <text x="589" y="58" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8.5" font-weight="700" fill="#38bdf8">3D WEBGL</text>
     <clipPath id="clipHero">
@@ -215,7 +215,7 @@
     <circle cx="72" cy="55" r="4" fill="#fbbf24"/>
     <circle cx="86" cy="55" r="4" fill="#34d399"/>
     <rect x="104" y="47" width="352" height="16" rx="8" fill="#030816" stroke="#1e293b" stroke-width="0.8"/>
-    <text x="116" y="58.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#94a3b8">https://shasthosetu.ai/services#consultations  ·  2-Device WebRTC</text>
+    <text x="116" y="58.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#94a3b8">https://shasthosetu.fit/services#consultations  ·  2-Device WebRTC</text>
     <rect x="466" y="47.5" width="54" height="15" rx="7.5" fill="#34d399" fill-opacity="0.18" stroke="#34d399" stroke-opacity="0.45" stroke-width="0.8"/>
     <text x="493" y="58" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8.5" font-weight="700" fill="#34d399">CONNECTED</text>
     <clipPath id="clipCall">
@@ -235,7 +235,7 @@
     <circle cx="292" cy="179" r="4" fill="#fbbf24"/>
     <circle cx="306" cy="179" r="4" fill="#34d399"/>
     <rect x="324" y="171" width="236" height="16" rx="8" fill="#030816" stroke="#1e293b" stroke-width="0.8"/>
-    <text x="336" y="182.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#94a3b8">shasthosetu.ai/blood-connect  ·  8 Divisions</text>
+    <text x="336" y="182.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#94a3b8">shasthosetu.fit/blood-connect  ·  8 Divisions</text>
     <rect x="570" y="171.5" width="54" height="15" rx="7.5" fill="#fb7185" fill-opacity="0.18" stroke="#fb7185" stroke-opacity="0.45" stroke-width="0.8"/>
     <text x="597" y="182" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8.5" font-weight="700" fill="#fb7185">EMERGENCY</text>
     <clipPath id="clipBlood">
@@ -289,7 +289,7 @@
     <circle cx="72" cy="55" r="4" fill="#fbbf24"/>
     <circle cx="86" cy="55" r="4" fill="#34d399"/>
     <rect x="104" y="47" width="448" height="16" rx="8" fill="#030816" stroke="#1e293b" stroke-width="0.8"/>
-    <text x="116" y="58.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#94a3b8">https://shasthosetu.ai/features/viral-rash  ·  PyTorch CUDA</text>
+    <text x="116" y="58.5" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="10" fill="#94a3b8">https://shasthosetu.fit/features/viral-rash  ·  PyTorch CUDA</text>
     <rect x="562" y="47.5" width="54" height="15" rx="7.5" fill="#818cf8" fill-opacity="0.18" stroke="#818cf8" stroke-opacity="0.45" stroke-width="0.8"/>
     <text x="589" y="58" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="8.5" font-weight="700" fill="#818cf8">RESNET18</text>
     <clipPath id="clipSkin">

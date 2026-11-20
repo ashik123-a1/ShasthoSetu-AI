@@ -122,9 +122,18 @@ export function PublicFooter() {
                 <MessageCircle className="w-3 h-3 text-emerald-400" /> WhatsApp
               </a>
               <a
+                href="https://shasthosetu.fit/"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Official Live Platform"
+                className="px-2.5 py-1 rounded-lg bg-slate-900/80 border border-cyan-500/40 hover:border-cyan-400 text-cyan-200 hover:text-white font-mono text-[10px] inline-flex items-center gap-1.5 transition"
+              >
+                <Globe className="w-3 h-3 text-cyan-400" /> shasthosetu.fit
+              </a>
+              <a
                 href="https://github.com/ashik123-a1/ShasthoSetu-AI"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 title="GitHub Repo"
                 className="px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white font-mono text-[10px] inline-flex items-center gap-1.5 transition"
               >
