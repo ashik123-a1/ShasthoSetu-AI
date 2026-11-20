@@ -9,6 +9,10 @@ interface PreferencesContextValue {
   motionPaused: boolean;
   setMotionPaused: (paused: boolean) => void;
   toggleMotionPaused: () => void;
+  preloaderOpen: boolean;
+  preloaderReplayNonce: number;
+  completePreloader: () => void;
+  replayPreloader: () => void;
 }
 
 const THEME_KEY = "ss-theme";
@@ -17,22 +21,32 @@ const MOTION_KEY = "ss-pause-motion";
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
 function readInitialTheme(): ThemeMode {
-  if (typeof window === "undefined") return "light";
+  if (typeof window === "undefined") return "dark";
   const saved = window.localStorage.getItem(THEME_KEY);
-  return saved === "dark" || saved === "light" ? saved : "light";
+  return saved === "dark" || saved === "light" ? saved : "dark";
 }
 
 function readInitialMotionPaused(): boolean {
   if (typeof window === "undefined") return false;
   const saved = window.localStorage.getItem(MOTION_KEY);
-  if (saved === "true") return true;
-  if (saved === "false") return false;
-  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+  // Default is always false (animations ON for everyone)
+  return saved === "true";
 }
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>(readInitialTheme);
   const [motionPaused, setMotionPausedState] = useState<boolean>(readInitialMotionPaused);
+  const [preloaderOpen, setPreloaderOpen] = useState<boolean>(true);
+  const [preloaderReplayNonce, setPreloaderReplayNonce] = useState<number>(0);
+
+  const completePreloader = () => {
+    setPreloaderOpen(false);
+  };
+
+  const replayPreloader = () => {
+    setPreloaderReplayNonce((n) => n + 1);
+    setPreloaderOpen(true);
+  };
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -52,8 +66,12 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       motionPaused,
       setMotionPaused: setMotionPausedState,
       toggleMotionPaused: () => setMotionPausedState((m) => !m),
+      preloaderOpen,
+      preloaderReplayNonce,
+      completePreloader,
+      replayPreloader,
     }),
-    [theme, motionPaused]
+    [theme, motionPaused, preloaderOpen, preloaderReplayNonce]
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;

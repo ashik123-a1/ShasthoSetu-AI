@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppShell, GlobalCursorGlow, ToastProvider, useToast, type PillTabItem } from "./components/ui";
 import { HomeSectionRail } from "./components/layout/HomeSectionRail";
 import { FloatingSupportWidget } from "./components/support/FloatingSupportWidget";
+import { ShasthoSetuParticlePreloader } from "./components/common/ShasthoSetuParticlePreloader";
 import { AuthProvider } from "./lib/authContext";
 import { I18nProvider, useI18n } from "./lib/i18n";
 import { PreferencesProvider, usePreferences } from "./lib/preferences";
@@ -82,10 +83,15 @@ function DevGalleryShellWrapper() {
 }
 
 function AppRoutes() {
-  const { motionPaused } = usePreferences();
+  const { motionPaused, preloaderOpen, preloaderReplayNonce, completePreloader } = usePreferences();
 
   return (
     <MotionConfig reducedMotion={motionPaused ? "always" : "user"}>
+      <ShasthoSetuParticlePreloader
+        isOpen={preloaderOpen}
+        replayNonce={preloaderReplayNonce}
+        onComplete={completePreloader}
+      />
       <HomeSectionRail />
       <GlobalCursorGlow />
       <FloatingSupportWidget />

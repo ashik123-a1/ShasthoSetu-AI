@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { ArrowUp, Pause, Play, ShieldCheck } from "lucide-react";
+import { ArrowUp, Pause, Play, ShieldCheck, Sparkles } from "lucide-react";
 import { useI18n } from "../../lib/i18n";
 import { usePreferences } from "../../lib/preferences";
 
 export function PublicFooter() {
   const { locale, t } = useI18n();
-  const { motionPaused, toggleMotionPaused } = usePreferences();
+  const { motionPaused, toggleMotionPaused, replayPreloader } = usePreferences();
 
   return (
     <footer className="relative z-10 border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur-md text-[var(--color-text)] py-12 px-4 sm:px-6">
@@ -60,6 +60,15 @@ export function PublicFooter() {
       <div className="max-w-7xl mx-auto mt-8 pt-5 border-t border-[var(--color-border)] flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--color-text-muted)]">
         <span className="font-mono">© 2026 ShasthoSetu AI · Dhaka, Bangladesh</span>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={replayPreloader}
+            aria-label="Replay intro animation"
+            className="min-h-11 px-3 rounded-full border border-[var(--color-border)] hover:border-cyan-400 text-sky-400 hover:text-sky-300 inline-flex items-center gap-1.5 font-medium cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{locale === "bn" ? "ইন্ট্রো দেখুন" : "Replay Intro"}</span>
+          </button>
           <button
             type="button"
             onClick={toggleMotionPaused}

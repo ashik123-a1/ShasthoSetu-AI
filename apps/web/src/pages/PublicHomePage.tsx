@@ -33,6 +33,7 @@ import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
 import { DepartmentSectorGrid } from "../components/doctors/DepartmentSectorGrid";
+import { HomepageTeamSection } from "../components/team/HomepageTeamSection";
 import { HERO_DOCTOR_SLIDES } from "../components/home/HeroDoctorShowcase";
 import {
   DigitalObservatoryDeck,
@@ -155,7 +156,6 @@ export function PublicHomePage() {
   const navigate = useNavigate();
 
   const [activeLayer, setActiveLayer] = useState(0);
-  const [heroMode, setHeroMode] = useState<"SQLite" | "HTTP 422" | "Zero-PHI" | "Audit">("SQLite");
   const [heroSlideIdx, setHeroSlideIdx] = useState(0);
   const [heroSlidePaused, setHeroSlidePaused] = useState(false);
   const [autoRotate, setAutoRotate] = useState(true);
@@ -675,30 +675,11 @@ export function PublicHomePage() {
                   ))}
                 </div>
 
-                <div className="h-px bg-white/10 my-0.5" />
-                <span className="font-mono text-[8.5px] font-bold tracking-[0.14em] uppercase text-slate-400 text-center">
-                  Guard
-                </span>
-                <div className="grid grid-cols-1 gap-1">
-                  {(["SQLite", "HTTP 422", "Zero-PHI", "Audit"] as const).map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setHeroMode(m)}
-                      className={`py-1 px-1 rounded text-[9px] font-mono font-bold transition cursor-pointer whitespace-nowrap ${
-                        heroMode === m ? "bg-[#f2c879] text-slate-950" : "text-slate-300 hover:bg-white/10"
-                      }`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="h-px bg-white/10 my-0.5" />
+                <div className="h-px bg-white/10 my-1" />
                 <button
                   type="button"
                   onClick={() => setAutoRotate((r) => !r)}
-                  className={`py-1 rounded text-[9px] font-mono font-bold border transition cursor-pointer ${
+                  className={`py-1.5 rounded text-[10px] font-mono font-bold border transition cursor-pointer ${
                     autoRotate
                       ? "bg-sky-400/20 border-sky-400/40 text-sky-300"
                       : "border-white/15 text-slate-400"
@@ -1693,6 +1674,9 @@ export function PublicHomePage() {
         </div>
       </section>
 
+      {/* OFFICIAL CORE ENGINEERING TEAM ROSTER & LEADERSHIP */}
+      <HomepageTeamSection />
+
       {/* =================================================================
           SECTION 14 · FINAL CONVERSION CTA
           ================================================================= */}
@@ -1705,7 +1689,9 @@ export function PublicHomePage() {
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
               <Stethoscope className="w-6 h-6 text-teal-300" />
-              {locale === "bn" ? "৪টি রোল পোর্টাল লাইভ পরীক্ষা করতে প্রস্তুত?" : "Ready to Test All 4 Live SQLite Clinical Portals?"}
+              {locale === "bn"
+                ? "স্বাস্থ্যসেতু এআই ক্লিনিক্যাল টেলিহেলথ প্ল্যাটফর্ম পরীক্ষা করতে প্রস্তুত?"
+                : "Ready to Test ShasthoSetu AI Clinical Telehealth Platform?"}
             </h2>
             <p className="text-sm text-slate-300">
               {locale === "bn"

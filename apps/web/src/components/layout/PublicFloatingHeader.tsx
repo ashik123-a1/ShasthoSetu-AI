@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Globe, LayoutDashboard, LogIn, LogOut, Menu, Moon, Pause, Play, Search, Settings, Sun, X } from "lucide-react";
+import { FastForward, Globe, LayoutDashboard, LogIn, LogOut, Menu, Moon, Pause, Play, Search, Settings, Sparkles, Sun, X } from "lucide-react";
 import { roleHomePath, useAuth } from "../../lib/authContext";
 import { useI18n } from "../../lib/i18n";
 import { getEdges, slideFill } from "../../lib/pillMotion";
@@ -10,7 +10,7 @@ import { NotificationsPopover } from "./NotificationsPopover";
 
 export function PublicFloatingHeader({ transparentHero = false }: { transparentHero?: boolean }) {
   const { locale, setLocale, t } = useI18n();
-  const { theme, toggleTheme, motionPaused, toggleMotionPaused } = usePreferences();
+  const { theme, toggleTheme, motionPaused, toggleMotionPaused, replayPreloader } = usePreferences();
   const { user, authenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -125,26 +125,36 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
         }`}
       >
         <div className="max-w-[1540px] mx-auto px-4 sm:px-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          {/* LEFT ZONE: Brand Mark matching AgriSense screenshot */}
+          {/* LEFT ZONE: Brand Mark matching Screenshot 1 */}
           <Link
             to="/"
             data-testid="header-brand-link"
-            className="pointer-events-auto justify-self-start inline-flex items-center gap-2 min-h-9 pr-1 shrink-0"
+            className="pointer-events-auto justify-self-start inline-flex items-center gap-2.5 min-h-9 pr-1 shrink-0 group select-none cursor-pointer"
           >
-            <img
-              src="/shasthosetu-logo.png"
-              alt="ShasthoSetu AI Logo"
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-sky-400/50 shadow-[0_4px_16px_rgba(56,189,248,0.32)]"
-            />
-            <span className="hidden sm:inline-flex items-baseline gap-1.5 whitespace-nowrap">
+            <div className="relative w-9 h-9 shrink-0 flex items-center justify-center">
               <span
-                className={`text-[12px] font-bold tracking-[0.16em] ${
-                  darkSurface ? "text-slate-100" : "text-[var(--color-text)]"
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-1 rounded-full border border-dashed border-cyan-400/70 lg-spin-orbit"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-full bg-cyan-400/25 blur-sm group-hover:bg-cyan-400/40 transition"
+              />
+              <img
+                src="/shasthosetu-logo.png"
+                alt="ShasthoSetu AI Logo"
+                className="relative z-10 w-full h-full rounded-full object-cover border-2 border-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.45)] group-hover:scale-105 transition"
+              />
+            </div>
+            <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
+              <span
+                className={`text-[13px] font-sans font-black tracking-[0.16em] uppercase ${
+                  darkSurface ? "text-white" : "text-[var(--color-text)]"
                 }`}
               >
                 SHASTHOSETU
               </span>
-              <span className="text-[11px] font-bold tracking-[0.16em] text-sky-400">
+              <span className="text-[12px] font-mono font-black tracking-[0.16em] text-[#38bdf8] drop-shadow-[0_0_8px_rgba(56,189,248,0.65)]">
                 AI
               </span>
             </span>
@@ -384,6 +394,22 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                     >
                       <span>{motionPaused ? t("controls.pauseMotionOn") : t("controls.pauseMotionOff")}</span>
                       {motionPaused ? <Play className="w-4 h-4 text-teal-400" /> : <Pause className="w-4 h-4" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSettingsOpen(false);
+                        replayPreloader();
+                      }}
+                      data-testid="public-replay-intro-btn"
+                      className="w-full min-h-11 px-3 rounded-xl bg-[var(--color-surface-alt)] hover:bg-[var(--color-border)] text-xs font-semibold flex items-center justify-between cursor-pointer"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-cyan-400" />
+                        <span>{locale === "bn" ? "পার্টিকেল ইন্ট্রো আবার দেখুন" : "Replay Particle Intro"}</span>
+                      </span>
+                      <FastForward className="w-4 h-4 text-slate-400" />
                     </button>
 
                     <div className="pt-2 border-t border-[var(--color-border)] grid grid-cols-2 gap-1.5">
