@@ -1,65 +1,138 @@
-# Virtual environments
+# ==============================================================================
+# ShasthoSetu AI — Git Ignore Policy
+# Heavy clinical datasets (~9 GB) & checkpoints are hosted on Hugging Face:
+#   https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets
+# Ready-to-test sample QA pack lives inside testingmainapps/ (tracked in Git).
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Python Virtual Environments, Caches & Test Artifacts
+# ------------------------------------------------------------------------------
 _shared/venv/
 .venv/
+venv/
+**/venv/
 env/
-
-# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
 
-# Raw medical & clinical data (HIPAA / Privacy compliance)
+# ------------------------------------------------------------------------------
+# 2. Node.js, Frontend Builds & Playwright Scratch Outputs
+# ------------------------------------------------------------------------------
+node_modules/
+apps/web/dist/
+apps/web/.vite/
+apps/web/test-results/
+apps/web/playwright-report/
+
+# ------------------------------------------------------------------------------
+# 3. Local Runtime Databases, RAG Binary Indices, OCR Vaults & Secrets
+# ------------------------------------------------------------------------------
+services/api/data/
+services/data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+.env
+.env.*
+!.env.example
+!services/api/.env.cpanel.example
+LIVE_ONLINE_LINK.txt
+
+# ------------------------------------------------------------------------------
+# 4. Heavy Clinical Datasets (Hosted on Hugging Face Hub)
+# ------------------------------------------------------------------------------
 01_PCOS_Clinical/data/raw/*
-02_PCOS_Ultrasound/data/raw/*
-03_Measles_Viral_Rash/data/raw/*
-04_Prescription_OCR/data/raw/*
-05_Bangla_Voice_AI/data/raw/*
-
-# Processed patient records & large arrays
 01_PCOS_Clinical/data/processed/*
+02_PCOS_Ultrasound/data/raw/*
 02_PCOS_Ultrasound/data/processed/*
+03_Measles_Viral_Rash/data/raw/*
 03_Measles_Viral_Rash/data/processed/*
+04_Prescription_OCR/data/raw/*
 04_Prescription_OCR/data/processed/*
+05_Bangla_Voice_AI/data/raw/*
 05_Bangla_Voice_AI/data/processed/*
+06_DermoPed_Pediatric_Skin/data/raw/*
+06_DermoPed_Pediatric_Skin/data/processed/*
 
-# Keep data dirs tracked
+# Preserve directory placeholders
 !**/data/raw/.gitkeep
 !**/data/processed/.gitkeep
 
-# Large model checkpoints
+# ------------------------------------------------------------------------------
+# 5. Model Checkpoints, Training Runs & Proof Archives
+# ------------------------------------------------------------------------------
 *.pth
 *.pt
 *.bin
 *.onnx
 *.safetensors
 *.joblib
-
-# Logs and system caches
-*.log
-.DS_Store
-Thumbs.db
-
-# Local UI-00 reference repository clones & Playwright scratch artifacts
-_reference_repos/
-node_modules/
-apps/web/dist/
-apps/web/test-results/
-apps/web/playwright-report/
-services/api/data/
-*.db
-*.db-wal
-*.db-shm
-.env
-
-
-# Archives & additional caches/raw assets
+*.ckpt
+*.h5
+*.pkl
 *.zip
 *.tar.gz
-.pytest_cache/
-06_DermoPed_Pediatric_Skin/data/raw/*
-06_DermoPed_Pediatric_Skin/data/processed/*
-venv/
-**/venv/
-.coverage
-apps/web/.vite/
+02_PCOS_Ultrasound/runs/*
+03_Measles_Viral_Rash/runs/*
+04_Prescription_OCR/runs/*
+02_PCOS_Ultrasound/proofs/outputs/gradcam_visualizations.png
+03_Measles_Viral_Rash/proofs/gradcam_visualizations.png
+
+# ------------------------------------------------------------------------------
+# 6. Reference Repo Clones & Unused Duplicate / Scratch Media
+# ------------------------------------------------------------------------------
+_reference_repos/
+04_Prescription_OCR/page.html
+apps/web/public/images/hero/hero-doctors-cutout.png
+apps/web/public/images/hero/hero-doctors-back-to-back-cutout.png
+apps/web/public/images/team/team_docx_image_*.jpg
+apps/web/public/images/team/al_kabir.jpg
+apps/web/public/images/team/hasin_ishruq.jpg
+apps/web/public/images/team/mynuddin_ahmed.jpg
+apps/web/public/images/team/nakib_md_ashik.jpg
+
+# ------------------------------------------------------------------------------
+# 7. Internal Self-Audit Scratchpads, Bulk Generators & IDE / Agent Configs
+# ------------------------------------------------------------------------------
+docs/UI_REFERENCE_RESEARCH/
+docs/SHASTHOSETU_COMPETITION_VIDEO_SECURITY_01/audio/
+docs/HF_DATASET_PROVENANCE_AUDIT_01/03_REPOSITORY_FILE_INVENTORY.csv
+docs/COMPETITION_AUDIT_01/
+docs/COMPETITION_QA_LOCK_02/
+docs/COMP_IMPLEMENTATION_FIX_03/
+docs/COMP_OWNER_REVIEW_04/
+docs/COMP_FULL_MARKS_IMPLEMENTATION_05/
+docs/PROJECT_RELEASE_AUDIT_01/
+docs/PROJECT_RELEASE_EVIDENCE_CORRECTION_02/
+docs/PROJECT_FINAL_DEMO_GATE_03/
+docs/PROJECT_FINAL_EVIDENCE_REPAIR_04/
+scripts/generate_*
+scripts/build_comp*
+scripts/build_cat3*
+scripts/update_audit_01*
+.cursor/
+.kiro/
+.specify/
+.claude/
+memory-bank/
+.vscode/
+.idea/
+
+# ------------------------------------------------------------------------------
+# 8. OS & Log Files
+# ------------------------------------------------------------------------------
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db

@@ -4,72 +4,50 @@ export function KineticBrandLogo({
   to = "/",
   compact = false,
   tagline = "CLINICAL TELEMEDICINE • RESEARCH VAULT",
+  showTagline = false,
 }: {
   to?: string;
   compact?: boolean;
   tagline?: string;
+  showTagline?: boolean;
 }) {
   return (
     <Link
       to={to}
-      className={`lg-center-brand ${compact ? "scale-[0.82] origin-left -ml-2" : ""}`}
-      title="SHASTHO SETU — Official Clinical Telemedicine & AI Platform"
+      className={`inline-flex items-center gap-3 group transition cursor-pointer select-none ${
+        compact ? "scale-95 origin-left" : ""
+      }`}
+      title="SHASTHOSETU AI — Official Clinical Telemedicine & AI Platform"
     >
-      {/* 1. Main Row: SHASTHO [ OFFICIAL WEBSITE LOGO ] SETU */}
-      <div className="lg-brand-row">
-        <div
-          className={`lg-kinetic-word lg-word-land ${compact ? "!text-[15px] !tracking-[2.5px] !mr-2" : ""}`}
-          data-text="SHASTHO"
-        >
-          SHASTHO
-          <span className="lg-word-fill-land">SHASTHO</span>
-        </div>
-
-        <div className={`lg-middle-shield ${compact ? "!w-9 !h-9" : "!w-12 !h-12"}`}>
-          <div className="relative w-full h-full flex items-center justify-center">
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -inset-1 rounded-full border border-dashed border-cyan-400/70 lg-spin-orbit"
-            />
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-full bg-cyan-400/20 blur-sm"
-            />
-            <img
-              src="/shasthosetu-logo.png"
-              alt="ShasthoSetu AI"
-              className="relative z-10 w-full h-full rounded-full object-cover border-2 border-cyan-300/80 shadow-[0_0_16px_rgba(34,211,238,0.45)]"
-            />
-          </div>
-        </div>
-
-        <div
-          className={`lg-kinetic-word lg-word-guard ${compact ? "!text-[15px] !tracking-[2.5px] !ml-2" : ""}`}
-          data-text="SETU"
-        >
-          SETU
-          <span className="lg-word-fill-guard">SETU</span>
-        </div>
+      {/* 1. Circular Stethoscope / Cross Badge */}
+      <div className={`relative shrink-0 flex items-center justify-center ${compact ? "w-8 h-8 sm:w-9 sm:h-9" : "w-10 h-10 sm:w-11 sm:h-11"}`}>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-full bg-cyan-400/25 blur-sm group-hover:bg-cyan-400/40 transition"
+        />
+        <img
+          src="/shasthosetu-logo.png"
+          alt="ShasthoSetu AI Logo"
+          className="relative z-10 w-full h-full rounded-full object-cover border-2 border-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.45)] group-hover:scale-105 transition"
+        />
       </div>
 
-      {/* 2. Cyber Base Plate */}
-      {!compact && (
-        <>
-          <div className="lg-cyber-platform">
-            <div className="lg-plate-wing lg-wing-left" />
-            <div className="lg-plate-keyhole">
-              <img
-                src="/shasthosetu-logo.png"
-                alt=""
-                aria-hidden="true"
-                className="w-4 h-4 rounded-full object-cover border border-cyan-400/70"
-              />
-            </div>
-            <div className="lg-plate-wing lg-wing-right" />
-          </div>
-          <div className="lg-subtext">{tagline}</div>
-        </>
-      )}
+      {/* 2. Unified Brand Typography: SHASTHOSETU (White) + AI (Cyan) */}
+      <div className="flex flex-col leading-none">
+        <div className="flex items-baseline gap-1.5 font-sans font-black tracking-wider">
+          <span className={`tracking-[0.16em] uppercase text-white font-extrabold ${compact ? "text-sm sm:text-base" : "text-lg sm:text-xl"}`}>
+            SHASTHOSETU
+          </span>
+          <span className={`font-mono font-extrabold text-[#38bdf8] drop-shadow-[0_0_10px_rgba(56,189,248,0.65)] ${compact ? "text-sm sm:text-base" : "text-lg sm:text-xl"}`}>
+            AI
+          </span>
+        </div>
+        {!compact && showTagline && (
+          <span className="font-mono text-[8.5px] uppercase tracking-[0.22em] text-cyan-300/80 mt-1">
+            {tagline}
+          </span>
+        )}
+      </div>
     </Link>
   );
 }

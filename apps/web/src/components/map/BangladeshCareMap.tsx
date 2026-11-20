@@ -70,11 +70,11 @@ interface DivisionHub {
   districts: string[];
 }
 
-const BD_CENTER: [number, number] = [23.62, 90.35];
-const BD_INITIAL_ZOOM = 7.3;
+const BD_CENTER: [number, number] = [23.75, 90.35];
+const BD_INITIAL_ZOOM = 7.4;
 const BD_BOUNDS: L.LatLngBoundsExpression = [
-  [20.55, 87.98],
-  [26.68, 92.72],
+  [20.70, 88.00],
+  [26.65, 92.65],
 ];
 
 const DIVISION_HUBS: DivisionHub[] = [
@@ -372,7 +372,7 @@ export function BangladeshCareMap({
       map.closePopup();
       const size = map.getSize();
       if (size.x > 64 && size.y > 64) {
-        map.fitBounds(BD_BOUNDS, { padding: [4, 4], animate: !motionPaused });
+        map.fitBounds(BD_BOUNDS, { padding: [6, 6], maxZoom: 8.4, animate: !motionPaused });
       } else {
         map.setView(BD_CENTER, BD_INITIAL_ZOOM, { animate: !motionPaused });
       }
@@ -445,7 +445,7 @@ export function BangladeshCareMap({
     const fitBangladesh = () => {
       const size = map.getSize();
       if (size.x > 64 && size.y > 64) {
-        map.fitBounds(BD_BOUNDS, { padding: [4, 4], animate: false });
+        map.fitBounds(BD_BOUNDS, { padding: [6, 6], maxZoom: 8.4, animate: false });
       } else {
         map.setView(BD_CENTER, BD_INITIAL_ZOOM, { animate: false });
       }
@@ -749,8 +749,8 @@ export function BangladeshCareMap({
           <div
             className={`relative w-full flex-1 ${
               compact
-                ? "h-[430px] sm:h-[480px] lg:h-[520px]"
-                : "h-[460px] sm:h-[520px] lg:h-[580px]"
+                ? "h-[560px] sm:h-[620px] lg:h-[680px]"
+                : "h-[600px] sm:h-[680px] lg:h-[740px]"
             }`}
           >
             <div className="absolute inset-0">

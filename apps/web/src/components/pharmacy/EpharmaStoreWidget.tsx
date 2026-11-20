@@ -1,5 +1,23 @@
 import { useEffect, useState } from "react";
-import { CheckCircle2, FileText, History, Minus, PackageCheck, Pill, Plus, Search, ShoppingBag, ShoppingCart, Trash2 } from "lucide-react";
+import {
+  Baby,
+  CheckCircle2,
+  Cpu,
+  FileText,
+  Heart,
+  History,
+  Minus,
+  PackageCheck,
+  Pill,
+  Plus,
+  Search,
+  ShieldCheck,
+  ShoppingBag,
+  ShoppingCart,
+  Sparkles,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { apiGet } from "../../lib/apiClient";
 import { formatBdtFromPoisha } from "../../lib/formatters";
 import { useI18n } from "../../lib/i18n";
@@ -9,6 +27,7 @@ import {
   type SimulatedPaymentSuccessPayload,
 } from "../billing/SimulatedPaymentCheckoutModal";
 import { MedicalReceiptDocument } from "../billing/MedicalReceiptDocument";
+import { MedicineProductVisual } from "./MedicineProductVisual";
 
 export interface EpharmaMedicineItem {
   id: string;
@@ -25,7 +44,19 @@ export interface EpharmaMedicineItem {
   rx_required: boolean;
   in_stock: boolean;
   best_seller: boolean;
+  image_tag?: string;
 }
+
+const PHARMA_SECTOR_TABS = [
+  { key: "ALL", labelEn: "All Medicines (24)", labelBn: "সকল ২৪টি ওষুধ", icon: Pill, color: "text-amber-300" },
+  { key: "Medicines", labelEn: "Essential & GI Care", labelBn: "সাধারণ ও গ্যাস্ট্রিক", icon: Sparkles, color: "text-sky-300" },
+  { key: "Diabetic Care", labelEn: "Diabetic Care", labelBn: "ডায়াবেটিস ও সুগার", icon: Heart, color: "text-emerald-300" },
+  { key: "Vitamins & Supplements", labelEn: "Vitamins & Minerals", labelBn: "ভিটামিন ও সাপ্লিমেন্ট", icon: Pill, color: "text-orange-300" },
+  { key: "Women's Care", labelEn: "Women's & Prenatal", labelBn: "মহিলা ও প্রসবপূর্ব কেয়ার", icon: Users, color: "text-rose-300" },
+  { key: "Baby & Mom", labelEn: "Baby & Pediatric", labelBn: "শিশু ও মাতৃদুগ্ধ কেয়ার", icon: Baby, color: "text-pink-300" },
+  { key: "Health & Devices", labelEn: "Medical Devices", labelBn: "ডিজিটাল স্বাস্থ্য ডিভাইস", icon: Cpu, color: "text-indigo-300" },
+  { key: "Wellness", labelEn: "Hygiene & Antiseptics", labelBn: "জীবাণুনাশক ও সুরক্ষা", icon: ShieldCheck, color: "text-teal-300" },
+];
 
 export function EpharmaStoreWidget({
   medicines: propMedicines,
@@ -98,7 +129,6 @@ export function EpharmaStoreWidget({
   }, [autoFetch, propMedicines]);
 
   const allMeds = propMedicines ?? fetchedMedicines;
-  const medCats = ["ALL", ...Array.from(new Set(allMeds.map((m) => m.category)))];
   const filteredMeds = allMeds.filter((m) => {
     const catOk = medCategory === "ALL" || m.category === medCategory;
     const q = medSearch.trim().toLowerCase();
@@ -258,67 +288,95 @@ export function EpharmaStoreWidget({
         </div>
       ) : (
         <>
-          {/* Category Filter Pills */}
-          <div className="flex flex-wrap gap-2">
-            {medCats.map((cat) => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => setMedCategory(cat)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer transition ${
-              medCategory === cat
-                ? "bg-amber-400 text-slate-950 border-amber-300 font-bold"
-                : "bg-slate-900 border-slate-700 text-slate-300 hover:border-amber-400/50"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+          {/* 8 Category Sector Grid Cards (Doctor-style Tab Interaction) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+            {PHARMA_SECTOR_TABS.map((sec) => {
+              const Icon = sec.icon;
+              const isSelected = medCategory === sec.key || (sec.key === "ALL" && medCategory === "ALL");
+              const count = allMeds.filter((m) => {
+                if (sec.key === "ALL") return true;
+                return m.category.toLowerCase().includes(sec.key.toLowerCase());
+              }).length;
 
-      {orderNotice && (
-        <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-200 text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>{orderNotice}</span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-          {filteredMeds.map((med) => {
-            const qty = cart[med.id] || 0;
-            return (
-              <div
-                key={med.id}
-                className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-cyan-400/40 flex flex-col justify-between gap-3"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 text-[10px] font-mono">
-                    <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30">
-                      {med.category}
+              return (
+                <button
+                  key={sec.key}
+                  type="button"
+                  onClick={() => setMedCategory(sec.key)}
+                  className={`p-2.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-1.5 ${
+                    isSelected
+                      ? "bg-gradient-to-br from-amber-950/70 via-slate-900 to-slate-950 border-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.22)] scale-[1.02]"
+                      : "bg-slate-950/70 hover:bg-slate-900/80 border-slate-800 hover:border-slate-700 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <Icon className={`w-3.5 h-3.5 ${sec.color}`} />
+                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-white/10 text-slate-300">
+                      {count}
                     </span>
-                    <div className="flex items-center gap-1">
-                      {med.rx_required && (
-                        <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/30">
-                          Rx Req
-                        </span>
-                      )}
-                      {med.discount_pct > 0 && (
-                        <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                          -{med.discount_pct}%
-                        </span>
-                      )}
+                  </div>
+                  <div>
+                    <div className="font-bold text-[11px] text-white leading-tight">
+                      {locale === "bn" ? sec.labelBn : sec.labelEn}
                     </div>
                   </div>
+                </button>
+              );
+            })}
+          </div>
 
-                  <h4 className="font-bold text-sm text-white mt-2">
-                    {locale === "bn" ? med.name_bn : med.name_en}
-                  </h4>
-                  <p className="text-[11px] text-cyan-300">{med.generic_name}</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">
-                    {med.brand} • {med.pack_size}
-                  </p>
-                </div>
+          {orderNotice && (
+            <div className="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-200 text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{orderNotice}</span>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {filteredMeds.map((med) => {
+                const qty = cart[med.id] || 0;
+                return (
+                  <div
+                    key={med.id}
+                    className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-cyan-400/50 flex flex-col justify-between gap-3 group transition"
+                  >
+                    <div className="flex items-start gap-3.5">
+                      {/* Stylized Illustrated Medicine Icon / Thumbnail Picture */}
+                      <MedicineProductVisual
+                        tag={med.image_tag}
+                        category={med.category}
+                        className="w-14 h-14"
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2 text-[10px] font-mono">
+                          <span className="px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/30 truncate max-w-[110px]">
+                            {med.category}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {med.rx_required && (
+                              <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/30 font-bold">
+                                Rx Req
+                              </span>
+                            )}
+                            {med.discount_pct > 0 && (
+                              <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/30 font-bold">
+                                -{med.discount_pct}%
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <h4 className="font-bold text-sm text-white mt-1.5 group-hover:text-amber-300 transition line-clamp-1">
+                          {locale === "bn" ? med.name_bn : med.name_en}
+                        </h4>
+                        <p className="text-[11px] text-cyan-300 truncate">{med.generic_name}</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          {med.brand} • {med.pack_size}
+                        </p>
+                      </div>
+                    </div>
 
                 <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
                   <div>

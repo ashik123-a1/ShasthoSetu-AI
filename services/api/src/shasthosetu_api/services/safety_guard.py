@@ -24,8 +24,13 @@ _EMERGENCY_PATTERNS = [
     re.compile(r"\b(stroke|face\s+drooping|slurred\s+speech|one\s+side\s+weakness)\b", re.I),
     re.compile(r"\b(heavy\s+bleeding|uncontrolled\s+bleeding|suicidal|overdose|poisoning|anaphylaxis|swollen\s+tongue|throat\s+closing)\b", re.I),
     re.compile(r"\b(non-?blanching|purple\s+spots|petechiae)\b", re.I),
-    re.compile(r"(বুকে(?:\s+\S+){0,2}\s*ব্যথা|বুক(?:\s+\S+){0,2}\s*ব্যথা|শ্বাস\s*কষ্ট|শ্বাসকষ্ট|(?:নিঃ)?শ্বাস\s*নিতে\s*(?:কষ্ট|পারছে\s*না|পারছি\s*না)|অজ্ঞান|খিঁচুনি|স্ট্রোক|অতিরিক্ত\s*রক্তক্ষরণ|গলা\s*ফুলে\s*যাচ্ছে)", re.I),
+    re.compile(r"(বুকে.{0,40}?(?:ব্যথা|চাপ|ভারী)|বুক.{0,40}?(?:ব্যথা|চাপ|ভারী)|শ্বাস\s*কষ্ট|শ্বাসকষ্ট|(?:নিঃ)?শ্বাস\s*নিতে\s*(?:কষ্ট|পারছে\s*না|পারছি\s*না)|অজ্ঞান|খিঁচুনি|স্ট্রোক|অতিরিক্ত\s*রক্তক্ষরণ|গলা\s*ফুলে\s*যাচ্ছে)", re.I),
     re.compile(r"\b(buke\s+byatha|buke\s+betha|shash\s*koshto|shashkoshto|oggyan|khichuni)\b", re.I),
+]
+
+_OUT_OF_DOMAIN_PATTERNS = [
+    re.compile(r"\b(stock\s+price|share\s+price|revenue\s+of\s+microsoft|train\s+schedule|train\s+time|ticket\s+booking|movie\s+showtimes|cricket\s+score)\b", re.I),
+    re.compile(r"(ট্রেনের\s*সময়সূচী|ট্রেন\s*কখন\s*ছাড়ে|শেয়ার\s*বাজার|স্টক\s*মার্কেট|মুভির\s*সময়|ট্রেন\s*টিকিট)", re.I),
 ]
 
 _INFANT_FEVER_RE = re.compile(r"(newborn|infant|baby|শিশু|বাচ্চা|baccha).{0,40}?(month|weeks|দিন|মাস|mas).{0,30}?(fever|জ্বর|jor|100\.4|38)", re.I)
@@ -108,11 +113,16 @@ def inspect_user_query(query: str) -> dict[str, Any]:
     if asks_dosage_or_rx:
         flags.append("CLINICAL_BOUNDARY_NOTICE")
 
+    is_out_of_domain = any(pat.search(q) for pat in _OUT_OF_DOMAIN_PATTERNS)
+    if is_out_of_domain:
+        flags.append("OUT_OF_DOMAIN_INQUIRY")
+
     return {
         "language_detected": lang_detected,
         "is_injection": is_injection,
         "is_emergency": is_emergency,
         "asks_dosage_or_rx": asks_dosage_or_rx,
+        "is_out_of_domain": is_out_of_domain,
         "flags": flags,
     }
 

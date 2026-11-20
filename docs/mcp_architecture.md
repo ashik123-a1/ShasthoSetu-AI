@@ -1,6 +1,6 @@
 # ShasthoSetu AI — Model Context Protocol (MCP) Architecture
 
-> **Compliance & Scope:** Implements all 3 competition rubric pillars for Category 11 (`MCP — Built + Used + Architecture`): **3 custom-built MCP servers**, **3+ integrated & live-verified public MCP servers** (plus competition `cloudcamp-bd` SSE endpoint), and full transport, client/host, permission boundary, and tool-reusability documentation backed by live JSON-RPC verification evidence at [mcp_verification_report.json](file:///F:/Clude%20cccccccccccccccccccccccc/data%20we%20test/docs/evidence/INT_01/mcp_verification_report.json).
+> **Compliance & Scope:** Implements all 3 competition rubric pillars for Category 11 (`MCP — Built + Used + Architecture`): **3 custom-built MCP servers**, **3+ integrated & live-verified public MCP servers** (plus competition `cloudcamp-bd` SSE endpoint), and full transport, client/host, permission boundary, and tool-reusability documentation backed by live JSON-RPC verification evidence at [mcp_verification_report.json](evidence/INT_01/mcp_verification_report.json).
 
 ---
 

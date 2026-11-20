@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { FastForward } from "lucide-react";
+import { REALISTIC_DOCTORS_POINTS } from "./realisticDoctorsParticleData";
 
 // ============================================================================
 // CONSTANTS & TIMELINE CONFIGURATION
@@ -111,288 +112,45 @@ function generateFullWindowScatterTargets(
   return targets;
 }
 
-/**
- * Samples non-transparent pixels from an offscreen canvas layer.
- */
-function sampleLayerPixels(
-  canvas: HTMLCanvasElement,
-  step = 2
-): Array<{ x: number; y: number; r: number; g: number; b: number }> {
-  const cw = canvas.width;
-  const ch = canvas.height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return [];
-  const imgData = ctx.getImageData(0, 0, cw, ch).data;
-  const points: Array<{ x: number; y: number; r: number; g: number; b: number }> = [];
-
-  for (let y = 0; y < ch; y += step) {
-    for (let x = 0; x < cw; x += step) {
-      const idx = (y * cw + x) * 4;
-      if (imgData[idx + 3] > 80) {
-        points.push({
-          x: x - cw / 2,
-          y: y - ch / 2,
-          r: imgData[idx],
-          g: imgData[idx + 1],
-          b: imgData[idx + 2],
-        });
-      }
-    }
-  }
-  return points;
-}
 
 /**
- * Generates the Iconic Formation of 2 Human Doctors Standing Back-to-Back
- * with Stethoscopes, Clinical White Coats, ECG Pulse Line, and Bio-Resonance Ring.
+ * Generates the Iconic Formation of 2 Photorealistic Human Doctors Standing Back-to-Back
+ * with Natural Skin Tones, Rich Hair, Clinical White Coats, Stethoscopes, ECG Pulse Line, and Bio-Resonance Ring.
  */
 function generateTwoDoctorsTargets(count: number, width: number, height: number): TargetPoint[] {
-  const cw = Math.max(760, Math.min(1360, Math.floor(width)));
-  const ch = Math.max(540, Math.min(880, Math.floor(height)));
-  const cx = cw / 2;
-  const cy = ch / 2 - 15;
-
-  const makeCanvas = () => {
-    const c = document.createElement("canvas");
-    c.width = cw;
-    c.height = ch;
-    return c;
-  };
-
-  // LAYER 1: Tilted Bio-Resonance Halo (Orbital Ring around Doctors)
-  const ringCanvas = makeCanvas();
-  const rCtx = ringCanvas.getContext("2d");
-  if (rCtx) {
-    rCtx.save();
-    rCtx.translate(cx, cy);
-    rCtx.rotate(-0.32);
-    rCtx.lineWidth = 5;
-    rCtx.strokeStyle = "#38bdf8";
-    rCtx.beginPath();
-    rCtx.ellipse(0, 0, Math.min(cw, ch) * 0.46, Math.min(cw, ch) * 0.15, 0, 0, Math.PI * 2);
-    rCtx.stroke();
-    rCtx.restore();
-  }
-  const ringPoints = sampleLayerPixels(ringCanvas, 2);
-
-  // LAYER 2: Central Medical Cross in Background
-  const crossCanvas = makeCanvas();
-  const cCtx = crossCanvas.getContext("2d");
-  if (cCtx) {
-    cCtx.fillStyle = "#06b6d4";
-    const barW = 26;
-    const barH = 115;
-    cCtx.fillRect(cx - barW, cy - barH, barW * 2, barH * 2);
-    cCtx.fillRect(cx - barH, cy - barW, barH * 2, barW * 2);
-  }
-  const crossPoints = sampleLayerPixels(crossCanvas, 2);
-
-  // LAYER 3: Left & Right Human Doctors Standing Back-to-Back
-  const doctorsCanvas = makeCanvas();
-  const dCtx = doctorsCanvas.getContext("2d");
-  if (dCtx) {
-    dCtx.fillStyle = "#ffffff";
-
-    // --- LEFT DOCTOR (Facing Left) ---
-    const hlCx = cx - 58;
-    const hlCy = cy - 135;
-    // Head & face profile facing left
-    dCtx.beginPath();
-    dCtx.ellipse(hlCx, hlCy, 26, 32, 0, 0, Math.PI * 2);
-    dCtx.fill();
-    dCtx.beginPath();
-    dCtx.moveTo(hlCx - 18, hlCy - 8);
-    dCtx.lineTo(hlCx - 36, hlCy);
-    dCtx.lineTo(hlCx - 18, hlCy + 14);
-    dCtx.closePath();
-    dCtx.fill();
-    // Neck
-    dCtx.fillRect(hlCx - 10, hlCy + 28, 22, 30);
-    // Torso / Lab coat
-    dCtx.beginPath();
-    dCtx.moveTo(cx - 5, cy - 70);
-    dCtx.lineTo(hlCx - 10, cy - 70);
-    dCtx.lineTo(hlCx - 68, cy - 40);
-    dCtx.lineTo(hlCx - 82, cy + 25);
-    dCtx.lineTo(hlCx - 65, cy + 85);
-    dCtx.lineTo(hlCx - 12, cy + 85);
-    dCtx.lineTo(hlCx - 30, cy + 145);
-    dCtx.lineTo(cx - 5, cy + 145);
-    dCtx.closePath();
-    dCtx.fill();
-    // Lower coat
-    dCtx.beginPath();
-    dCtx.moveTo(cx - 5, cy + 145);
-    dCtx.lineTo(hlCx - 30, cy + 145);
-    dCtx.lineTo(hlCx - 25, cy + 220);
-    dCtx.lineTo(cx - 5, cy + 220);
-    dCtx.closePath();
-    dCtx.fill();
-
-    // --- RIGHT DOCTOR (Facing Right) ---
-    const hrCx = cx + 58;
-    const hrCy = cy - 135;
-    // Head & face profile facing right
-    dCtx.beginPath();
-    dCtx.ellipse(hrCx, hrCy, 26, 32, 0, 0, Math.PI * 2);
-    dCtx.fill();
-    dCtx.beginPath();
-    dCtx.moveTo(hrCx + 18, hrCy - 8);
-    dCtx.lineTo(hrCx + 36, hrCy);
-    dCtx.lineTo(hrCx + 18, hrCy + 14);
-    dCtx.closePath();
-    dCtx.fill();
-    // Neck
-    dCtx.fillRect(hrCx - 12, hrCy + 28, 22, 30);
-    // Torso / Lab coat
-    dCtx.beginPath();
-    dCtx.moveTo(cx + 5, cy - 70);
-    dCtx.lineTo(hrCx + 10, cy - 70);
-    dCtx.lineTo(hrCx + 68, cy - 40);
-    dCtx.lineTo(hrCx + 82, cy + 25);
-    dCtx.lineTo(hrCx + 65, cy + 85);
-    dCtx.lineTo(hrCx + 12, cy + 85);
-    dCtx.lineTo(hrCx + 30, cy + 145);
-    dCtx.lineTo(cx + 5, cy + 145);
-    dCtx.closePath();
-    dCtx.fill();
-    // Lower coat
-    dCtx.beginPath();
-    dCtx.moveTo(cx + 5, cy + 145);
-    dCtx.lineTo(hrCx + 30, cy + 145);
-    dCtx.lineTo(hrCx + 25, cy + 220);
-    dCtx.lineTo(cx + 5, cy + 220);
-    dCtx.closePath();
-    dCtx.fill();
-  }
-  const doctorPoints = sampleLayerPixels(doctorsCanvas, 2);
-
-  // LAYER 4: Stethoscopes & ECG Cardiac Waveform (Vibrant Emerald & Mint)
-  const stethCanvas = makeCanvas();
-  const sCtx = stethCanvas.getContext("2d");
-  if (sCtx) {
-    sCtx.lineWidth = 4;
-    sCtx.strokeStyle = "#34d399";
-    sCtx.fillStyle = "#34d399";
-
-    // Left Stethoscope
-    const hlCx = cx - 58;
-    sCtx.beginPath();
-    sCtx.moveTo(hlCx - 5, cy - 50);
-    sCtx.quadraticCurveTo(hlCx - 25, cy - 10, hlCx - 36, cy + 30);
-    sCtx.lineTo(hlCx - 28, cy + 55);
-    sCtx.stroke();
-    sCtx.beginPath();
-    sCtx.arc(hlCx - 28, cy + 55, 6, 0, Math.PI * 2);
-    sCtx.fill();
-
-    // Right Stethoscope
-    const hrCx = cx + 58;
-    sCtx.beginPath();
-    sCtx.moveTo(hrCx + 5, cy - 50);
-    sCtx.quadraticCurveTo(hrCx + 25, cy - 10, hrCx + 36, cy + 30);
-    sCtx.lineTo(hrCx + 28, cy + 55);
-    sCtx.stroke();
-    sCtx.beginPath();
-    sCtx.arc(hrCx + 28, cy + 55, 6, 0, Math.PI * 2);
-    sCtx.fill();
-
-    // ECG Heartbeat Rhythm across chestline
-    sCtx.beginPath();
-    sCtx.moveTo(cx - 240, cy + 10);
-    sCtx.lineTo(cx - 150, cy + 10);
-    sCtx.lineTo(cx - 130, cy + 24);
-    sCtx.lineTo(cx - 110, cy - 40);
-    sCtx.lineTo(cx - 90, cy + 32);
-    sCtx.lineTo(cx - 70, cy + 10);
-    sCtx.lineTo(cx + 70, cy + 10);
-    sCtx.lineTo(cx + 90, cy - 40);
-    sCtx.lineTo(cx + 110, cy + 32);
-    sCtx.lineTo(cx + 130, cy + 10);
-    sCtx.lineTo(cx + 240, cy + 10);
-    sCtx.stroke();
-  }
-  const stethPoints = sampleLayerPixels(stethCanvas, 2);
-
-  // LAYER 5: Sub-Caption Typography below doctors
-  const captionCanvas = makeCanvas();
-  const capCtx = captionCanvas.getContext("2d");
-  if (capCtx) {
-    capCtx.font = "800 15px 'Plus Jakarta Sans', 'Inter', sans-serif";
-    capCtx.textAlign = "center";
-    capCtx.fillStyle = "#7dd3fc";
-    capCtx.fillText("2 4 / 7   C L I N I C A L   G U A R D I A N S", cx, cy + 255);
-  }
-  const captionPoints = sampleLayerPixels(captionCanvas, 2);
-
   const targets: TargetPoint[] = new Array(count);
-  const doctorQuota = Math.floor(count * 0.48);
-  const stethQuota = Math.floor(count * 0.16);
-  const ringQuota = Math.floor(count * 0.14);
-  const crossQuota = Math.floor(count * 0.12);
+  const totalSource = REALISTIC_DOCTORS_POINTS.length;
+
+  // Scale factor to fit viewport naturally without clipping
+  // Base dimensions are roughly 750px high by 650px wide
+  const scale = Math.min(width / 960, height / 840) * 0.95;
 
   for (let i = 0; i < count; i++) {
-    if (i < doctorQuota && doctorPoints.length > 0) {
-      const pt = doctorPoints[(i * 67) % doctorPoints.length];
-      const isCoatHem = pt.y > 100;
-      targets[i] = {
-        x: pt.x + (Math.random() - 0.5) * 2.2,
-        y: pt.y + (Math.random() - 0.5) * 2.2,
-        z: 18 + (Math.random() - 0.5) * 8,
-        brandColor: isCoatHem ? "#bae6fd" : i % 7 === 0 ? "#e0f2fe" : "#ffffff",
-        sizeMult: 1.15,
-        layerPriority: 3,
-      };
-    } else if (i < doctorQuota + stethQuota && stethPoints.length > 0) {
-      const pt = stethPoints[(i * 73) % stethPoints.length];
-      targets[i] = {
-        x: pt.x + (Math.random() - 0.5) * 1.8,
-        y: pt.y + (Math.random() - 0.5) * 1.8,
-        z: 28 + (Math.random() - 0.5) * 6,
-        brandColor: i % 4 === 0 ? "#10b981" : "#34d399",
-        sizeMult: 1.25,
-        layerPriority: 4,
-      };
-    } else if (i < doctorQuota + stethQuota + ringQuota && ringPoints.length > 0) {
-      const pt = ringPoints[(i * 83) % ringPoints.length];
-      targets[i] = {
-        x: pt.x + (Math.random() - 0.5) * 2.5,
-        y: pt.y + (Math.random() - 0.5) * 2.5,
-        z: 8 + (Math.random() - 0.5) * 8,
-        brandColor: i % 3 === 0 ? "#38bdf8" : "#0284c7",
-        sizeMult: 1.05,
-        layerPriority: 2,
-      };
-    } else if (i < doctorQuota + stethQuota + ringQuota + crossQuota && crossPoints.length > 0) {
-      const pt = crossPoints[(i * 59) % crossPoints.length];
-      targets[i] = {
-        x: pt.x + (Math.random() - 0.5) * 2.4,
-        y: pt.y + (Math.random() - 0.5) * 2.4,
-        z: -14 + (Math.random() - 0.5) * 10,
-        brandColor: i % 2 === 0 ? "#06b6d4" : "#0891b2",
-        sizeMult: 0.95,
-        layerPriority: 1,
-      };
-    } else if (captionPoints.length > 0) {
-      const pt = captionPoints[(i * 97) % captionPoints.length];
-      targets[i] = {
-        x: pt.x + (Math.random() - 0.5) * 1.6,
-        y: pt.y + (Math.random() - 0.5) * 1.6,
-        z: 12 + (Math.random() - 0.5) * 4,
-        brandColor: "#7dd3fc",
-        sizeMult: 1.0,
-        layerPriority: 2,
-      };
-    } else {
-      targets[i] = {
-        x: (Math.random() - 0.5) * width * 1.1,
-        y: (Math.random() - 0.5) * height * 1.1,
-        z: (Math.random() - 0.5) * 200,
-        brandColor: "#334155",
-        sizeMult: 0.7,
-        layerPriority: 0,
-      };
-    }
+    const src = REALISTIC_DOCTORS_POINTS[i % totalSource];
+    const jitter = src.priority === 4 ? 0.7 : src.priority === 3 ? 1.1 : 1.6;
+    const jx = (Math.random() - 0.5) * jitter;
+    const jy = (Math.random() - 0.5) * jitter;
+
+    targets[i] = {
+      x: src.x * scale + jx,
+      y: src.y * scale + jy,
+      z:
+        src.priority === 4
+          ? 24 + (Math.random() - 0.5) * 6
+          : src.priority === 3
+          ? 16 + (Math.random() - 0.5) * 6
+          : (Math.random() - 0.5) * 12,
+      brandColor: src.color,
+      sizeMult:
+        src.priority === 4
+          ? 1.28
+          : src.priority === 3
+          ? 1.16
+          : src.priority === 2
+          ? 1.02
+          : 0.92,
+      layerPriority: src.priority,
+    };
   }
 
   return targets;
@@ -412,10 +170,10 @@ function generateShasthoSetuTargets(count: number, width: number, height: number
 
   ctx.clearRect(0, 0, cw, ch);
   const cx = cw / 2;
-  const cy = ch / 2 - 20;
+  const cy = ch / 2;
 
   const maxTextWidth = cw * 0.88;
-  let fontSize = Math.floor(cw * 0.125);
+  let fontSize = Math.floor(cw * 0.135);
   ctx.font = `900 ${fontSize}px "Plus Jakarta Sans", "Inter", "Arial Black", sans-serif`;
   const measured = ctx.measureText("SHASTHOSETU AI").width;
   if (measured > maxTextWidth) {
@@ -447,25 +205,9 @@ function generateShasthoSetuTargets(count: number, width: number, height: number
       // AI -> Radiant Emerald
       ctx.fillStyle = "rgb(52, 211, 153)";
     }
-    ctx.fillText(char, currentX + w / 2, cy - fontSize * 0.05);
+    ctx.fillText(char, currentX + w / 2, cy);
     currentX += w + charSpacing;
   });
-
-  // Primary Clinical Subtitle
-  const subFont1 = Math.max(13, Math.floor(fontSize * 0.18));
-  ctx.font = `800 ${subFont1}px "Plus Jakarta Sans", "Inter", sans-serif`;
-  ctx.fillStyle = "rgb(125, 211, 252)";
-  ctx.fillText(
-    "B I L I N G U A L   C L I N I C A L   T E L E M E D I C I N E",
-    cx,
-    cy + fontSize * 0.72
-  );
-
-  // Bengali Secondary Subtitle
-  const subFont2 = Math.max(11, Math.floor(fontSize * 0.14));
-  ctx.font = `700 ${subFont2}px "Noto Sans Bengali", sans-serif`;
-  ctx.fillStyle = "rgb(148, 163, 184)";
-  ctx.fillText("স্বাস্থ্যসেতু এআই • ২৪/৭ বিশেষজ্ঞ স্বাস্থ্যসেবা ও নির্ভুল ডায়াগনস্টিকস", cx, cy + fontSize * 1.05);
 
   const imgData = ctx.getImageData(0, 0, cw, ch).data;
   const textPoints: Array<{ x: number; y: number; brandColor: string; isSub: boolean }> = [];
@@ -487,9 +229,6 @@ function generateShasthoSetuTargets(count: number, width: number, height: number
           brandColor = "#38bdf8";
         } else if (r < 100 && g > 200 && b < 180) {
           brandColor = "#34d399";
-        } else if (r > 120 && g > 150 && b > 180) {
-          brandColor = "#7dd3fc";
-          isSub = true;
         } else if (r > 230 && g > 230 && b > 230) {
           brandColor = Math.random() > 0.25 ? "#ffffff" : "#e0f2fe";
         }
@@ -920,6 +659,7 @@ export function ShasthoSetuParticlePreloader({
       {/* ShasthoSetu Dark Sapphire & Cyan Glassmorphic Skip Intro Button */}
       <button
         type="button"
+        data-testid="skip-preloader-btn"
         onClick={() => triggerExit(400)}
         onMouseEnter={() => setSkipHovered(true)}
         onMouseLeave={() => setSkipHovered(false)}
@@ -929,6 +669,7 @@ export function ShasthoSetuParticlePreloader({
           bottom: "1.25rem",
           right: "1.25rem",
           zIndex: 30,
+          minHeight: "44px",
           display: "inline-flex",
           alignItems: "center",
           gap: "0.45rem",

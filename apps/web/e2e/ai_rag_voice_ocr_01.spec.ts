@@ -57,7 +57,7 @@ test.describe("AI-RAG-VOICE-OCR-01 Consolidated End-to-End Suite", () => {
     await citationPill.click();
     const citationDialog = page.getByTestId("citation-source-dialog");
     await expect(citationDialog).toBeVisible();
-    await expect(citationDialog).toContainText("Source Provenance & Metadata");
+    await expect(citationDialog).toContainText("VERIFIED SOURCE");
 
     // Take screenshot 02: Native Dialog Citation Drawer
     await page.screenshot({
@@ -74,6 +74,9 @@ test.describe("AI-RAG-VOICE-OCR-01 Consolidated End-to-End Suite", () => {
     // -------------------------------------------------------------
     const voicePanel = page.getByTestId("voice-input-panel");
     await expect(voicePanel).toBeVisible();
+
+    // Switch to normal upload & editable transcript mode
+    await page.getByTestId("voice-mode-normal").click();
 
     // Upload verified test audio clip (mix_codeswitch_01.wav)
     const audioFilePath = path.resolve(

@@ -1,0 +1,52 @@
+{
+  "program": "Expanded Programme on Immunization (EPI) - DGHS, Bangladesh",
+  "national_schedule": [
+    {
+      "vaccine": "BCG",
+      "disease_prevented": "Tuberculosis (severe forms: TB meningitis & miliary TB)",
+      "target_age": "At birth (or first contact)",
+      "dose": "0.05 ml",
+      "route": "Intradermal (left upper arm)",
+      "expected_outcome": "Small papule at 2-3 weeks, permanent scar at 6-12 weeks"
+    },
+    {
+      "vaccine": "Pentavalent (DTP-HepB-Hib)",
+      "disease_prevented": "Diphtheria, Pertussis, Tetanus, Hepatitis B, Haemophilus influenzae type b",
+      "doses": [
+        {"dose_number": 1, "target_age": "6 weeks"},
+        {"dose_number": 2, "target_age": "10 weeks"},
+        {"dose_number": 3, "target_age": "14 weeks"}
+      ],
+      "route": "Intramuscular (anterolateral aspect of outer thigh)"
+    },
+    {
+      "vaccine": "bOPV (bivalent Oral Polio Vaccine)",
+      "disease_prevented": "Poliomyelitis (Poliovirus types 1 and 3)",
+      "doses": [
+        {"dose_number": 1, "target_age": "6 weeks"},
+        {"dose_number": 2, "target_age": "10 weeks"},
+        {"dose_number": 3, "target_age": "14 weeks"}
+      ],
+      "route": "Oral (2 drops)"
+    },
+    {
+      "vaccine": "PCV (Pneumococcal Conjugate Vaccine)",
+      "disease_prevented": "Pneumococcal pneumonia, meningitis, bacteremia",
+      "doses": [
+        {"dose_number": 1, "target_age": "6 weeks"},
+        {"dose_number": 2, "target_age": "10 weeks"},
+        {"dose_number": 3, "target_age": "14 weeks"}
+      ],
+      "route": "Intramuscular (opposite thigh)"
+    },
+    {
+      "vaccine": "MR (Measles-Rubella)",
+      "disease_prevented": "Measles and Rubella (Congenital Rubella Syndrome)",
+      "doses": [
+        {"dose_number": 1, "target_age": "9 months"},
+        {"dose_number": 2, "target_age": "15 months (Booster)"}
+      ],
+      "route": "Subcutaneous (right upper arm)"
+    }
+  ]
+}

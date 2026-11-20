@@ -27,7 +27,7 @@ test.describe("UI-01 Responsive, Accessibility & Screenshot Suite", () => {
     });
     page.on("pageerror", (err) => pageErrors.push(String(err)));
 
-    await page.goto("/", { waitUntil: "networkidle" });
+    await page.goto("/dev/design-system", { waitUntil: "networkidle" });
 
     // Check zero external CDN styles/scripts loaded
     const externalCdnCount = await page.evaluate(() => {
@@ -38,6 +38,12 @@ test.describe("UI-01 Responsive, Accessibility & Screenshot Suite", () => {
       }).length;
     });
     expect(externalCdnCount).toBe(0);
+
+    // Ensure baseline light theme for test step 1
+    const currentTheme = await page.locator("html").getAttribute("data-theme");
+    if (currentTheme === "dark") {
+      await page.getByTestId("theme-switch").click();
+    }
 
     // 1. Desktop Light Bengali (default)
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -192,7 +198,7 @@ test.describe("UI-01 Responsive, Accessibility & Screenshot Suite", () => {
     });
 
     await page.goto("/admin/dashboard", { waitUntil: "networkidle" });
-    await expect(page.getByTestId("unauthenticated-route-guard")).toBeVisible();
+    await expect(page.getByTestId("login-identifier-input")).toBeVisible();
 
     fs.writeFileSync(
       path.join(EVIDENCE_DIR, "playwright_metrics.json"),

@@ -1,0 +1,63 @@
+1
+00:00:00,000 --> 00:00:18,071
+Across South Asia, accessing basic healthcare is an agonizing crisis. For parents watching a child suffer from severe
+fever and blistering rash, or families desperately seeking blood during emergency surgery, delays are fatal. Fragmented steps cost lives.
+
+2
+00:00:15,000 --> 00:00:18,178
+This is why we built ShasthoSetu AI.
+
+3
+00:00:18,000 --> 00:00:29,847
+A unified, multilingual platform designed to bridge diagnostic delays, connecting
+patients, doctors, and responsible clinical AI into one accessible ecosystem.
+
+4
+00:00:30,000 --> 00:00:41,212
+Patients instantly browse verified specialists, review qualifications, and schedule
+appointments in seconds, demonstrated here using completely isolated synthetic records.
+
+5
+00:00:45,000 --> 00:01:09,839
+Our research pipeline directly targets major diagnostic bottlenecks. Model 01 uses XGBoost across eighteen clinical markers for early PCOS screening, achieving ninety-four
+percent accuracy on held-out research data. Model 02 employs a ResNet-18 architecture to evaluate ovarian ultrasound morphology, providing objective decision support to clinicians.
+
+6
+00:01:08,000 --> 00:01:26,665
+In pediatric health, distinguishing measles from common viral rashes is vital. Model 03 evaluates viral rash patterns using rigorous
+family-grouped splits to eliminate data leakage, while our pediatric dermatology module assists triage for vulnerable children in underserved clinics.
+
+7
+00:01:28,000 --> 00:01:51,315
+Handwritten prescriptions frequently cause dangerous medication toxicity. ShasthoSetu's OCR Studio extracts dosage, frequency, and warnings into structured
+digital records. Crucially, patient confirmation verifies text accuracy only. Activating clinical medication plans strictly requires approved doctor authorization.
+
+8
+00:01:50,000 --> 00:02:03,926
+To overcome literacy and language divides, Model 05 provides bilingual speech recognition, transcribing
+spoken Bengali into editable Unicode text so patients can review descriptions before AI processing.
+
+9
+00:02:04,000 --> 00:02:20,046
+Our bilingual RAG engine fuses dense embeddings with BM25 keyword retrieval. Orchestrated by LangGraph,
+it cites verified clinical guidelines while automatically intercepting medical emergencies with immediate 999 redirection.
+
+10
+00:02:22,000 --> 00:02:36,526
+Doctors remain the ultimate decision-makers. Inside the live telemedicine studio, physicians conduct
+video consultations, review AI summaries, and issue authorized digital prescriptions with auditable consent.
+
+11
+00:02:38,000 --> 00:02:47,417
+In critical emergencies, Blood Connect rapidly matches voluntary
+blood donors across Bangladesh, with strictly masked contact details.
+
+12
+00:02:46,000 --> 00:02:52,873
+Built with role-based access, Zero-PHI support
+barriers, and strict synthetic demo isolation.
+
+13
+00:02:53,000 --> 00:03:00,000
+ShasthoSetu AI: responsible, multilingual healthcare intelligence.
+Next, we expand towards formal clinical validation.

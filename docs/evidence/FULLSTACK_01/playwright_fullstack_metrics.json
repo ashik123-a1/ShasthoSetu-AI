@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-19T11:29:52.726Z",
+  "timestamp": "2026-11-20T07:54:48.421Z",
   "viewports": [
     {
       "name": "mobile_360",
@@ -27,7 +27,7 @@
     }
   ],
   "consoleErrorCount": 0,
-  "expected403ProbeCount": 3,
+  "expected403ProbeCount": 2,
   "pageErrorCount": 0,
   "consoleErrors": [],
   "pageErrors": [],

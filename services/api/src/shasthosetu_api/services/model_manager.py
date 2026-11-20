@@ -7,7 +7,13 @@ import threading
 from typing import Any
 
 import httpx
-import torch
+
+try:
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None  # type: ignore
+    TORCH_AVAILABLE = False
 
 from ..config import PROJECT_ROOT, settings
 from ..core.security import new_id, utc_now_iso
@@ -23,7 +29,7 @@ _COMPONENT_STATUS: dict[str, dict[str, Any]] = {}
 
 
 def get_gpu_memory_info() -> dict[str, Any]:
-    if not torch.cuda.is_available():
+    if not TORCH_AVAILABLE or torch is None or not torch.cuda.is_available():
         return {"cuda_available": False, "device_name": "cpu", "free_mb": 0.0, "total_mb": 0.0, "used_mb": 0.0}
     try:
         free_b, total_b = torch.cuda.mem_get_info(0)
@@ -41,7 +47,9 @@ def get_gpu_memory_info() -> dict[str, Any]:
         return {"cuda_available": False, "device_name": f"cpu ({exc})", "free_mb": 0.0, "total_mb": 0.0, "used_mb": 0.0}
 
 
-def get_pytorch_device(min_vram_mb: float = 1800.0) -> tuple[torch.device, str]:
+def get_pytorch_device(min_vram_mb: float = 1800.0) -> tuple[Any, str]:
+    if not TORCH_AVAILABLE or torch is None:
+        return "cpu", "cpu (PyTorch offline)"
     gpu = get_gpu_memory_info()
     if gpu.get("cuda_available") and gpu.get("free_mb", 0.0) >= min_vram_mb:
         return torch.device("cuda"), f"cuda ({gpu['device_name']})"
@@ -109,7 +117,7 @@ def unload_pytorch_models(except_keys: set[str] | None = None) -> list[str]:
             evicted.append(k)
     if evicted:
         gc.collect()
-        if torch.cuda.is_available():
+        if TORCH_AVAILABLE and torch is not None and torch.cuda.is_available():
             try:
                 torch.cuda.empty_cache()
             except Exception:

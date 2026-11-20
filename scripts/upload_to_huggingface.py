@@ -108,7 +108,7 @@ def check_auth(api: HfApi) -> str | None:
         print("\n❌ Hugging Face Authentication Required!")
         print(f"   Reason: {e}")
         print("\n👉 To authenticate, please run either:")
-        print('   & "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\hf.exe" auth login')
+        print("   hf auth login  # (or: huggingface-cli login)")
         print("   OR")
         print('   $env:HF_TOKEN = "hf_your_personal_access_token"')
         return None

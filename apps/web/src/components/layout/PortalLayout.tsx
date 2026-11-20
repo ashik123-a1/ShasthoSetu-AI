@@ -90,7 +90,7 @@ export function PortalLayout({
   return (
     <div
       style={PORTAL_CSS_VARS}
-      className="lg-portal-ambient-bg relative min-h-screen bg-[#070b16] text-slate-100 flex flex-col lg:flex-row overflow-x-clip"
+      className={`lg-portal-ambient-bg lg-bg-${(user?.primary_role || "patient").toLowerCase()} relative min-h-screen bg-[#070b16] text-slate-100 flex flex-col lg:flex-row overflow-x-clip`}
     >
       {/* Desktop Land-Guard Floating Frosted Glass Sidebar */}
       <aside
@@ -278,6 +278,7 @@ export function PortalLayout({
 
             <div className="hidden sm:flex items-center gap-1.5">
               <LanguageSwitch />
+              <ThemeSwitch />
             </div>
 
             <button

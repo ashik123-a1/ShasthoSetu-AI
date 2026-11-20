@@ -1,0 +1,29 @@
+{
+  "language": "bn",
+  "test_queries": [
+    {
+      "id": "BN-01",
+      "query": "পিসিওএস (PCOS) রোগের প্রাথমিক লক্ষণগুলো কী এবং খাদ্যাভ্যাসে কী পরিবর্তন আনা দরকার?",
+      "expected_retrieval_topics": ["Rotterdam Criteria", "Insulin Resistance", "Dietary Inositol & Exercise"],
+      "expected_citation_slug": "dgdf-pcos-guideline-2024"
+    },
+    {
+      "id": "BN-02",
+      "query": "বাংলাদেশে শিশুর ইপিআই টিকা শিডিউল অনুযায়ী পেন্টাভ্যালেন্ট এবং এমআর টিকা কখন দিতে হয়?",
+      "expected_retrieval_topics": ["Pentavalent 6, 10, 14 weeks", "MR 9 months & 15 months booster"],
+      "expected_citation_slug": "dghs-epi-childhood-schedule-2024"
+    },
+    {
+      "id": "BN-03",
+      "query": "শিশুর হঠাৎ ১০২ ডিগ্রি জ্বর ও শরীরে লাল ফুসকুড়ি উঠলে প্রাথমিক করণীয় কী?",
+      "expected_retrieval_topics": ["Pediatric Fever Triage", "IMCI Red Flags", "Paracetamol Dosing by Weight"],
+      "expected_citation_slug": "dghs-imci-pediatric-manual-2023"
+    },
+    {
+      "id": "BN-04",
+      "query": "গর্ভকালীন ডায়াবেটিস (GDM) প্রতিরোধে ওটিটি পরীক্ষার নিয়ম কী?",
+      "expected_retrieval_topics": ["OGTT 75g Glucose 2-hour test", "Maternal Nutrition"],
+      "expected_citation_slug": "ogsb-maternal-health-protocol-2023"
+    }
+  ]
+}

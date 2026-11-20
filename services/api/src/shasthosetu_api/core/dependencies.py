@@ -14,7 +14,12 @@ def extract_raw_token(request: Request) -> str | None:
     if auth_header.lower().startswith("bearer "):
         return auth_header[7:].strip()
     cookie_val = request.cookies.get(settings.session_cookie_name)
-    return cookie_val.strip() if cookie_val else None
+    if cookie_val:
+        return cookie_val.strip()
+    token_param = request.query_params.get("token")
+    if token_param:
+        return token_param.strip()
+    return None
 
 
 def get_optional_user(request: Request) -> dict | None:

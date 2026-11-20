@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
-  Activity,
   Baby,
   CreditCard,
   FilePlus2,
@@ -10,7 +9,6 @@ import {
   FolderHeart,
   HeartPulse,
   LifeBuoy,
-  PhoneCall,
   Pill,
   Printer,
   Search,
@@ -38,6 +36,8 @@ import {
 import { PrescriptionArchiveView } from "../components/prescriptions/PrescriptionArchiveView";
 import { EpharmaStoreWidget } from "../components/pharmacy/EpharmaStoreWidget";
 import { SimulatedPaymentCheckoutModal } from "../components/billing/SimulatedPaymentCheckoutModal";
+import { ConsultationPreparationModal } from "../components/consultations/ConsultationPreparationModal";
+import { ModernPcosTrackerWidget } from "../components/pcos/ModernPcosTrackerWidget";
 import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { AiHealthAssistant } from "../components/ai/AiHealthAssistant";
@@ -147,6 +147,7 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
   const [visitReason, setVisitReason] = useState("Follow-up consultation & lab review");
   const [checkoutMethod, setCheckoutMethod] = useState<"DEMO_BKASH" | "DEMO_NAGAD" | "DEMO_CARD">("DEMO_BKASH");
   const [receiptData, setReceiptData] = useState<Record<string, unknown> | null>(null);
+  const [prepAppointment, setPrepAppointment] = useState<any>(null);
   const [inspectingDoctor, setInspectingDoctor] = useState<RichDoctorCard | null>(null);
   const [inspectingRx, setInspectingRx] = useState<MedicalPrescriptionProps["prescription"] | null>(null);
 
@@ -161,9 +162,6 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
   // Forms state
   const [depName, setDepName] = useState("");
   const [docFilename, setDocFilename] = useState("prescription_demo_scan.png");
-  const [pcosDate, setPcosDate] = useState("2026-11-01");
-  const [pcosCycleLen, setPcosCycleLen] = useState(32);
-  const [pcosNotes, setPcosNotes] = useState("");
   const [pedTemp, setPedTemp] = useState(101.8);
   const [pedBreathing, setPedBreathing] = useState(false);
   const [pedFeverDays, setPedFeverDays] = useState(2);
@@ -501,13 +499,41 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                         </div>
                         <div className="flex items-center gap-2">
                           <StatusBadge status={a.status} />
-                          <button
-                            type="button"
-                            onClick={() => navigate("/patient/consultations")}
-                            className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 font-semibold cursor-pointer inline-flex items-center gap-1"
-                          >
-                            <Video className="w-3 h-3" /> Call Room
-                          </button>
+                          {a.status === "AWAITING_DEMO_PAYMENT" ? (
+                            <button
+                              type="button"
+                              onClick={() => setPayingApt(a)}
+                              className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/35 border border-amber-400/50 text-amber-300 font-semibold cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <CreditCard className="w-3 h-3" /> {locale === "bn" ? "আগে ফি দিন" : "Pay First"}
+                            </button>
+                          ) : a.status === "COMPLETED" ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const rx = dash.eprescriptions.find((r) => r.doctor_name === a.doctor_name) || dash.eprescriptions[0];
+                                if (rx) setInspectingRx(rx as any);
+                                else {
+                                  pushToast({
+                                    title: locale === "bn" ? "পরামর্শ সম্পন্ন হয়েছে" : "Consultation Completed",
+                                    description: locale === "bn" ? "এই অ্যাপয়েন্টমেন্টের প্রেসক্রিপশন সংরক্ষিত আছে।" : "Summary and e-prescription archived.",
+                                    tone: "success",
+                                  });
+                                }
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/35 border border-cyan-400/40 text-cyan-300 font-semibold cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <FileText className="w-3 h-3" /> {locale === "bn" ? "প্রেসক্রিপশন দেখুন" : "View e-Rx"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setPrepAppointment(a)}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 font-semibold cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <Video className="w-3 h-3" /> {locale === "bn" ? "কল শুরু করুন" : "Join Call"}
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -752,28 +778,18 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                                 onClick={() => {
                                   setBookingDoctorId(d.id);
                                   setBookingSlotId("");
+                                  const slotElem = document.getElementById("booking-slot-selection-panel");
+                                  if (slotElem) slotElem.scrollIntoView({ behavior: "smooth" });
                                 }}
-                                className={`min-h-9 px-3.5 rounded-xl text-xs font-bold cursor-pointer ${
+                                className={`min-h-9 px-4 rounded-xl text-xs font-bold cursor-pointer transition inline-flex items-center gap-1.5 ${
                                   bookingDoctorId === d.id
-                                    ? "bg-cyan-400 text-slate-950"
-                                    : "bg-slate-800 hover:bg-cyan-500/25 text-white"
+                                    ? "bg-cyan-400 text-slate-950 shadow-md ring-2 ring-cyan-300"
+                                    : "bg-gradient-to-r from-teal-500/20 to-cyan-500/20 hover:from-teal-500/30 hover:to-cyan-500/30 border border-cyan-400/50 text-cyan-200"
                                 }`}
                               >
-                                {bookingDoctorId === d.id ? "✓ Selected for Booking" : "Select & Pick Slot"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setCallTarget({ doc: d, mode: "VIDEO" })}
-                                className="min-h-9 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/40 text-emerald-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
-                              >
-                                <Video className="w-3.5 h-3.5" /> Video Call
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setCallTarget({ doc: d, mode: "AUDIO" })}
-                                className="min-h-9 px-3 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-400/40 text-cyan-300 text-xs font-semibold inline-flex items-center gap-1 cursor-pointer"
-                              >
-                                <PhoneCall className="w-3.5 h-3.5" /> Audio
+                                {bookingDoctorId === d.id
+                                  ? (locale === "bn" ? "✓ নির্বাচিত ডাক্তার — ডানপাশে স্লট ও ফি নিশ্চিত করুন" : "✓ Doctor Selected — Pick Slot Right")
+                                  : (locale === "bn" ? "স্লট বাছাই ও ফি পরিশোধ করুন" : "Select & Pick Slot")}
                               </button>
                             </div>
                           </div>
@@ -781,7 +797,7 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                       </div>
                     </div>
 
-                    <form onSubmit={(e) => void runBookAppointment(e)} className="lg:col-span-6 bento-card rounded-2xl p-5 space-y-4 sticky top-24">
+                    <form id="booking-slot-selection-panel" onSubmit={(e) => void runBookAppointment(e)} className="lg:col-span-6 bento-card rounded-2xl p-5 space-y-4 sticky top-24">
                       <h2 className="font-bold text-base text-white">{locale === "bn" ? "২. স্লট ও রোগী নির্ধারণ করুন" : "2. Select Open Slot & Confirm Reservation"}</h2>
                       <label className="block space-y-1 text-xs font-semibold">
                         <span>{locale === "bn" ? "রোগী নির্বাচন" : "Patient Profile"}</span>
@@ -868,11 +884,12 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
             <div className="space-y-5">
               {section === "consultations" && (
                 <LiveConsultationCallStudio
-                  roomId={dash.appointments[0]?.booking_reference || "patient-consult-room"}
+                  roomId={searchParams.get("roomId") || dash.appointments[0]?.id || "apt-demo-9001"}
+                  userRole="PATIENT"
                   counterpartyName={dash.appointments[0]?.doctor_name || "Dr. Farhana Rahman"}
                   counterpartyRole={dash.appointments[0]?.specialty || "OB-GYN & PCOS Specialist"}
                   counterpartyAvatar="/images/doctors/doc-f-01.jpg"
-                  initialMode="VIDEO"
+                  initialMode={(searchParams.get("mode") as any) || "VIDEO"}
                 />
               )}
 
@@ -916,9 +933,18 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                         type="button"
                         data-testid={`pay-demo-btn-${apt.id}`}
                         onClick={() => setPayingApt(apt)}
+                        className="min-h-11 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-lg hover:brightness-105 transition"
+                      >
+                        <CreditCard className="w-4 h-4" /> {locale === "bn" ? "আগে ফি দিন (পেমেন্ট আবশ্যক)" : "Pay Fee First (Required)"}
+                      </button>
+                    )}
+                    {["CONFIRMED", "IN_CONSULTATION"].includes(apt.status) && (
+                      <button
+                        type="button"
+                        onClick={() => setPrepAppointment(apt)}
                         className="min-h-11 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-lg hover:brightness-105 transition"
                       >
-                        <CreditCard className="w-4 h-4" /> Pay {formatBdtFromPoisha(apt.fee_minor_poisha, locale)} (Simulated)
+                        <Video className="w-4 h-4 fill-slate-950" /> {locale === "bn" ? "কল রুমে প্রবেশ" : "Launch Call Studio"}
                       </button>
                     )}
                     {["AWAITING_DEMO_PAYMENT", "CONFIRMED"].includes(apt.status) && (
@@ -1142,44 +1168,23 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                 <TrustBadge kind="RESEARCH_ONLY" />
                 <span className="text-xs text-[var(--color-text-muted)]">Personal cycle journal — non-diagnostic record keeping</span>
               </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void (async () => {
-                    await apiPost("/v1/patient/pcos", { start_date: pcosDate, cycle_length_days: Number(pcosCycleLen), symptoms_json: { acne: true }, user_notes: pcosNotes });
-                    setPcosNotes("");
-                    pushToast({ title: "Cycle Entry Saved", tone: "success" });
-                    await loadAll();
-                  })();
+              <ModernPcosTrackerWidget
+                locale={locale}
+                serverEntries={pcosEntries}
+                onSaveCycle={async (data) => {
+                  await apiPost("/v1/patient/pcos", {
+                    start_date: data.start_date,
+                    cycle_length_days: data.cycle_length_days,
+                    symptoms_json: data.symptoms,
+                    user_notes: data.user_notes,
+                  });
+                  pushToast({
+                    title: locale === "bn" ? "সাইকেল এন্ট্রি সংরক্ষিত হয়েছে" : "Cycle Entry Saved",
+                    tone: "success",
+                  });
+                  await loadAll();
                 }}
-                className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end"
-              >
-                <label className="text-xs font-semibold space-y-1">
-                  <span>Start Date</span>
-                  <input type="date" value={pcosDate} onChange={(e) => setPcosDate(e.target.value)} className="w-full min-h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] px-3 text-sm" />
-                </label>
-                <label className="text-xs font-semibold space-y-1">
-                  <span>Cycle Length (days)</span>
-                  <input type="number" min={15} max={120} value={pcosCycleLen} onChange={(e) => setPcosCycleLen(Number(e.target.value))} className="w-full min-h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] px-3 text-sm" />
-                </label>
-                <label className="text-xs font-semibold space-y-1">
-                  <span>Notes</span>
-                  <input type="text" value={pcosNotes} onChange={(e) => setPcosNotes(e.target.value)} placeholder="Symptoms or notes" className="w-full min-h-11 rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] px-3 text-sm" />
-                </label>
-                <button type="submit" className="min-h-11 px-4 rounded-xl bg-[var(--color-primary)] text-[var(--color-primary-contrast)] font-semibold text-xs cursor-pointer flex items-center justify-center gap-1.5">
-                  <Activity className="w-4 h-4" /> Log Cycle
-                </button>
-              </form>
-              <div className="space-y-2.5">
-                {pcosEntries.map((e) => (
-                  <div key={e.id} className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 flex justify-between text-xs">
-                    <div>
-                      <strong>Start: {e.start_date}</strong> • Cycle: {e.cycle_length_days ?? "—"} days
-                      <p className="text-[var(--color-text-muted)]">{e.user_notes}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              />
 
               {/* Real M01 XGBoost & M02 Ultrasound Inference + Doctor Draft Sharing */}
               <div className="ss-sapphire-always rounded-3xl p-5 space-y-4">
@@ -1474,9 +1479,43 @@ export function PatientPortalPage({ section = "dashboard" }: { section?: string 
                 ? "DEMO_NAGAD"
                 : "DEMO_CARD";
             await runDemoCheckout(payingApt.id, mappedMethod);
+            const paidSnapshot = {
+              ...payingApt,
+              payment_reference: payload.receiptNumber || "DEMO-RCP-9001",
+            };
             setPayingApt(null);
+            // Launch short pre-consultation intake form before call room as requested
+            setPrepAppointment(paidSnapshot);
           }}
           onClose={() => setPayingApt(null)}
+        />
+      )}
+
+      {prepAppointment && (
+        <ConsultationPreparationModal
+          isOpen={Boolean(prepAppointment)}
+          appointment={prepAppointment}
+          locale={locale}
+          onClose={() => setPrepAppointment(null)}
+          onViewReceiptPdf={() => {
+            const r = {
+              receipt_number: prepAppointment.payment_reference || "DEMO-RCP-9001",
+              patient_name: prepAppointment.patient_name || "রহিয‌া বেগম",
+              doctor_name: prepAppointment.doctor_name,
+              specialty: prepAppointment.specialty,
+              amount_paid_bdt: (prepAppointment.fee_minor_poisha || 30000) / 100,
+              booking_reference: prepAppointment.booking_reference,
+              payment_method: "SHASTHOPAY_MFS",
+              transaction_id: "TXN-DEMO-9001",
+              paid_at: new Date().toISOString(),
+            };
+            setReceiptData(r as any);
+          }}
+          onProceedToCall={(prepData) => {
+            const aptId = prepAppointment.id;
+            setPrepAppointment(null);
+            navigate(`/patient/consultations?roomId=${aptId}&mode=${prepData.mode}`);
+          }}
         />
       )}
     </PortalLayout>

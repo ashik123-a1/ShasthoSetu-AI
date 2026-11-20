@@ -250,7 +250,7 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
                     fullName={String(dash.doctor_profile.display_name || "Dr. Farhana Rahman")}
                     idCode={String(dash.doctor_profile.bmdc_demo_reg || "BMDC-DEMO-91044")}
                     subtitle={`${String(dash.doctor_profile.specialty || "OB-GYN & PCOS Specialist")} • ${String(dash.doctor_profile.degrees || "MBBS, FCPS")}`}
-                    locationLabel={String(dash.doctor_profile.practice_location || "Dhaka Medical College")}
+                    locationLabel={String(dash.doctor_profile.practice_location || "ShasthoSetu Central Model Hospital (Demo)")}
                     bloodGroup="A+"
                     avatarUrl={String(dash.doctor_profile.avatar_url || "/images/doctors/doc-f-01.jpg")}
                   />
@@ -423,7 +423,8 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
           {section === "workspace" && workspace && (
             <div className="space-y-6">
               <LiveConsultationCallStudio
-                roomId={appointmentId || "doctor-desk"}
+                roomId={appointmentId || "apt-demo-9001"}
+                userRole="DOCTOR"
                 counterpartyName={String(workspace.patient_name || "রহিমা বেগম")}
                 counterpartyRole="Patient Consultation • Clinical Call"
                 counterpartyAvatar="/images/doctors/doc-f-02.jpg"

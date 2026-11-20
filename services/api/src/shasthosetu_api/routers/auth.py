@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
@@ -260,6 +261,23 @@ def login(payload: LoginRequest, request: Request, response: Response):
             record_audit(conn, actor_user_id=user_row["id"] if user_row else None, actor_role="ANONYMOUS", action_type="LOGIN_FAILED", target_resource="sessions", outcome="DENIED", details={"identifier": ident[:40]})
             conn.execute("COMMIT;")
             raise HTTPException(status_code=401, detail="Invalid credentials.")
+
+        if (settings.env == "production" or os.getenv("SHASTHOSETU_ENV") == "production") and user_row.get("is_synthetic"):
+            conn.execute("BEGIN IMMEDIATE;")
+            record_audit(
+                conn,
+                actor_user_id=user_row["id"],
+                actor_role="ANONYMOUS",
+                action_type="DEMO_ACCOUNT_IN_PRODUCTION_BLOCKED",
+                target_resource="sessions",
+                outcome="DENIED",
+                details={"reason": "Synthetic demo accounts strictly blocked in production"},
+            )
+            conn.execute("COMMIT;")
+            raise HTTPException(
+                status_code=403,
+                detail="PRODUCTION_SECURITY_GATE: Demo accounts are strictly disabled in production environments.",
+            )
 
         if user_row["account_status"] != "ACTIVE":
             raise HTTPException(status_code=403, detail=f"Account is {user_row['account_status']}.")

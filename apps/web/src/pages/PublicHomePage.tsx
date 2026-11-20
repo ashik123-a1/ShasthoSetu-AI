@@ -33,7 +33,6 @@ import { usePreferences } from "../lib/preferences";
 import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader";
 import { PublicFooter } from "../components/layout/PublicFooter";
 import { DepartmentSectorGrid } from "../components/doctors/DepartmentSectorGrid";
-import { HomepageTeamSection } from "../components/team/HomepageTeamSection";
 import { HERO_DOCTOR_SLIDES } from "../components/home/HeroDoctorShowcase";
 import {
   DigitalObservatoryDeck,
@@ -1673,9 +1672,6 @@ export function PublicHomePage() {
           </div>
         </div>
       </section>
-
-      {/* OFFICIAL CORE ENGINEERING TEAM ROSTER & LEADERSHIP */}
-      <HomepageTeamSection />
 
       {/* =================================================================
           SECTION 14 · FINAL CONVERSION CTA

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-18T20:39:44.846Z",
+  "timestamp": "2026-11-20T07:54:26.928Z",
   "externalCdnCount": 0,
   "viewportMetrics": [
     {
@@ -10,7 +10,7 @@
       "innerWidth": 360,
       "overflowX": false,
       "fontsLoaded": "loaded",
-      "visibleControlsCount": 26,
+      "visibleControlsCount": 27,
       "controlsUnder44pxHeightCount": 0,
       "undersizedSample": []
     },
@@ -22,7 +22,7 @@
       "innerWidth": 390,
       "overflowX": false,
       "fontsLoaded": "loaded",
-      "visibleControlsCount": 26,
+      "visibleControlsCount": 27,
       "controlsUnder44pxHeightCount": 0,
       "undersizedSample": []
     },
@@ -34,7 +34,7 @@
       "innerWidth": 768,
       "overflowX": false,
       "fontsLoaded": "loaded",
-      "visibleControlsCount": 31,
+      "visibleControlsCount": 32,
       "controlsUnder44pxHeightCount": 0,
       "undersizedSample": []
     },
@@ -46,7 +46,7 @@
       "innerWidth": 1440,
       "overflowX": false,
       "fontsLoaded": "loaded",
-      "visibleControlsCount": 41,
+      "visibleControlsCount": 46,
       "controlsUnder44pxHeightCount": 0,
       "undersizedSample": []
     }

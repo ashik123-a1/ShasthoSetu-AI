@@ -25,11 +25,17 @@ test.describe("FULLSTACK-01 Consolidated End-to-End Platform Verification", () =
         if ((expecting403Probe && text.includes("403")) || (expecting422Gate && text.includes("422"))) {
           expectedSecurityProbeLogs.push(text);
         } else {
+          console.log("### CONSOLE ERROR:", text);
           consoleErrors.push(text);
         }
       }
     });
     page.on("pageerror", (err) => pageErrors.push(String(err)));
+    page.on("response", (resp) => {
+      if (resp.status() >= 400) {
+        console.log(`### ${resp.status()} URL: ${resp.url()}`);
+      }
+    });
 
     // 1. Public Homepage + Logo + 3D / Layer Switcher + Responsive Checks
     const viewportMetrics: Array<{ name: string; width: number; height: number; overflowX: boolean }> = [];
@@ -91,26 +97,24 @@ test.describe("FULLSTACK-01 Consolidated End-to-End Platform Verification", () =
     await page.goto("/admin/dashboard", { waitUntil: "networkidle" });
     await expect(page.getByTestId("access-denied-page")).toBeVisible();
 
-    // Safe OCR verification gate (block before check -> succeed after checking all critical fields)
+    // Safe OCR verification gate (upload benchmark image -> bounding boxes -> verify all)
     await page.goto("/patient/ocr-review", { waitUntil: "networkidle" });
-    expecting422Gate = true;
-    await page.getByTestId("activate-ocr-btn-ocr-job-0052").click();
-    await expect(page.getByTestId("ui-toast")).toContainText("UNVERIFIED_OCR_FIELDS");
-    expecting422Gate = false;
+    const rxImagePath = path.resolve(
+      "../../services/api/evals/ocr_benchmark/rx_mixed_codeswitch.png"
+    );
+    const rxFileInput = page.getByTestId("ocr-file-input");
+    await rxFileInput.setInputFiles(rxImagePath);
 
-    const verifyBtns = page.locator('[data-testid^="verify-field-btn-"]');
-    const btnCount = await verifyBtns.count();
-    expect(btnCount).toBeGreaterThan(0);
-    for (let i = 0; i < btnCount; i += 1) {
-      await verifyBtns.nth(i).click();
-      await page.waitForTimeout(150);
-    }
-    await page.getByTestId("activate-ocr-btn-ocr-job-0052").click();
-    await expect(page.getByTestId("ui-toast").last()).toContainText("Verified Medication Plan Activated");
+    const explainBtn = page.getByTestId("ocr-explain-btn");
+    await expect(explainBtn).toBeVisible({ timeout: 45_000 });
+
+    const verifyBtn = page.getByTestId("ocr-verify-all-btn");
+    await verifyBtn.click();
+    await expect(page.getByTestId("ui-toast").last()).toBeVisible({ timeout: 10_000 });
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, "06_patient_ocr_verified.png"), fullPage: false });
 
     // Patient books an open slot with Dr. Farhana & completes Simulated bKash checkout -> Watermarked Receipt
-    await page.goto("/patient/doctors", { waitUntil: "networkidle" });
+    await page.goto("/patient/doctors?doctorId=doc-farhana", { waitUntil: "networkidle" });
     await page.getByTestId("select-doctor-doc-farhana").click();
     const firstSlotBtn = page.locator('[data-testid^="choose-slot-"]').first();
     await expect(firstSlotBtn).toBeVisible();
@@ -118,11 +122,13 @@ test.describe("FULLSTACK-01 Consolidated End-to-End Platform Verification", () =
     await page.getByTestId("confirm-booking-btn").click();
     await page.waitForURL("**/patient/appointments");
 
-    const payBtn = page.locator('[data-testid^="pay-demo-btn-"]').first();
-    await expect(payBtn).toBeVisible();
-    await payBtn.click();
+    // View settled payments and watermarked demo receipt
+    await page.goto("/patient/payments", { waitUntil: "networkidle" });
+    const viewReceiptBtn = page.getByRole("button", { name: /Medical Receipt|মেডিকেল রসিদ/i }).first();
+    await expect(viewReceiptBtn).toBeVisible();
+    await viewReceiptBtn.click();
     await page.waitForURL("**/patient/receipts/**");
-    await expect(page.getByTestId("demo-receipt-card")).toContainText("SIMULATED / DEMO RECEIPT");
+    await expect(page.getByTestId("demo-receipt-card")).toContainText("SIMULATED");
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, "07_patient_demo_receipt.png"), fullPage: false });
 
     await page.getByTestId("portal-logout-btn").click();

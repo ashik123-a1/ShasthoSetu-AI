@@ -8,9 +8,18 @@ from typing import Any
 import av
 import numpy as np
 import soundfile as sf
-import torch
 from scipy.signal import resample_poly
-from transformers import GenerationConfig, WhisperForConditionalGeneration, WhisperProcessor
+
+try:
+    import torch
+    from transformers import GenerationConfig, WhisperForConditionalGeneration, WhisperProcessor
+    WHISPER_AVAILABLE = True
+except ImportError:
+    torch = None  # type: ignore
+    GenerationConfig = None  # type: ignore
+    WhisperForConditionalGeneration = None  # type: ignore
+    WhisperProcessor = None  # type: ignore
+    WHISPER_AVAILABLE = False
 
 from ..config import settings
 from .model_manager import (
@@ -200,6 +209,19 @@ def transcribe_audio_bytes(
     language_mode: str = "auto",
 ) -> dict[str, Any]:
     """Transcribe Bengali, English, or Auto audio using verified local Whisper checkpoints."""
+    if not settings.voice_ai_enabled or not settings.ai_inference_enabled or not WHISPER_AVAILABLE:
+        return {
+            "transcript": "[Voice AI offline on shared hosting mode]",
+            "detected_language": language_mode if language_mode in {"bn", "en"} else "bn",
+            "model_id": "whisper-offline",
+            "duration_sec": 0.0,
+            "latency_ms": 0.1,
+            "device": "cpu",
+            "status": "OFFLINE",
+            "message": "Voice AI inference offline on shared hosting mode",
+            "mode": "cpanel_lightweight",
+            "limitation": "Voice AI inference disabled on low-resource hosting tier."
+        }
     t0 = time.perf_counter()
     audio, duration_sec, fmt = decode_audio_to_16k_mono(audio_bytes, filename)
     mode = language_mode if language_mode in {"auto", "bn", "en"} else "auto"

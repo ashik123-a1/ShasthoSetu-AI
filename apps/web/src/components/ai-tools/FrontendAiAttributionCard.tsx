@@ -92,13 +92,13 @@ export function FrontendAiAttributionCard() {
             <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
               <span>{locale === "bn" ? "ফ্রন্টএন্ড এআই টুলস লেজার ও অ্যাট্রিবিউশন" : "Frontend AI Tools Attribution Ledger"}</span>
               <span className="text-xs font-mono font-normal px-2.5 py-0.5 rounded-full bg-cyan-950 border border-cyan-500/40 text-cyan-300">
-                {locale === "bn" ? "৫টি ইউআই ফ্রেমওয়ার্ক অ্যাক্টিভ" : "5 Verified UI Components"}
+                {locale === "bn" ? "৫টি এআই-সহায়তাপ্রাপ্ত উপাদান" : "5 AI-Assisted UI Components (Provenance Pending)"}
               </span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
               {locale === "bn"
-                ? "৫টি ফ্রন্টএন্ড এআই প্ল্যাটফর্ম দিয়ে ডিজাইনকৃত ও ইন্টিগ্রেট করা আসল প্রোডাকশন কম্পোনেন্টসমূহ"
-                : "5 real production components engineered with Lovable, v0, Bolt.new, Cursor & Claude Artifacts"}
+                ? "৫টি ফ্রন্টএন্ড এআই প্ল্যাটফর্ম দিয়ে ডিজাইনকৃত ও ইন্টিগ্রেট করা উপাদানসমূহ (অরিজিনাল সেশন লগ পর্যালোচনাধীন)"
+                : "5 production components prototyped with Lovable, v0, Bolt.new, Cursor & Claude Artifacts (Provenance In Review)"}
             </p>
           </div>
         </div>

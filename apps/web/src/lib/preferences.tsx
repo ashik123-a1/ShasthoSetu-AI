@@ -23,23 +23,39 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 function readInitialTheme(): ThemeMode {
   if (typeof window === "undefined") return "dark";
   const saved = window.localStorage.getItem(THEME_KEY);
-  return saved === "dark" || saved === "light" ? saved : "dark";
+  return saved === "light" ? "light" : "dark";
 }
 
 function readInitialMotionPaused(): boolean {
   if (typeof window === "undefined") return false;
+  // One-time auto-reset to guarantee animations ON by default for everyone
+  if (window.localStorage.getItem("ss-motion-default-v4") !== "1") {
+    window.localStorage.setItem("ss-motion-default-v4", "1");
+    window.localStorage.removeItem(MOTION_KEY);
+    return false;
+  }
   const saved = window.localStorage.getItem(MOTION_KEY);
   // Default is always false (animations ON for everyone)
   return saved === "true";
 }
 
+const PRELOADER_SEEN_KEY = "ss-preloader-seen-v1";
+
+function readInitialPreloaderOpen(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.sessionStorage.getItem(PRELOADER_SEEN_KEY) !== "1";
+}
+
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>(readInitialTheme);
   const [motionPaused, setMotionPausedState] = useState<boolean>(readInitialMotionPaused);
-  const [preloaderOpen, setPreloaderOpen] = useState<boolean>(true);
+  const [preloaderOpen, setPreloaderOpen] = useState<boolean>(readInitialPreloaderOpen);
   const [preloaderReplayNonce, setPreloaderReplayNonce] = useState<number>(0);
 
   const completePreloader = () => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(PRELOADER_SEEN_KEY, "1");
+    }
     setPreloaderOpen(false);
   };
 
@@ -77,8 +93,21 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
 }
 
+const defaultPreferences: PreferencesContextValue = {
+  theme: "dark",
+  setTheme: () => {},
+  toggleTheme: () => {},
+  motionPaused: false,
+  setMotionPaused: () => {},
+  toggleMotionPaused: () => {},
+  preloaderOpen: false,
+  preloaderReplayNonce: 0,
+  completePreloader: () => {},
+  replayPreloader: () => {},
+};
+
 export function usePreferences(): PreferencesContextValue {
   const ctx = useContext(PreferencesContext);
-  if (!ctx) throw new Error("usePreferences must be used inside PreferencesProvider");
+  if (!ctx) return defaultPreferences;
   return ctx;
 }

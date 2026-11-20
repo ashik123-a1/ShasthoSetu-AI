@@ -46,8 +46,8 @@ export function HomepageTeamSection() {
           </button>
         </div>
 
-        {/* 4 Team Member Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* 5 Official Team Member Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
           {OFFICIAL_TEAM_MEMBERS.map((m) => (
             <div
               key={m.id}

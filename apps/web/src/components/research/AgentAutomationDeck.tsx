@@ -22,22 +22,22 @@ export function AgentAutomationDeck() {
               "daily_clinical_audit.json",
               "weekly_health_report.json",
             ],
-            bonus_pts: "2 pts bonus + 1 pt base = 3 pts",
+            runtime_mode: "SPECIFICATION_VERIFIED",
           },
           langgraph: {
-            status: "ACTIVE_PRODUCTION",
+            status: "COMPILED_STATE_GRAPH",
             endpoint: "/v1/agents/orchestrate",
-            pts: "1 pt base",
+            framework: "langgraph==1.2.24",
           },
           prefect: {
             flow_name: "shasthosetu_sync_flow",
             schedule: "0 2 * * * (Daily 2:00 AM BST)",
-            pts: "1 pt base",
+            runtime_mode: "CONFIGURED_STANDALONE",
           },
           dagster: {
             job_name: "clinical_audit_job",
             schedule: "0 4 * * * (Daily 4:00 AM BST)",
-            pts: "1 pt base",
+            runtime_mode: "CONFIGURED_STANDALONE",
           },
         });
       });
@@ -115,7 +115,7 @@ export function AgentAutomationDeck() {
             <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
               <span>{locale === "bn" ? "অটোমেশন ও পাইপলাইন অর্কেস্ট্রেশন ডেক" : "Automation Tools & Workflow Orchestration"}</span>
               <span className="text-xs font-mono font-normal px-2.5 py-0.5 rounded-full bg-indigo-950 border border-indigo-500/40 text-indigo-300">
-                {locale === "bn" ? "৪টি অটোমেশন ইঞ্জিন সক্রিয়" : "4 Active Engines Connected"}
+                {locale === "bn" ? "৪টি ওয়ার্কফ্লো স্পেসিফিকেশন" : "4 Clinical Workflow Specifications"}
               </span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -142,11 +142,11 @@ export function AgentAutomationDeck() {
           <span>
             {dispatchSuccess
               ? locale === "bn"
-                ? "n8n ডিসপ্যাচ সফল!"
-                : "n8n Webhook Dispatched!"
+                ? "ওয়েবহুক টেস্ট সম্পন্ন!"
+                : "Webhook Dispatched (Staged)"
               : locale === "bn"
-              ? "টেস্ট n8n ব্লাড ডিসপ্যাচ"
-              : "Test n8n Blood Webhook"}
+              ? "টেস্ট ব্লাড ওয়েবহুক ডিসপ্যাচ"
+              : "Test Webhook Dispatch (Staged)"}
           </span>
         </button>
       </div>
@@ -176,10 +176,10 @@ export function AgentAutomationDeck() {
         <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-slate-300">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>4 Automation Engines Active & Verified</span>
+            <span>4 Workflow Specifications Configured &amp; Verified</span>
           </div>
           <div className="text-slate-400">
-            n8n Workflows: <span className="text-cyan-300">4/4</span> • Prefect: <span className="text-cyan-300">Ready</span> • Dagster: <span className="text-cyan-300">Ready</span>
+            n8n Workflows: <span className="text-cyan-300">4 Staged</span> • Prefect: <span className="text-cyan-300">Configured</span> • Dagster: <span className="text-cyan-300">Configured</span>
           </div>
         </div>
       )}

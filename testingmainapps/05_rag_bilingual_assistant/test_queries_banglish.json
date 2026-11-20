@@ -1,0 +1,20 @@
+{
+  "language": "banglish",
+  "test_queries": [
+    {
+      "id": "BG-01",
+      "query": "bachhar jor 102 degree hole ar shathe betha thakle ki korbo?",
+      "expected_retrieval_topics": ["Paracetamol weight-based dose", "Tepid sponging", "Danger sign monitoring"]
+    },
+    {
+      "id": "BG-02",
+      "query": "pcos thakle ki pregnancy hote somossa hoy? kon test kora dorkar?",
+      "expected_retrieval_topics": ["Ovulatory subfertility", "FSH/LH, USG, Glucose tolerance"]
+    },
+    {
+      "id": "BG-03",
+      "query": "baby er 9 mashe kon tika dite hoy?",
+      "expected_retrieval_topics": ["MR-1 Measles Rubella Vaccine at 9 months"]
+    }
+  ]
+}

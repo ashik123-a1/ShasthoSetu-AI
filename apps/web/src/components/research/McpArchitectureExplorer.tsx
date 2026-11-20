@@ -136,7 +136,7 @@ export function McpArchitectureExplorer({ compact = false }: { compact?: boolean
             <Server className="w-3.5 h-3.5" /> Custom MCP Servers
           </div>
           <div className="text-2xl font-bold text-white">
-            {catalog.summary.custom_built_count} Servers Active
+            {catalog.summary.custom_built_count} Custom Servers Built
           </div>
           <div className="text-[11px] text-emerald-300 flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3" /> 12 Read-Only Tools Verified

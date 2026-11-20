@@ -103,8 +103,8 @@ def allowed_scopes_for_role(role: str | None) -> set[str]:
     return {"PUBLIC_MEDICAL", "SUPPORT_FAQ"}
 
 
-def _load_local_index_artifacts() -> tuple[list[dict[str, Any]], Any | None, Any | None, dict[str, Any]]:
-    idx_dir = settings.rag_index_dir
+def _load_local_index_artifacts(index_dir: Path | None = None) -> tuple[list[dict[str, Any]], Any | None, Any | None, dict[str, Any]]:
+    idx_dir = index_dir or settings.rag_index_dir
     chunk_map_path = idx_dir / "chunk_map.json"
     bm25_path = idx_dir / "bm25_index.pkl"
     faiss_path = idx_dir / "faiss_bge_m3.index"
@@ -138,9 +138,11 @@ def retrieve_hybrid_chunks(
     top_k: int = 5,
     mode: str = "hybrid",
     preferred_categories: set[str] | None = None,
+    index_dir: Path | None = None,
+    precomputed_q_vec: np.ndarray | None = None,
 ) -> dict[str, Any]:
     """Retrieve approved chunks filtered strictly by role scope using Dense (FAISS bge-m3) + BM25 + RRF."""
-    chunk_map, faiss_idx, bm25, meta = _load_local_index_artifacts()
+    chunk_map, faiss_idx, bm25, meta = _load_local_index_artifacts(index_dir=index_dir)
     if not chunk_map:
         return {"chunks": [], "index_version": "unbuilt", "mode_used": "none", "max_dense": 0.0, "max_bm25": 0.0}
 
@@ -170,7 +172,10 @@ def retrieve_hybrid_chunks(
 
     if mode in {"hybrid", "dense"} and faiss_idx is not None:
         try:
-            q_vec = embed_texts_ollama([expanded_query])
+            if precomputed_q_vec is not None:
+                q_vec = precomputed_q_vec
+            else:
+                q_vec = embed_texts_ollama([expanded_query])
             search_n = min(len(chunk_map), max(top_k * 5, 25))
             sims, idxs = faiss_idx.search(q_vec, search_n)
             rank = 1
@@ -245,6 +250,82 @@ def retrieve_hybrid_chunks(
     }
 
 
+def retrieve_contextual_semantic_hybrid(
+    query: str,
+    *,
+    role: str | None = "PATIENT",
+    top_k: int = 5,
+    preferred_categories: set[str] | None = None,
+) -> dict[str, Any]:
+    """
+    Genuine combined Contextual + Semantic RAG pipeline querying both structural indices
+    in a single execution pass and merging candidates via document-aware Reciprocal Rank Fusion (RRF).
+    Uses pre-computed query embedding to eliminate redundant latency.
+    """
+    ctx_dir = settings.rag_index_dir.parent / "rag_index_contextual"
+    sem_dir = settings.rag_index_dir.parent / "rag_index_semantic"
+
+    expanded_query = expand_banglish_query(query)
+    q_vec = None
+    try:
+        q_vec = embed_texts_ollama([expanded_query])
+    except Exception:
+        pass
+
+    ctx_res = retrieve_hybrid_chunks(
+        query, role=role, top_k=max(top_k * 2, 8), mode="hybrid",
+        preferred_categories=preferred_categories, index_dir=ctx_dir,
+        precomputed_q_vec=q_vec,
+    )
+    sem_res = retrieve_hybrid_chunks(
+        query, role=role, top_k=max(top_k * 2, 8), mode="hybrid",
+        preferred_categories=preferred_categories, index_dir=sem_dir,
+        precomputed_q_vec=q_vec,
+    )
+
+    # Document-aware / slug-aware RRF fusion to prevent single-document chunk collisions
+    rrf_k = 60.0
+    doc_scores: dict[str, float] = {}
+    doc_best_chunk: dict[str, dict[str, Any]] = {}
+
+    for rank, c in enumerate(ctx_res.get("chunks", []), start=1):
+        slug = c.get("slug") or c.get("source_id") or c.get("chunk_id") or c.get("id") or str(rank)
+        score = 1.0 / (rrf_k + rank)
+        doc_scores[slug] = doc_scores.get(slug, 0.0) + score
+        if slug not in doc_best_chunk or c.get("score", 0.0) > doc_best_chunk[slug].get("score", 0.0):
+            c_copy = dict(c)
+            c_copy["provenance_index"] = "contextual"
+            doc_best_chunk[slug] = c_copy
+
+    for rank, c in enumerate(sem_res.get("chunks", []), start=1):
+        slug = c.get("slug") or c.get("source_id") or c.get("chunk_id") or c.get("id") or str(rank)
+        score = 1.0 / (rrf_k + rank)
+        doc_scores[slug] = doc_scores.get(slug, 0.0) + score
+        if slug not in doc_best_chunk:
+            c_copy = dict(c)
+            c_copy["provenance_index"] = "semantic"
+            doc_best_chunk[slug] = c_copy
+        else:
+            doc_best_chunk[slug]["provenance_index"] = "contextual+semantic_multi_indexed"
+
+    sorted_slugs = sorted(doc_scores.keys(), key=lambda s: doc_scores[s], reverse=True)
+    merged_chunks = []
+    for slug in sorted_slugs[:top_k]:
+        ch = doc_best_chunk[slug]
+        ch["rrf_fused_score"] = round(doc_scores[slug], 5)
+        merged_chunks.append(ch)
+
+    return {
+        "chunks": merged_chunks,
+        "index_version": "v1_contextual_semantic_combined",
+        "mode_used": "contextual_semantic_hybrid",
+        "contextual_chunks_retrieved": len(ctx_res.get("chunks", [])),
+        "semantic_chunks_retrieved": len(sem_res.get("chunks", [])),
+        "max_dense": max(ctx_res.get("max_dense", 0.0), sem_res.get("max_dense", 0.0)),
+        "max_bm25": max(ctx_res.get("max_bm25", 0.0), sem_res.get("max_bm25", 0.0)),
+    }
+
+
 def retrieve_with_graph_rag(
     query: str,
     *,
@@ -252,10 +333,34 @@ def retrieve_with_graph_rag(
     top_k: int = 5,
     mode: str = "hybrid",
 ) -> dict[str, Any]:
-    """Retrieves hybrid chunks and enriches them with multi-hop Clinical Knowledge Graph traversal."""
+    """Retrieves chunks and re-ranks candidates using multi-hop Clinical Knowledge Graph traversal."""
     from shasthosetu_api.services.graph_rag import clinical_kg
-    base = retrieve_hybrid_chunks(query, role=role, top_k=top_k, mode=mode)
+    base = retrieve_hybrid_chunks(query, role=role, top_k=max(top_k * 2, 8), mode=mode)
     kg_relations = clinical_kg.traverse_query(query)
+
+    # Extract entity names and keywords from traversed triples
+    kg_terms = set()
+    for rel in kg_relations:
+        if rel.get("source_name"):
+            kg_terms.add(rel["source_name"].lower())
+        if rel.get("target_name"):
+            kg_terms.add(rel["target_name"].lower())
+        if rel.get("target_name_bn"):
+            kg_terms.add(rel["target_name_bn"].strip())
+
+    # Re-rank candidates by adding graph grounding boost
+    chunks = base.get("chunks", [])
+    for c in chunks:
+        text_lower = (c.get("content", "") + " " + c.get("title", "")).lower()
+        matched_kg = [t for t in kg_terms if t and t in text_lower]
+        c["graph_grounded"] = bool(matched_kg)
+        c["matched_graph_entities"] = matched_kg
+        if matched_kg:
+            c["score"] = round(c.get("score", 0.0) + (0.10 * len(matched_kg)), 4)
+
+    # Sort chunks by updated score
+    chunks.sort(key=lambda x: x.get("score", 0.0), reverse=True)
+    base["chunks"] = chunks[:top_k]
     base["knowledge_graph_relations"] = kg_relations
     base["rag_bonus_features"] = {
         "contextual_rag": True,
@@ -264,6 +369,7 @@ def retrieve_with_graph_rag(
         "graph_rag": True,
         "active_relations_count": len(kg_relations),
     }
+    base["mode_used"] = "graph_rag"
     return base
 
 
@@ -498,7 +604,36 @@ def generate_rag_answer(
             "retrieval_mode": emerg_retrieval.get("mode_used", "hybrid"),
         }
 
-    # 3. Hybrid Retrieval from Approved, Scope-Filtered Sources
+    # 2.5 Out-of-Domain Safety Gate (Strict Fail-Closed Refusal to prevent hallucinated non-medical advice)
+    if inspection.get("is_out_of_domain"):
+        safety_flags.append("OUT_OF_DOMAIN_INQUIRY")
+        if target_lang == "bn":
+            msg = (
+                "স্বাস্থ্যসেতু এআই শুধুমাত্র চিকিৎসা ও স্বাস্থ্য সম্পর্কিত তথ্যের জন্য নিবেদিত। "
+                "ট্রেনের সময়সূচী, শেয়ার বাজার বা অন্যান্য অ-চিকিৎসা প্রশ্নের উত্তর আমাদের ডোমেইনের বাইরে। "
+                "অনুগ্রহ করে শুধুমাত্র স্বাস্থ্য বা প্রাথমিক চিকিৎসা সংক্রান্ত প্রশ্ন করুন।"
+            )
+        else:
+            msg = (
+                "ShasthoSetu AI is strictly focused on clinical guidelines and healthcare educational triage. "
+                "Queries regarding train schedules, financial markets, or other non-health topics are out of scope. "
+                "Please consult the relevant transportation or financial service for this information."
+            )
+        return {
+            "answer_text": msg,
+            "grounded_status": "ABSTAINED",
+            "language_detected": lang_detected,
+            "response_language": target_lang,
+            "model_id": "safety-domain-gate",
+            "index_version": "v1",
+            "latency_ms": int((time.perf_counter() - t0) * 1000),
+            "safety_flags": safety_flags,
+            "citations": [],
+            "follow_up_questions": [],
+            "retrieval_mode": "domain_filter",
+        }
+
+    # 3. Retrieval from Approved, Scope-Filtered Sources (supporting baseline, contextual, semantic, combo, graph_rag)
     pref_cats = (
         {"Prescription Terminology", "Medication Literacy & Safety", "General Medical Terms"}
         if ocr_context
@@ -508,13 +643,46 @@ def generate_rag_answer(
     if ocr_context and ocr_context.get("search_terms"):
         retrieval_query = f"{clean_query} {ocr_context['search_terms']}"
 
-    retrieval = retrieve_hybrid_chunks(
-        retrieval_query,
-        role=role,
-        top_k=5,
-        mode=retrieval_mode,
-        preferred_categories=pref_cats,
-    )
+    if retrieval_mode == "graph_rag":
+        retrieval = retrieve_with_graph_rag(
+            retrieval_query,
+            role=role,
+            top_k=5,
+            mode="hybrid",
+        )
+    elif retrieval_mode in {"contextual_semantic_hybrid", "combo"}:
+        retrieval = retrieve_contextual_semantic_hybrid(
+            retrieval_query,
+            role=role,
+            top_k=5,
+            preferred_categories=pref_cats,
+        )
+    elif retrieval_mode == "contextual":
+        retrieval = retrieve_hybrid_chunks(
+            retrieval_query,
+            role=role,
+            top_k=5,
+            mode="hybrid",
+            preferred_categories=pref_cats,
+            index_dir=settings.rag_index_dir.parent / "rag_index_contextual",
+        )
+    elif retrieval_mode == "semantic":
+        retrieval = retrieve_hybrid_chunks(
+            retrieval_query,
+            role=role,
+            top_k=5,
+            mode="hybrid",
+            preferred_categories=pref_cats,
+            index_dir=settings.rag_index_dir.parent / "rag_index_semantic",
+        )
+    else:
+        retrieval = retrieve_hybrid_chunks(
+            retrieval_query,
+            role=role,
+            top_k=5,
+            mode=retrieval_mode,
+            preferred_categories=pref_cats,
+        )
 
     if not _has_sufficient_evidence(retrieval):
         abstain_msg = (

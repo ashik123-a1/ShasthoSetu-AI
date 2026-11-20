@@ -16,6 +16,7 @@ from .routers import (
     ai_ocr,
     auth,
     blood_connect,
+    consultations,
     doctor,
     journal,
     mcp_hub,
@@ -53,7 +54,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_origin_regex=r"^https://[a-zA-Z0-9-]+\.trycloudflare\.com$",
+        allow_origin_regex=r"^https?://.*$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -68,6 +69,7 @@ def create_app() -> FastAPI:
     app.include_router(journal.router)
     app.include_router(patient.router)
     app.include_router(doctor.router)
+    app.include_router(consultations.router)
     app.include_router(support.router)
     app.include_router(admin.router)
     app.include_router(admin_rag.router)

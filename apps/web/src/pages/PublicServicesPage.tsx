@@ -11,7 +11,6 @@ import {
   FileLock2,
   FlaskConical,
   HeartPulse,
-  Home,
   LifeBuoy,
   Pill,
   Scale,
@@ -28,6 +27,7 @@ import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { LocalDevicePreviewCard } from "../components/consultations/LocalDevicePreviewCard";
 import { CyberScanWorkbench } from "../components/ai/CyberScanWorkbench";
 import { EpharmaStoreWidget, type EpharmaMedicineItem } from "../components/pharmacy/EpharmaStoreWidget";
+import { DiagnosticLabSectorGrid } from "../components/diagnostics/DiagnosticLabSectorGrid";
 import { type AiModuleKey } from "../components/three/AiModuleScene3D";
 import { Skeleton, TrustBadge } from "../components/ui";
 
@@ -150,7 +150,6 @@ export function PublicServicesPage() {
   const [loading, setLoading] = useState(true);
 
   // Diagnostics + BMI Calculator
-  const [diagCategory, setDiagCategory] = useState<string>("ALL");
   const [bmiHeightCm, setBmiHeightCm] = useState<number>(168);
   const [bmiWeightKg, setBmiWeightKg] = useState<number>(64);
 
@@ -415,75 +414,33 @@ export function PublicServicesPage() {
             <Skeleton className="h-48 w-full" />
           ) : (() => {
             const allTests = data?.diagnostic_tests || [];
-            const testCats = ["ALL", ...Array.from(new Set(allTests.map((t) => t.category)))];
-            const filteredTests = allTests.filter((t) => diagCategory === "ALL" || t.category === diagCategory);
 
             return (
               <div className="space-y-10">
-                {/* 12 Diagnostic Tests + Family Plans + BMI Calculator */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  <div className="lg:col-span-7 space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <h3 className="text-lg font-bold flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-[#2dd4bf]" /> Diagnostic Lab Tests ({allTests.length} Panels)
+                {/* 12 Diagnostic Tests with Sector Grid and Visual Icons */}
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                    <div>
+                      <span className="font-mono text-[11px] uppercase tracking-wider text-teal-300">
+                        DIAGNOSTIC LAB TESTING &amp; HOME COLLECTION (12 PANELS)
+                      </span>
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2 mt-0.5">
+                        <Activity className="w-5 h-5 text-[#2dd4bf]" />
+                        {locale === "bn" ? "ডায়াগনস্টিক ল্যাব টেস্ট ক্যাটালগ (১২টি প্যানেল)" : "Diagnostic Lab Tests (12 Panels)"}
                       </h3>
-                      <Link to="/patient/diagnostics" className="text-xs font-semibold text-sky-300 hover:underline">
-                        Order Demo Lab →
-                      </Link>
                     </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {testCats.map((cat) => (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => setDiagCategory(cat)}
-                          className={`px-3 py-1 rounded-full text-[11px] font-semibold border cursor-pointer ${
-                            diagCategory === cat
-                              ? "bg-[#2dd4bf] text-slate-950 border-transparent font-bold"
-                              : "bg-slate-900/80 border-slate-700 text-slate-300 hover:border-teal-400"
-                          }`}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {filteredTests.map((test) => (
-                        <div key={test.id} className="ss-sapphire-card rounded-2xl p-4 space-y-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-[11px] font-mono text-[#2dd4bf]">
-                              {test.code} • {test.turnaround_hours}h TAT
-                            </span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 inline-flex items-center gap-1">
-                              <Home className="w-3 h-3" /> Home Collect
-                            </span>
-                          </div>
-                          <div className="font-bold text-sm text-white">
-                            {locale === "bn" ? test.name_bn : test.name_en}
-                          </div>
-                          <div className="text-xs text-slate-400">
-                            {test.category} • {test.sample_type}
-                          </div>
-                          <div className="flex items-center justify-between pt-1">
-                            <div className="font-mono font-bold text-sm text-[#f2c879]">
-                              {formatBdtFromPoisha(test.fee_minor_poisha, locale)}
-                            </div>
-                            <Link
-                              to="/patient/diagnostics"
-                              className="text-[11px] font-bold text-cyan-300 hover:underline"
-                            >
-                              Book Test →
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <Link to="/patient/diagnostics" className="text-xs font-semibold text-sky-300 hover:underline">
+                      Order Demo Lab Online →
+                    </Link>
                   </div>
 
-                  {/* Right Column: Interactive BMI Calculator + Healthcare Plans */}
-                  <div className="lg:col-span-5 space-y-5">
+                  <DiagnosticLabSectorGrid tests={allTests} locale={locale} />
+                </div>
+
+                {/* Family Plans + BMI Calculator */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Column 1: Interactive BMI & Wellness Gauge */}
+                  <div className="space-y-5">
                     {/* Interactive BMI & Wellness Gauge */}
                     <div className="bento-card rounded-3xl p-5 space-y-4 border-cyan-400/30">
                       <div className="flex items-center justify-between">
@@ -537,30 +494,31 @@ export function PublicServicesPage() {
                         Educational wellness estimator — consult an Internal Medicine or Endocrinology specialist for clinical plans.
                       </p>
                     </div>
+                  </div>
 
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-bold flex items-center gap-2">
-                        <HeartPulse className="w-4 h-4 text-emerald-400" /> Family Healthcare Plans (Simulated)
-                      </h3>
-                      {(data?.healthcare_plans || []).map((plan) => (
-                        <div key={plan.id} className="ss-sapphire-card rounded-2xl p-5 space-y-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-bold text-base text-white">
-                              {locale === "bn" ? plan.name_bn : plan.name_en}
-                            </span>
-                            <span className="font-mono font-bold text-base text-[#f2c879]">
-                              {formatBdtFromPoisha(plan.monthly_fee_minor_poisha, locale)}/mo
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-300">
-                            {locale === "bn" ? plan.description_bn : plan.description_en}
-                          </p>
-                          <div className="text-[10px] font-mono text-slate-400">
-                            <Stethoscope className="w-3 h-3 inline mr-1" /> Up to {plan.max_family_members} profiles • SIMULATED DEMO
-                          </div>
+                  {/* Column 2: Healthcare Plans */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      <HeartPulse className="w-4 h-4 text-emerald-400" /> Family Healthcare Plans (Simulated)
+                    </h3>
+                    {(data?.healthcare_plans || []).map((plan) => (
+                      <div key={plan.id} className="ss-sapphire-card rounded-2xl p-5 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-base text-white">
+                            {locale === "bn" ? plan.name_bn : plan.name_en}
+                          </span>
+                          <span className="font-mono font-bold text-base text-[#f2c879]">
+                            {formatBdtFromPoisha(plan.monthly_fee_minor_poisha, locale)}/mo
+                          </span>
                         </div>
-                      ))}
-                    </div>
+                        <p className="text-xs text-slate-300">
+                          {locale === "bn" ? plan.description_bn : plan.description_en}
+                        </p>
+                        <div className="text-[10px] font-mono text-slate-400">
+                          <Stethoscope className="w-3 h-3 inline mr-1" /> Up to {plan.max_family_members} profiles • SIMULATED DEMO
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 

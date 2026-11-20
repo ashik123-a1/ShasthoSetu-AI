@@ -58,7 +58,7 @@ export function TeamRosterModal({
                   OFFICIAL PROJECT TEAM ROSTER
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono border border-emerald-400/30">
-                  4 Engineers
+                  {OFFICIAL_TEAM_MEMBERS.length} Engineers
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-extrabold text-white">

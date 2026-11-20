@@ -218,10 +218,15 @@ export function PrescriptionOcrStudio({
     if (!activeJob) return;
     setSavingVerification(true);
     try {
-      const res = await apiPost<{ job: OcrJobPayload }>(`/v1/ai/ocr/${activeJob.id}/verify`, {
+      const res = await apiPost<{ job?: OcrJobPayload } & Partial<OcrJobPayload>>(`/v1/ai/ocr/${activeJob.id}/verify`, {
+        action: "VERIFY",
         verified_fields: fieldEdits,
       });
-      setActiveJob(res.job);
+      if (res?.job) {
+        setActiveJob(res.job);
+      } else if (res?.status) {
+        setActiveJob((prev) => (prev ? { ...prev, status: res.status as any } : prev));
+      }
       pushToast({
         title: locale === "bn" ? "প্রেসক্রিপশন মানব-যাচাইকৃত হিসেবে সংরক্ষিত" : "Prescription human-verified",
         description: locale === "bn" ? "সবগুলো ক্ষেত্র সংরক্ষিত হয়েছে।" : "All fields saved with human verification audit trail.",
@@ -400,8 +405,14 @@ export function PrescriptionOcrStudio({
                 }}
               >
                 <img
-                  src={previewUrl}
+                  src={previewUrl || "/images/ocr/sample_bilingual_0052.jpg"}
                   alt="Prescription preview"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src.endsWith(".jpg")) {
+                      target.src = "/images/ocr/sample_bilingual_0052.png";
+                    }
+                  }}
                   className="max-w-none rounded shadow-2xl block"
                   style={{ maxHeight: "490px" }}
                 />

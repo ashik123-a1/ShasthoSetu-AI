@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { PhoneCall, ShieldCheck } from "lucide-react";
+import { LifeBuoy, Lock, PhoneCall, RefreshCw, Send, ShieldCheck, User } from "lucide-react";
 import { ApiError, apiGet, apiPatch, apiPost } from "../lib/apiClient";
 import { useAuth } from "../lib/authContext";
 import { useI18n } from "../lib/i18n";
@@ -8,6 +8,7 @@ import { Skeleton, StatusBadge, useToast } from "../components/ui";
 import { SmartHealthIdCard } from "../components/portal/SmartHealthIdCard";
 import { LiveConsultationCallStudio } from "../components/consultations/LiveConsultationCallStudio";
 import { AiHealthAssistant } from "../components/ai/AiHealthAssistant";
+import { playNotificationSound } from "../utils/soundEffects";
 
 export function SupportPortalPage({ section = "dashboard" }: { section?: string }) {
   const { user } = useAuth();
@@ -198,42 +199,83 @@ export function SupportPortalPage({ section = "dashboard" }: { section?: string 
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Ticket Queue */}
-              <div className="lg:col-span-5 space-y-2.5">
-                <h2 className="font-bold text-sm uppercase tracking-wider text-[var(--color-text-muted)]">Ticket Inbox</h2>
-                {tickets.map((t) => (
+              <div className="lg:col-span-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-bold text-sm uppercase tracking-wider text-[var(--color-text-muted)] flex items-center gap-1.5">
+                    <LifeBuoy className="w-4 h-4 text-cyan-400" /> Ticket Queue ({tickets.length})
+                  </h2>
                   <button
-                    key={String(t.id)}
                     type="button"
-                    data-testid={`support-ticket-${String(t.id)}`}
-                    onClick={() => setSelectedId(String(t.id))}
-                    className={`w-full p-4 rounded-2xl border text-left transition cursor-pointer ${
-                      selectedId === String(t.id)
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                        : "border-[var(--color-border)] bg-[var(--color-surface)]"
-                    }`}
+                    onClick={() => void loadTickets()}
+                    className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                    title="Refresh tickets"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono font-bold text-xs">{String(t.ticket_number)}</span>
-                      <StatusBadge status={String(t.status)} />
-                    </div>
-                    <p className="font-semibold text-sm mt-1">{String(t.subject)}</p>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{String(t.requester_name)} • Ref: {String(t.appointment_ref || "N/A")}</p>
+                    <RefreshCw className="w-3.5 h-3.5" />
                   </button>
-                ))}
+                </div>
+
+                <div className="space-y-2.5 max-h-[720px] overflow-y-auto pr-1">
+                  {tickets.map((t) => {
+                    const isSelected = selectedId === String(t.id);
+                    return (
+                      <div
+                        key={String(t.id)}
+                        onClick={() => setSelectedId(String(t.id))}
+                        data-testid={`support-ticket-${String(t.id)}`}
+                        className={`p-4 rounded-2xl border transition cursor-pointer space-y-2 ${
+                          isSelected
+                            ? "border-cyan-400 bg-cyan-950/40 shadow-lg shadow-cyan-950/50"
+                            : "border-[var(--color-border)] bg-[var(--color-surface)] hover:border-slate-600"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono font-bold text-xs px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300">
+                            {String(t.ticket_number)}
+                          </span>
+                          <StatusBadge status={String(t.status)} />
+                        </div>
+                        <h4 className="font-bold text-sm text-white line-clamp-1">
+                          {String(t.subject)}
+                        </h4>
+                        <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-400 pt-1 border-t border-slate-800/80">
+                          <span className="font-medium text-slate-300 flex items-center gap-1">
+                            <User className="w-3 h-3 text-cyan-400" /> {String(t.requester_name)}
+                          </span>
+                          <span className="font-mono text-[10px] text-amber-300">
+                            Ref: {String(t.appointment_ref || "N/A")}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Ticket Detail & Zero-PHI Replies */}
-              <div className="lg:col-span-7 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 space-y-4">
+              <div className="lg:col-span-7 rounded-3xl border border-cyan-500/30 bg-[#071229]/95 p-5 sm:p-6 flex flex-col h-[740px] shadow-2xl">
                 {detail ? (
                   <>
-                    <div className="flex flex-wrap justify-between items-start gap-3 border-b border-[var(--color-border)] pb-3">
-                      <div>
-                        <h2 className="font-bold text-lg">{String(detail.ticket.ticket_number)}: {String(detail.ticket.subject)}</h2>
-                        <p className="text-xs text-[var(--color-text-muted)]">
-                          Requester: {String(detail.ticket.requester_name)} • Booking: {String(detail.ticket.appointment_ref || "None")} • Payment: {String(detail.ticket.payment_ref || "None")} ({String(detail.ticket.payment_status || "N/A")})
-                        </p>
+                    <div className="shrink-0 flex flex-wrap justify-between items-start gap-4 border-b border-slate-800 pb-4">
+                      <div className="space-y-1 max-w-md">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-extrabold text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/30">
+                            {String(detail.ticket.ticket_number)}
+                          </span>
+                          <StatusBadge status={String(detail.ticket.status)} />
+                        </div>
+                        <h2 className="font-black text-lg text-white">
+                          {String(detail.ticket.subject)}
+                        </h2>
+                        <div className="text-xs text-slate-400 space-x-2">
+                          <span>Requester: <strong className="text-slate-200">{String(detail.ticket.requester_name)}</strong></span>
+                          <span>•</span>
+                          <span>Booking: <span className="font-mono text-cyan-300">{String(detail.ticket.appointment_ref || "None")}</span></span>
+                          <span>•</span>
+                          <span>Payment: <span className="font-mono text-emerald-400">{String(detail.ticket.payment_status || "N/A")}</span></span>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
                           onClick={() => {
@@ -242,80 +284,179 @@ export function SupportPortalPage({ section = "dashboard" }: { section?: string 
                                 body_text: "🟢 সাপোর্ট অফিসার চ্যাটে যুক্ত হয়েছেন। আসসালামু আলাইকুম, আমি কিভাবে সাহায্য করতে পারি?",
                                 visibility: "PUBLIC",
                               });
+                              playNotificationSound();
                               await apiPatch(`/v1/support/tickets/${selectedId}/status`, { status: "IN_PROGRESS" });
                               await loadTickets();
                             })();
                           }}
-                          className="min-h-10 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold cursor-pointer inline-flex items-center gap-1"
+                          className="min-h-10 px-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:brightness-110 text-slate-950 text-xs font-black cursor-pointer inline-flex items-center gap-1.5 shadow-md transition"
                         >
                           🟢 Join Live Chat
                         </button>
-                        <button type="button" onClick={() => void escalateTicket()} data-testid="support-escalate-btn" className="min-h-10 px-3 rounded-xl bg-rose-600 text-white text-xs font-semibold cursor-pointer">
+                        <button
+                          type="button"
+                          onClick={() => void escalateTicket()}
+                          data-testid="support-escalate-btn"
+                          className="min-h-10 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold cursor-pointer transition shadow-md"
+                        >
                           Escalate to Admin
                         </button>
-                        <button type="button" onClick={() => void apiPatch(`/v1/support/tickets/${selectedId}/status`, { status: "RESOLVED" }).then(loadTickets)} className="min-h-10 px-3 rounded-xl bg-emerald-600 text-white text-xs font-semibold cursor-pointer">
+                        <button
+                          type="button"
+                          onClick={() => void apiPatch(`/v1/support/tickets/${selectedId}/status`, { status: "RESOLVED" }).then(loadTickets)}
+                          className="min-h-10 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer transition shadow-md"
+                        >
                           Mark Resolved
                         </button>
                       </div>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-[var(--color-canvas)] border border-[var(--color-border)] text-[11px] font-mono text-[var(--color-text-muted)]">
-                      Redacted PHI columns excluded from query: {detail.redacted_fields.join(", ")}
+                    <div className="shrink-0 p-3 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 text-xs text-slate-300 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+                        <span><strong>Zero-PHI Enforcement:</strong> Clinical prose &amp; diagnosis redacted ({detail.redacted_fields.slice(0, 3).join(", ")}...)</span>
+                      </div>
+                      <span className="font-mono text-[10px] text-emerald-300">Protected</span>
                     </div>
 
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
-                      {detail.messages.map((m) => (
-                        <div
-                          key={String(m.id)}
-                          className={`p-3 rounded-xl text-xs border ${
-                            m.visibility === "INTERNAL"
-                              ? "bg-amber-500/12 border-amber-500/40"
-                              : "bg-[var(--color-canvas)] border-[var(--color-border)]"
+                    {/* Styled Chat Bubble Thread */}
+                    <div className="flex-1 overflow-y-auto min-h-0 space-y-3.5 pr-1 p-2">
+                      {detail.messages.map((m) => {
+                        const isInternal = m.visibility === "INTERNAL";
+                        const isSupport = String(m.sender_role).toUpperCase() === "SUPPORT";
+
+                        if (isInternal) {
+                          return (
+                            <div
+                              key={String(m.id)}
+                              className="p-3.5 rounded-2xl bg-amber-950/40 border border-amber-500/50 text-xs space-y-1.5 shadow-md"
+                            >
+                              <div className="flex items-center justify-between font-bold text-amber-300 text-[11px]">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                                  INTERNAL STAFF NOTE (Hidden from Patient)
+                                </span>
+                                <span className="font-mono text-[10px] text-slate-400">{String(m.sender_name)}</span>
+                              </div>
+                              <p className="text-amber-100 text-xs leading-relaxed">{String(m.body_text)}</p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={String(m.id)}
+                            className={`flex flex-col max-w-[85%] space-y-1 ${
+                              isSupport ? "ml-auto items-end" : "mr-auto items-start"
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                              <span className="font-semibold text-slate-300">
+                                {String(m.sender_name)} ({String(m.sender_role)})
+                              </span>
+                              <span>•</span>
+                              <span className="font-mono text-cyan-300 text-[9px] uppercase">{String(m.visibility)}</span>
+                            </div>
+                            <div
+                              className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
+                                isSupport
+                                  ? "bg-gradient-to-r from-teal-900 to-cyan-900 text-cyan-50 border border-cyan-400/40 rounded-br-none shadow-md"
+                                  : "bg-slate-900/90 text-slate-100 border border-slate-700/80 rounded-bl-none shadow-md"
+                              }`}
+                            >
+                              <p>{String(m.body_text)}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Compose Reply Area */}
+                    <form onSubmit={(e) => void sendReply(e)} className="shrink-0 space-y-3 pt-3 border-t border-slate-800">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setVisibility("PUBLIC")}
+                            className={`min-h-9 px-3.5 rounded-xl text-xs font-bold cursor-pointer transition ${
+                              visibility === "PUBLIC"
+                                ? "bg-cyan-500 text-slate-950 shadow-md"
+                                : "bg-slate-900 border border-slate-700 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            💬 Public Reply (Visible to Patient)
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="support-internal-mode-btn"
+                            onClick={() => setVisibility("INTERNAL")}
+                            className={`min-h-9 px-3.5 rounded-xl text-xs font-bold cursor-pointer transition ${
+                              visibility === "INTERNAL"
+                                ? "bg-amber-500 text-slate-950 shadow-md"
+                                : "bg-slate-900 border border-slate-700 text-slate-400 hover:text-white"
+                            }`}
+                          >
+                            🔒 Internal Staff Note Only
+                          </button>
+                        </div>
+
+                        {/* Quick Macro Pills */}
+                        <div className="flex items-center gap-1.5">
+                          {[
+                            "পেমেন্ট স্ট্যাটাস ভেরিফাইড (DEMO-RCP-9001)",
+                            "ডাক্তারের শিডিউল কনফার্ম করা হয়েছে",
+                          ].map((macro, mIdx) => (
+                            <button
+                              key={mIdx}
+                              type="button"
+                              onClick={() => setReplyText(macro)}
+                              className="px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:border-cyan-400/40 text-[10px] text-slate-300 hover:text-white transition cursor-pointer"
+                            >
+                              {macro.slice(0, 22)}...
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="relative">
+                        <textarea
+                          rows={3}
+                          required
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder={
+                            visibility === "INTERNAL"
+                              ? "Type internal staff note (confidential, never shown to patient)..."
+                              : "Type clear, helpful reply to requester..."
+                          }
+                          className="w-full rounded-2xl border border-slate-700 bg-slate-900/90 p-3 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
+                          data-testid="support-reply-textarea"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-slate-400 font-mono">
+                          Mode: <strong className={visibility === "PUBLIC" ? "text-cyan-300" : "text-amber-400"}>{visibility}</strong>
+                        </span>
+                        <button
+                          type="submit"
+                          data-testid="support-reply-submit-btn"
+                          className={`min-h-11 px-5 rounded-xl font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-lg transition ${
+                            visibility === "PUBLIC"
+                              ? "bg-gradient-to-r from-teal-500 to-cyan-500 hover:brightness-110 text-slate-950"
+                              : "bg-amber-500 hover:bg-amber-400 text-slate-950"
                           }`}
                         >
-                          <div className="flex justify-between font-bold mb-1">
-                            <span>{String(m.sender_name)} ({String(m.sender_role)})</span>
-                            <span className="font-mono text-[11px]">{String(m.visibility)}</span>
-                          </div>
-                          <p>{String(m.body_text)}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <form onSubmit={(e) => void sendReply(e)} className="space-y-3 pt-2 border-t border-[var(--color-border)]">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setVisibility("PUBLIC")}
-                          className={`min-h-10 px-3 rounded-xl text-xs font-semibold cursor-pointer ${visibility === "PUBLIC" ? "bg-[var(--color-primary)] text-[var(--color-primary-contrast)]" : "border border-[var(--color-border)]"}`}
-                        >
-                          Public Reply (Visible to User)
-                        </button>
-                        <button
-                          type="button"
-                          data-testid="support-internal-mode-btn"
-                          onClick={() => setVisibility("INTERNAL")}
-                          className={`min-h-10 px-3 rounded-xl text-xs font-semibold cursor-pointer ${visibility === "INTERNAL" ? "bg-amber-600 text-white" : "border border-[var(--color-border)]"}`}
-                        >
-                          Internal Staff Note Only
+                          <Send className="w-3.5 h-3.5" />
+                          Send {visibility} Note
                         </button>
                       </div>
-                      <textarea
-                        rows={2}
-                        required
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        placeholder={visibility === "INTERNAL" ? "Internal staff note (hidden from patient)..." : "Reply to requester..."}
-                        className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-canvas)] p-3 text-sm"
-                        data-testid="support-reply-textarea"
-                      />
-                      <button type="submit" data-testid="support-reply-submit-btn" className="min-h-11 px-4 rounded-xl bg-[var(--color-primary)] text-[var(--color-primary-contrast)] text-xs font-semibold cursor-pointer">
-                        Send {visibility} Note
-                      </button>
                     </form>
                   </>
                 ) : (
-                  <p className="text-sm text-[var(--color-text-muted)]">Select a ticket to view Zero-PHI metadata.</p>
+                  <div className="text-center py-12 text-slate-400 text-sm">
+                    Select a ticket from the inbox queue to view Zero-PHI communication log.
+                  </div>
                 )}
               </div>
             </div>

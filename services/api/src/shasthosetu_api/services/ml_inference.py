@@ -12,14 +12,23 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
-import torch
-import torch.nn as nn
 from PIL import Image
 from pypdf import PdfReader
-from torchvision import transforms
-from torchvision.models import resnet18
 
-from ..config import PROJECT_ROOT
+try:
+    import torch
+    import torch.nn as nn
+    from torchvision import transforms
+    from torchvision.models import resnet18
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None  # type: ignore
+    nn = None  # type: ignore
+    transforms = None  # type: ignore
+    resnet18 = None  # type: ignore
+    TORCH_AVAILABLE = False
+
+from ..config import PROJECT_ROOT, settings
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
@@ -51,22 +60,29 @@ M03_CLASSES = ["Chickenpox", "Cowpox", "HFMD", "Healthy", "Measles", "Monkeypox"
 M06_DEFAULT_CLASSES = ["chickenpox", "pediculosis"]
 
 _MODEL_LOCK = threading.Lock()
-_DEVICE: torch.device | None = None
+_DEVICE: Any | None = None
 _DEVICE_LABEL: str | None = None
 _CACHE: dict[str, Any] = {}
 
-_EVAL_TRANSFORM = transforms.Compose(
-    [
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ]
-)
+if TORCH_AVAILABLE and transforms is not None:
+    _EVAL_TRANSFORM = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
+else:
+    _EVAL_TRANSFORM = None
 
 
-def get_compute_device() -> tuple[torch.device, str]:
+def get_compute_device() -> tuple[Any, str]:
     global _DEVICE, _DEVICE_LABEL
     if _DEVICE is not None and _DEVICE_LABEL is not None:
+        return _DEVICE, _DEVICE_LABEL
+    if not TORCH_AVAILABLE or torch is None:
+        _DEVICE = "cpu"
+        _DEVICE_LABEL = "cpu (PyTorch offline)"
         return _DEVICE, _DEVICE_LABEL
     if torch.cuda.is_available():
         gpu_name = torch.cuda.get_device_name(0)
@@ -153,26 +169,89 @@ def _load_easyocr_reader():
     return _CACHE["m04_reader"]
 
 
-def _decode_image_bytes(image_bytes: bytes, filename: str) -> tuple[Image.Image, str]:
+def _decode_image_bytes(image_bytes: bytes, filename: str, module_key: str = "generic") -> tuple[Image.Image, str]:
     if not image_bytes:
         raise ValueError("Uploaded file is empty.")
     if len(image_bytes) > MAX_UPLOAD_BYTES:
         raise ValueError("Uploaded file exceeds 10 MB limit.")
     ext = Path(filename or "").suffix.lower()
-    if ext not in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}:
-        # Still inspect magic header to avoid rejecting cleanly converted images
-        pass
+    is_pdf = ext == ".pdf" or image_bytes[:4] == b"%PDF"
+
+    # Strictly reject non-image formats for clinical vision models
+    if module_key in ("pcos-ultrasound", "viral-rash", "dermoped"):
+        if is_pdf:
+            raise ValueError(
+                "⚠️ ফাইল ফরম্যাট ত্রুটি: এই ক্লিনিক্যাল ভিশন মডিউলে শুধুমাত্র ছবি (JPG, JPEG, PNG, WEBP) গ্রহণযোগ্য; PDF বা ডকুমেন্ট ফাইল অনুমোদিত নয়। প্রেসক্রিপশন বা ডকুমেন্টের জন্য 'প্রেসক্রিপশন OCR' মডিউল ব্যবহার করুন।"
+            )
+        if ext and ext not in {".jpg", ".jpeg", ".png", ".webp", ".bmp"}:
+            raise ValueError(
+                "⚠️ ফাইল ফরম্যাট ত্রুটি: শুধুমাত্র ইমেজ ফাইল (JPG, JPEG, PNG, WEBP) অনুমোদিত।"
+            )
+
     try:
         img = Image.open(io.BytesIO(image_bytes))
         img.verify()
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     except Exception as exc:
         raise ValueError(f"Invalid or corrupted image file: {exc}") from exc
+
     sha = hashlib.sha256(image_bytes).hexdigest()
+
+    # Content-level Medical Domain Guardrail
+    if module_key == "pcos-ultrasound":
+        # Ultrasound check: real pelvic USG is grayscale B-mode scan (monochrome acoustic shadow)
+        thumb = img.resize((128, 128))
+        arr = np.array(thumb, dtype=np.float32)
+        diff_rg = np.abs(arr[:, :, 0] - arr[:, :, 1])
+        diff_gb = np.abs(arr[:, :, 1] - arr[:, :, 2])
+        diff_br = np.abs(arr[:, :, 2] - arr[:, :, 0])
+        chroma_divergence = float(np.mean(diff_rg + diff_gb + diff_br))
+
+        # Check for colorful natural scene, selfie, phone, outdoor car, etc.
+        if chroma_divergence > 15.0:
+            raise ValueError(
+                "⚠️ অসংগতিপূর্ণ বা অ-চিকিৎসাগত ছবি সনাক্ত হয়েছে: এই ছবিটি পিসিওএস আল্ট্রাসাউন্ডের সাথে সঙ্গতিপূর্ণ নয় (সেলফি, মোবাইল ফোন বা সাধারণ রঙিন বস্তুর ছবি গ্রহণযোগ্য নয়)। অনুগ্রহ করে শুধুমাত্র সংশ্লিষ্ট ক্লিনিক্যাল পেলভিক আল্ট্রাসাউন্ড স্ক্যানের স্পষ্ট ছবি আপলোড করুন।"
+            )
+
+    elif module_key in ("viral-rash", "dermoped"):
+        # Dermatological check: skin lesion photos must have human skin chrominance
+        thumb = img.resize((128, 128))
+        ycbcr = thumb.convert("YCbCr")
+        yarr = np.array(ycbcr)
+        cb, cr = yarr[:, :, 1], yarr[:, :, 2]
+        skin_mask = (cb >= 77) & (cb <= 135) & (cr >= 125) & (cr <= 180)
+        skin_ratio = float(np.mean(skin_mask))
+
+        # Inanimate objects (smartphones, cars, furniture, abstract graphics, documents) have near zero skin tones
+        if skin_ratio < 0.15:
+            raise ValueError(
+                "⚠️ অসংগতিপূর্ণ বা অ-চিকিৎসাগত ছবি সনাক্ত হয়েছে: এই ছবিটি চর্মরোগের সাথে সঙ্গতিপূর্ণ নয় (সেলফি, মোবাইল ফোন বা সাধারণ বস্তুর ছবি গ্রহণযোগ্য নয়)। অনুগ্রহ করে শুধুমাত্র সংশ্লিষ্ট আক্রান্ত ত্বকের স্পষ্ট ছবি আপলোড করুন।"
+            )
+
     return img, sha
 
 
 def infer_pcos_clinical(features: dict[str, Any]) -> dict[str, Any]:
+    if not settings.ai_inference_enabled:
+        return {
+            "module_key": "pcos-clinical",
+            "model_id": "M01-XGB-01",
+            "model_name": "XGBoost Classifier (Shared Hosting Offline)",
+            "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
+            "prediction": "OFFLINE_DEMO",
+            "confidence": 0.0,
+            "probabilities": [],
+            "provided_features": [],
+            "imputed_features": [],
+            "latency_ms": 0.1,
+            "device": "cpu",
+            "status": "OFFLINE",
+            "message": "AI inference offline on shared hosting mode",
+            "mode": "cpanel_lightweight",
+            "warning_bn": "হোস্টিং সার্ভারে এআই ইনফারেন্স অফলাইন রয়েছে।",
+            "warning_en": "AI inference offline on shared hosting mode.",
+            "doctor_review_recommended": True,
+        }
     t0 = time.perf_counter()
     with _MODEL_LOCK:
         pipe = _load_pcos_xgb()
@@ -233,8 +312,29 @@ def _run_torch_vision(model: nn.Module, classes: list[str], img: Image.Image) ->
 
 
 def infer_pcos_ultrasound(image_bytes: bytes, filename: str) -> dict[str, Any]:
+    if not settings.ai_inference_enabled or not TORCH_AVAILABLE:
+        return {
+            "module_key": "pcos-ultrasound",
+            "model_id": "M02-RESNET-01",
+            "model_name": "ResNet18 Ultrasound Morphology (Shared Hosting Offline)",
+            "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
+            "prediction": "OFFLINE_DEMO",
+            "confidence": 0.0,
+            "probabilities": [],
+            "image_width": 0,
+            "image_height": 0,
+            "file_sha256": "none",
+            "latency_ms": 0.1,
+            "device": "cpu",
+            "status": "OFFLINE",
+            "message": "AI inference offline on shared hosting mode",
+            "mode": "cpanel_lightweight",
+            "warning_bn": "হোস্টিং সার্ভারে এআই ইনফারেন্স অফলাইন রয়েছে।",
+            "warning_en": "AI inference offline on shared hosting mode.",
+            "doctor_review_recommended": True,
+        }
     t0 = time.perf_counter()
-    img, sha = _decode_image_bytes(image_bytes, filename)
+    img, sha = _decode_image_bytes(image_bytes, filename, module_key="pcos-ultrasound")
     with _MODEL_LOCK:
         model = _load_usg_resnet()
         ranked, top_conf, dev_label = _run_torch_vision(model, M02_CLASSES, img)
@@ -259,8 +359,29 @@ def infer_pcos_ultrasound(image_bytes: bytes, filename: str) -> dict[str, Any]:
 
 
 def infer_viral_rash(image_bytes: bytes, filename: str) -> dict[str, Any]:
+    if not settings.ai_inference_enabled or not TORCH_AVAILABLE:
+        return {
+            "module_key": "viral-rash",
+            "model_id": "M03-RESNET-GROUPED-01",
+            "model_name": "ResNet18 Grouped Model (Shared Hosting Offline)",
+            "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
+            "prediction": "OFFLINE_DEMO",
+            "confidence": 0.0,
+            "probabilities": [],
+            "image_width": 0,
+            "image_height": 0,
+            "file_sha256": "none",
+            "latency_ms": 0.1,
+            "device": "cpu",
+            "status": "OFFLINE",
+            "message": "AI inference offline on shared hosting mode",
+            "mode": "cpanel_lightweight",
+            "warning_bn": "হোস্টিং সার্ভারে এআই ইনফারেন্স অফলাইন রয়েছে।",
+            "warning_en": "AI inference offline on shared hosting mode.",
+            "doctor_review_recommended": True,
+        }
     t0 = time.perf_counter()
-    img, sha = _decode_image_bytes(image_bytes, filename)
+    img, sha = _decode_image_bytes(image_bytes, filename, module_key="viral-rash")
     with _MODEL_LOCK:
         model = _load_viral_rash_grouped()
         ranked, top_conf, dev_label = _run_torch_vision(model, M03_CLASSES, img)
@@ -285,8 +406,29 @@ def infer_viral_rash(image_bytes: bytes, filename: str) -> dict[str, Any]:
 
 
 def infer_dermoped(image_bytes: bytes, filename: str) -> dict[str, Any]:
+    if not settings.ai_inference_enabled or not TORCH_AVAILABLE:
+        return {
+            "module_key": "dermoped",
+            "model_id": "M06-EXP-B-01",
+            "model_name": "ResNet18 DermoPed EXP_B Controlled (Shared Hosting Offline)",
+            "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
+            "prediction": "OFFLINE_DEMO",
+            "confidence": 0.0,
+            "probabilities": [],
+            "image_width": 0,
+            "image_height": 0,
+            "file_sha256": "none",
+            "latency_ms": 0.1,
+            "device": "cpu",
+            "status": "OFFLINE",
+            "message": "AI inference offline on shared hosting mode",
+            "mode": "cpanel_lightweight",
+            "warning_bn": "হোস্টিং সার্ভারে এআই ইনফারেন্স অফলাইন রয়েছে।",
+            "warning_en": "AI inference offline on shared hosting mode.",
+            "doctor_review_recommended": True,
+        }
     t0 = time.perf_counter()
-    img, sha = _decode_image_bytes(image_bytes, filename)
+    img, sha = _decode_image_bytes(image_bytes, filename, module_key="dermoped")
     with _MODEL_LOCK:
         model, classes = _load_dermoped_exp_b()
         ranked, top_conf, dev_label = _run_torch_vision(model, classes, img)

@@ -1,41 +1,41 @@
 {
   "mcpServers": {
     "shasthosetu-guideline": {
-      "command": "F:/Clude cccccccccccccccccccccccc/data we test/_shared/venv/Scripts/python.exe",
+      "command": "python",
       "args": [
-        "F:/Clude cccccccccccccccccccccccc/data we test/services/mcp/guideline_mcp.py",
+        "services/mcp/guideline_mcp.py",
         "--transport",
         "stdio"
       ],
       "env": {
         "PYTHONUTF8": "1",
-        "SHASTHOSETU_DB_PATH": "F:/Clude cccccccccccccccccccccccc/data we test/services/api/data/shasthosetu.db"
+        "SHASTHOSETU_DB_PATH": "services/api/data/shasthosetu.db"
       },
       "description": "Custom Built MCP #1: Clinical guidelines RAG search, 16-checkpoint SHA-256 register & emergency triage guard."
     },
     "shasthosetu-directory": {
-      "command": "F:/Clude cccccccccccccccccccccccc/data we test/_shared/venv/Scripts/python.exe",
+      "command": "python",
       "args": [
-        "F:/Clude cccccccccccccccccccccccc/data we test/services/mcp/directory_mcp.py",
+        "services/mcp/directory_mcp.py",
         "--transport",
         "stdio"
       ],
       "env": {
         "PYTHONUTF8": "1",
-        "SHASTHOSETU_DB_PATH": "F:/Clude cccccccccccccccccccccccc/data we test/services/api/data/shasthosetu.db"
+        "SHASTHOSETU_DB_PATH": "services/api/data/shasthosetu.db"
       },
       "description": "Custom Built MCP #2: 43 approved doctors across 8 departments, diagnostics, facilities & privacy-masked Blood Connect."
     },
     "shasthosetu-care-record": {
-      "command": "F:/Clude cccccccccccccccccccccccc/data we test/_shared/venv/Scripts/python.exe",
+      "command": "python",
       "args": [
-        "F:/Clude cccccccccccccccccccccccc/data we test/services/mcp/care_record_mcp.py",
+        "services/mcp/care_record_mcp.py",
         "--transport",
         "stdio"
       ],
       "env": {
         "PYTHONUTF8": "1",
-        "SHASTHOSETU_DB_PATH": "F:/Clude cccccccccccccccccccccccc/data we test/services/api/data/shasthosetu.db"
+        "SHASTHOSETU_DB_PATH": "services/api/data/shasthosetu.db"
       },
       "description": "Custom Built MCP #3: Role-scoped care summary, mandatory HTTP 422 OCR verification gate & Zero-PHI enforcement."
     },
@@ -46,8 +46,8 @@
         "npx",
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "F:/Clude cccccccccccccccccccccccc/data we test/docs",
-        "F:/Clude cccccccccccccccccccccccc/data we test/SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT/final_lock"
+        "docs",
+        "SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT/final_lock"
       ],
       "description": "Public MCP #1: Official read/inspect filesystem server sandboxed strictly to docs & frozen final_lock audit directory."
     },
@@ -60,9 +60,9 @@
         "@modelcontextprotocol/server-memory"
       ],
       "env": {
-        "MEMORY_FILE_PATH": "F:/Clude cccccccccccccccccccccccc/data we test/services/mcp/data/clinical_kg_memory.jsonl"
+        "MEMORY_FILE_PATH": "services/mcp/data/clinical_kg_memory.jsonl"
       },
-      "description": "Public MCP #2: Official Knowledge Graph memory server persisting ShasthoSetu clinical module & MCP entities."
+      "description": "Public MCP #2: Official Knowledge Graph memory server persisting ShasthoSetu clinical AI & MCP entities."
     },
     "sequential-thinking": {
       "command": "cmd",

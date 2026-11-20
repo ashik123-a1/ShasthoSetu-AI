@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Response, UploadFile
 from pydantic import BaseModel, Field
@@ -97,9 +97,10 @@ class OcrFieldUpdate(BaseModel):
 
 
 class OcrVerifyRequest(BaseModel):
-    action: str = Field(..., pattern="^(SAVE_DRAFT|PATIENT_ACKNOWLEDGE|VERIFY|CLINICIAN_VERIFY|DISCARD)$")
+    action: str = Field(default="VERIFY", pattern="^(SAVE_DRAFT|PATIENT_ACKNOWLEDGE|VERIFY|CLINICIAN_VERIFY|DISCARD)$")
     corrected_full_text: Optional[str] = Field(default=None, max_length=8000)
     fields: list[OcrFieldUpdate] = Field(default_factory=list)
+    verified_fields: Optional[dict[str, Any]] = None
 
 
 class OcrExplainRequest(BaseModel):
@@ -470,6 +471,19 @@ def verify_or_save_ocr_job(job_id: str, payload: OcrVerifyRequest, user: dict = 
                 )
 
             mark_flag = 1 if is_ack_action else 0
+            if payload.verified_fields:
+                for fid, vval in payload.verified_fields.items():
+                    conn.execute(
+                        """
+                        UPDATE ocr_fields
+                           SET verified_value = ?,
+                               is_verified = 1,
+                               verified_by_user_id = ?,
+                               updated_at_utc = ?
+                         WHERE id = ? AND ocr_job_id = ?
+                        """,
+                        (str(vval).strip(), user["id"], now, fid, job_id),
+                    )
             for upd in payload.fields:
                 if upd.field_id:
                     is_ver = 1 if (is_ack_action or upd.mark_verified) else 0
@@ -600,8 +614,9 @@ def verify_or_save_ocr_job(job_id: str, payload: OcrVerifyRequest, user: dict = 
             raise
 
     clinician_ok = bool(clinician_id)
-    return {
+    res_payload = {
         "ocr_job_id": job_id,
+        "id": job_id,
         "status": new_status,
         "review_action": review_action,
         "authorization_state": auth_state,
@@ -615,6 +630,7 @@ def verify_or_save_ocr_job(job_id: str, payload: OcrVerifyRequest, user: dict = 
             else "Patient verification records human-reviewed text only; it does not constitute physician prescribing authorization."
         ),
     }
+    return {**res_payload, "job": res_payload}
 
 
 @router.post("/{job_id}/clinician-verify")

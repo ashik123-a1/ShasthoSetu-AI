@@ -2,18 +2,26 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Camera,
   CameraOff,
-  CheckCircle2,
+  FileText,
   MessageSquare,
   Mic,
   MicOff,
   MonitorUp,
-  Phone,
   PhoneCall,
   PhoneOff,
   Send,
   ShieldCheck,
+  Sparkles,
+  Users,
   Video,
 } from "lucide-react";
+import {
+  playCallConnected,
+  playCallEnded,
+  playNotificationSound,
+  startCallingToneLoop,
+  stopCallingToneLoop,
+} from "../../utils/soundEffects";
 
 type CallMode = "VIDEO" | "AUDIO";
 type CallPhase = "IDLE" | "RINGING" | "CONNECTED" | "ENDED";
@@ -31,55 +39,10 @@ export interface LiveConsultationCallStudioProps {
   counterpartyName?: string;
   counterpartyRole?: string;
   counterpartyAvatar?: string;
+  userRole?: "PATIENT" | "DOCTOR";
   initialMode?: CallMode;
   compact?: boolean;
   onEndCall?: () => void;
-}
-
-function playToneChime(kind: "ring" | "connect" | "end") {
-  try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    const now = ctx.currentTime;
-
-    if (kind === "ring") {
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(523.25, now);
-      osc.frequency.setValueAtTime(659.25, now + 0.14);
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-      osc.start(now);
-      osc.stop(now + 0.36);
-    } else if (kind === "connect") {
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(587.33, now);
-      osc.frequency.setValueAtTime(880, now + 0.11);
-      gain.gain.setValueAtTime(0.07, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-      osc.start(now);
-      osc.stop(now + 0.3);
-    } else {
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.setValueAtTime(329.63, now + 0.12);
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-      osc.start(now);
-      osc.stop(now + 0.32);
-    }
-    window.setTimeout(() => {
-      void ctx.close().catch(() => {});
-    }, 500);
-  } catch {
-    // Ignore autoplay restrictions
-  }
 }
 
 function formatClock(sec: number): string {
@@ -89,21 +52,30 @@ function formatClock(sec: number): string {
 }
 
 export function LiveConsultationCallStudio({
-  roomId = "shasthosetu-consult-demo",
+  roomId = "apt-demo-9001",
   counterpartyName = "Dr. Farhana Rahman",
   counterpartyRole = "OB-GYN & PCOS Specialist • BMDC #91044",
   counterpartyAvatar = "/images/doctors/doc-f-01.jpg",
+  userRole = "PATIENT",
   initialMode = "VIDEO",
   compact = false,
   onEndCall,
 }: LiveConsultationCallStudioProps) {
+  const cleanRoomId = roomId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+
   const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const remoteStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
+  const peerConnRef = useRef<RTCPeerConnection | null>(null);
+  const peerIdRef = useRef<string>(
+    `peer-${userRole.toLowerCase()}-${Math.random().toString(36).slice(2, 8)}`
+  );
+
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef = useRef<number | null>(null);
-  const channelRef = useRef<BroadcastChannel | null>(null);
 
   const [mode, setMode] = useState<CallMode>(initialMode);
   const [phase, setPhase] = useState<CallPhase>("IDLE");
@@ -112,8 +84,12 @@ export function LiveConsultationCallStudio({
   const [camOff, setCamOff] = useState(initialMode === "AUDIO");
   const [screenSharing, setScreenSharing] = useState(false);
   const [hardwareLive, setHardwareLive] = useState(false);
+  const [remotePeerActive, setRemotePeerActive] = useState(false);
+  const [remoteHasVideo, setRemoteHasVideo] = useState(false);
+  const [intakeData, setIntakeData] = useState<any>(null);
+
   const [statusNote, setStatusNote] = useState(
-    "Ready for encrypted consultation. Start Video or Audio Call anytime."
+    "2-Device Encrypted Call Studio ready. Start Video or Audio Call anytime."
   );
   const [bars, setBars] = useState<number[]>(() => Array.from({ length: 14 }, () => 14));
   const [chatInput, setChatInput] = useState("");
@@ -122,12 +98,16 @@ export function LiveConsultationCallStudio({
       id: "sys-1",
       sender: "system",
       name: "Consultation Room",
-      text: `Secure consultation channel #${roomId} initialized.`,
+      text: `Secure consultation room #${cleanRoomId} initialized. Connect from 2 devices using this room ID.`,
       time: "Now",
     },
   ]);
 
+  const latestSignalIdRef = useRef(0);
+  const latestChatTsRef = useRef(0.0);
+
   const stopAllMedia = useCallback(() => {
+    stopCallingToneLoop();
     if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -145,37 +125,201 @@ export function LiveConsultationCallStudio({
       screenStreamRef.current.getTracks().forEach((tr) => tr.stop());
       screenStreamRef.current = null;
     }
+    if (peerConnRef.current) {
+      peerConnRef.current.close();
+      peerConnRef.current = null;
+    }
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
     setHardwareLive(false);
     setScreenSharing(false);
+    setRemoteHasVideo(false);
   }, []);
 
   useEffect(() => {
     return () => {
       stopAllMedia();
+      // Inform backend we left
+      void fetch(`/v1/consultations/rooms/${cleanRoomId}/leave?peer_id=${peerIdRef.current}`, {
+        method: "POST",
+      }).catch(() => {});
     };
-  }, [stopAllMedia]);
+  }, [cleanRoomId, stopAllMedia]);
 
-  // BroadcastChannel multi-tab call chat sync
+  // Join Room & Register with Backend Signaling
   useEffect(() => {
-    if (typeof BroadcastChannel === "undefined") return undefined;
-    const ch = new BroadcastChannel(`shasthosetu-call-${roomId}`);
-    channelRef.current = ch;
-    ch.onmessage = (ev: MessageEvent) => {
-      const payload = ev.data as ChatMessage | undefined;
-      if (!payload || !payload.text) return;
-      setMessages((prev) => {
-        if (prev.some((m) => m.id === payload.id)) return prev;
-        return [...prev, { ...payload, sender: "remote" }];
-      });
+    let active = true;
+    const join = async () => {
+      try {
+        const res = await fetch(`/v1/consultations/rooms/${cleanRoomId}/join`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            peer_id: peerIdRef.current,
+            role: userRole,
+            display_name: userRole === "DOCTOR" ? "Dr. Desk" : "Patient",
+          }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        if (data.intake) setIntakeData(data.intake);
+        if (data.active_peers && data.active_peers.length > 1) {
+          setRemotePeerActive(true);
+        }
+      } catch {
+        // Signaling endpoint fallback
+      }
     };
+    void join();
     return () => {
-      ch.close();
-      channelRef.current = null;
+      active = false;
     };
-  }, [roomId]);
+  }, [cleanRoomId, userRole]);
+
+  // WebRTC Setup Helper
+  const setupPeerConnection = useCallback(() => {
+    if (peerConnRef.current) return peerConnRef.current;
+    if (typeof RTCPeerConnection === "undefined") return null;
+
+    const pc = new RTCPeerConnection({
+      iceServers: [
+        { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+      ],
+    });
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        void fetch(`/v1/consultations/rooms/${cleanRoomId}/signal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from_peer: peerIdRef.current,
+            signal_type: "ice",
+            data: event.candidate,
+          }),
+        }).catch(() => {});
+      }
+    };
+
+    pc.ontrack = (event) => {
+      const stream = event.streams[0];
+      remoteStreamRef.current = stream;
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = stream;
+      }
+      setRemoteHasVideo(stream.getVideoTracks().length > 0);
+    };
+
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => {
+        pc.addTrack(track, mediaStreamRef.current!);
+      });
+    }
+
+    peerConnRef.current = pc;
+    return pc;
+  }, [cleanRoomId]);
+
+  // Polling Signaling Loop (Exchanges SDP Offer/Answer, ICE, and Chat across 2 Devices)
+  useEffect(() => {
+    let interval: number;
+
+    const poll = async () => {
+      try {
+        const res = await fetch(
+          `/v1/consultations/rooms/${cleanRoomId}/poll?peer_id=${peerIdRef.current}&since_signal_id=${latestSignalIdRef.current}&since_chat_ts=${latestChatTsRef.current}`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update peers presence
+        const otherPeers = (data.active_peers || []).filter(
+          (p: any) => p.peer_id !== peerIdRef.current
+        );
+        setRemotePeerActive(otherPeers.length > 0);
+        if (data.intake) setIntakeData(data.intake);
+        if (data.latest_signal_id) latestSignalIdRef.current = data.latest_signal_id;
+
+        // Process incoming signals
+        for (const sig of data.signals || []) {
+          const pc = setupPeerConnection();
+          if (!pc) continue;
+
+          if (sig.type === "offer") {
+            await pc.setRemoteDescription(new RTCSessionDescription(sig.data));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            await fetch(`/v1/consultations/rooms/${cleanRoomId}/signal`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from_peer: peerIdRef.current,
+                to_peer: sig.from_peer,
+                signal_type: "answer",
+                data: answer,
+              }),
+            });
+            if (phase === "RINGING" || phase === "IDLE") {
+              stopCallingToneLoop();
+              playCallConnected();
+              setPhase("CONNECTED");
+            }
+          } else if (sig.type === "answer") {
+            await pc.setRemoteDescription(new RTCSessionDescription(sig.data));
+            if (phase === "RINGING") {
+              stopCallingToneLoop();
+              playCallConnected();
+              setPhase("CONNECTED");
+            }
+          } else if (sig.type === "ice") {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(sig.data));
+            } catch {
+              // Ignore late ICE candidate
+            }
+          } else if (sig.type === "end_call") {
+            stopCallingToneLoop();
+            playCallEnded();
+            stopAllMedia();
+            setPhase("ENDED");
+            setStatusNote("Remote participant ended the consultation.");
+          }
+        }
+
+        // Process incoming chat messages
+        if (data.chat && data.chat.length > 0) {
+          playNotificationSound();
+          setMessages((prev) => {
+            const existingIds = new Set(prev.map((m) => m.id));
+            const newOnes = data.chat
+              .filter((c: any) => !existingIds.has(c.id))
+              .map((c: any) => ({
+                id: c.id,
+                sender: c.sender_peer_id === peerIdRef.current ? "you" : "remote",
+                name: c.name,
+                text: c.text,
+                time: c.time,
+              }));
+            return [...prev, ...newOnes];
+          });
+          latestChatTsRef.current = data.now_ts || Date.now() / 1000;
+        }
+      } catch {
+        // Offline or connection glitch
+      }
+    };
+
+    interval = window.setInterval(() => {
+      void poll();
+    }, 1200);
+
+    return () => window.clearInterval(interval);
+  }, [cleanRoomId, phase, setupPeerConnection, stopAllMedia]);
 
   // Call duration timer
   useEffect(() => {
@@ -186,32 +330,23 @@ export function LiveConsultationCallStudio({
     return () => window.clearInterval(timer);
   }, [phase]);
 
-  // Ring -> Connected auto transition
+  // Ring timeout -> auto fallback connect in demo if second peer is slow
   useEffect(() => {
     if (phase !== "RINGING") return undefined;
     const timer = window.setTimeout(() => {
-      playToneChime("connect");
+      stopCallingToneLoop();
+      playCallConnected();
       setPhase("CONNECTED");
       setStatusNote(
         hardwareLive
-          ? "Live call connected with real browser camera/microphone stream."
-          : "Live call connected in Simulated Clinical Studio (camera/mic unavailable or blocked)."
+          ? "Live call connected with camera/microphone stream (2-Device WebRTC ready)."
+          : "Live call active in Clinical Studio (audio/video synthesized)."
       );
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `greet-${Date.now()}`,
-          sender: "remote",
-          name: counterpartyName,
-          text: `Assalamu Alaikum! I am ${counterpartyName}. Your ${mode.toLowerCase()} consultation room is active. Please share your symptoms or question.`,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
-    }, 1100);
+    }, 2800);
     return () => window.clearTimeout(timer);
-  }, [phase, hardwareLive, counterpartyName, mode]);
+  }, [phase, hardwareLive]);
 
-  // Equalizer WebAudio analyzer loop (real mic FFT or smooth simulated wave)
+  // Audio Equalizer WebAudio analyzer loop
   useEffect(() => {
     if (phase !== "CONNECTED" && phase !== "RINGING") {
       setBars(Array.from({ length: 14 }, () => 12));
@@ -219,7 +354,9 @@ export function LiveConsultationCallStudio({
     }
 
     let running = true;
-    const freqData = analyserRef.current ? new Uint8Array(analyserRef.current.frequencyBinCount) : null;
+    const freqData = analyserRef.current
+      ? new Uint8Array(analyserRef.current.frequencyBinCount)
+      : null;
     let tick = 0;
 
     const frame = () => {
@@ -249,7 +386,7 @@ export function LiveConsultationCallStudio({
       running = false;
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [phase, micMuted, hardwareLive]);
+  }, [phase, micMuted]);
 
   const startCall = async (targetMode: CallMode) => {
     stopAllMedia();
@@ -258,16 +395,18 @@ export function LiveConsultationCallStudio({
     setMicMuted(false);
     setSeconds(0);
     setPhase("RINGING");
-    playToneChime("ring");
+    startCallingToneLoop();
+
     setStatusNote(
       targetMode === "VIDEO"
-        ? "Requesting camera + microphone for HD video consultation..."
-        : "Connecting HD clinical audio channel..."
+        ? "Connecting HD video call across devices..."
+        : "Connecting clinical voice channel..."
     );
 
+    let stream: MediaStream | null = null;
     if (typeof navigator !== "undefined" && navigator.mediaDevices?.getUserMedia) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        stream = await navigator.mediaDevices.getUserMedia({
           video: targetMode === "VIDEO",
           audio: true,
         });
@@ -275,6 +414,7 @@ export function LiveConsultationCallStudio({
         if (localVideoRef.current && targetMode === "VIDEO") {
           localVideoRef.current.srcObject = stream;
         }
+
         try {
           const AudioCtx =
             window.AudioContext ||
@@ -292,21 +432,51 @@ export function LiveConsultationCallStudio({
           // AudioContext optional
         }
         setHardwareLive(true);
-        return;
       } catch {
         setHardwareLive(false);
-        setStatusNote(
-          "Camera/mic permission unavailable in this browser — using simulated AV stream & WebAudio call."
-        );
+        setStatusNote("Camera/mic permission unavailable in this browser — using simulated AV stream.");
       }
     } else {
       setHardwareLive(false);
-      setStatusNote("Browser mediaDevices unavailable — running interactive simulated call studio.");
+      setStatusNote("Running interactive simulated call studio.");
+    }
+
+    // Initialize WebRTC and dispatch Offer to the other device
+    const pc = setupPeerConnection();
+    if (pc) {
+      try {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await fetch(`/v1/consultations/rooms/${cleanRoomId}/signal`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from_peer: peerIdRef.current,
+            signal_type: "offer",
+            data: offer,
+          }),
+        });
+      } catch {
+        // Fallback
+      }
     }
   };
 
   const endCall = () => {
-    playToneChime("end");
+    stopCallingToneLoop();
+    playCallEnded();
+
+    // Signal other peer that call ended
+    void fetch(`/v1/consultations/rooms/${cleanRoomId}/signal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from_peer: peerIdRef.current,
+        signal_type: "end_call",
+        data: { reason: "User pressed end call" },
+      }),
+    }).catch(() => {});
+
     stopAllMedia();
     setPhase("ENDED");
     setStatusNote(`Consultation ended • Duration ${formatClock(seconds)}. Zero server video stored.`);
@@ -370,39 +540,46 @@ export function LiveConsultationCallStudio({
     }
   };
 
-  const sendMessage = (textOverride?: string) => {
+  const sendMessage = async (textOverride?: string) => {
     const raw = (textOverride ?? chatInput).trim();
     if (!raw) return;
-    const msg: ChatMessage = {
-      id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      sender: "you",
-      name: "You",
-      text: raw,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-    setMessages((prev) => [...prev, msg]);
-    if (!textOverride) setChatInput("");
-    channelRef.current?.postMessage(msg);
 
-    // Helpful solo demo acknowledgement
-    window.setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `ack-${Date.now()}`,
-          sender: "remote",
-          name: counterpartyName,
-          text: `Received: "${raw.slice(0, 64)}". I have noted this in our live consultation summary.`,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
-    }, 650);
+    const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const localMsg: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      sender: "you",
+      name: userRole === "DOCTOR" ? "Doctor" : "You",
+      text: raw,
+      time: timeStr,
+    };
+    setMessages((prev) => [...prev, localMsg]);
+    if (!textOverride) setChatInput("");
+
+    // Send to backend signaling to broadcast to the second device
+    try {
+      await fetch(`/v1/consultations/rooms/${cleanRoomId}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender_peer_id: peerIdRef.current,
+          sender_role: userRole,
+          sender_name: userRole === "DOCTOR" ? "Doctor" : "Patient",
+          text: raw,
+        }),
+      });
+    } catch {
+      // Local fallback
+    }
   };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
       {/* LEFT: AV STAGE & CONTROLS */}
-      <div className={`${compact ? "lg:col-span-12" : "lg:col-span-7"} rounded-3xl border border-cyan-500/30 bg-[#050d1e]/95 text-white p-4 sm:p-5 space-y-4 shadow-2xl`}>
+      <div
+        className={`${
+          compact ? "lg:col-span-12" : "lg:col-span-7"
+        } rounded-3xl border border-cyan-500/30 bg-[#050d1e]/95 text-white p-4 sm:p-5 space-y-4 shadow-2xl`}
+      >
         {/* Room Header */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -420,11 +597,23 @@ export function LiveConsultationCallStudio({
           <div className="flex items-center gap-2">
             <span
               className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold inline-flex items-center gap-1.5 border ${
+                remotePeerActive
+                  ? "bg-emerald-950/90 border-emerald-400/50 text-emerald-300"
+                  : "bg-slate-900 border-slate-700 text-slate-400"
+              }`}
+              title="2-Device Network Signaling Status"
+            >
+              <Users className="w-3.5 h-3.5" />
+              {remotePeerActive ? "2 Devices Synced" : "Waiting for 2nd Device"}
+            </span>
+
+            <span
+              className={`px-2.5 py-1 rounded-full text-[11px] font-mono font-bold inline-flex items-center gap-1.5 border ${
                 phase === "CONNECTED"
                   ? "bg-emerald-950/90 border-emerald-400/50 text-emerald-300"
                   : phase === "RINGING"
-                    ? "bg-amber-950/90 border-amber-400/50 text-amber-300"
-                    : "bg-slate-900 border-slate-700 text-slate-300"
+                  ? "bg-amber-950/90 border-amber-400/50 text-amber-300"
+                  : "bg-slate-900 border-slate-700 text-slate-300"
               }`}
             >
               <span
@@ -432,8 +621,8 @@ export function LiveConsultationCallStudio({
                   phase === "CONNECTED"
                     ? "bg-emerald-400 animate-pulse"
                     : phase === "RINGING"
-                      ? "bg-amber-400 animate-ping"
-                      : "bg-slate-500"
+                    ? "bg-amber-400 animate-ping"
+                    : "bg-slate-500"
                 }`}
               />
               {phase} {phase === "CONNECTED" ? `• ${formatClock(seconds)}` : ""}
@@ -443,222 +632,280 @@ export function LiveConsultationCallStudio({
 
         {/* Main Video / Audio Stage */}
         <div className="relative aspect-video rounded-2xl bg-gradient-to-br from-[#071229] via-[#0b1936] to-[#061529] border border-cyan-500/25 overflow-hidden flex items-center justify-center">
-          {/* Remote Counterparty Stage Backdrop */}
-          <div className="text-center px-6 space-y-3 z-10">
-            <div className="relative inline-block">
-              <img
-                src={counterpartyAvatar}
-                alt={counterpartyName}
-                className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 mx-auto shadow-xl ${
-                  phase === "CONNECTED" ? "border-emerald-400" : "border-cyan-400/60"
-                }`}
-              />
-              {phase === "CONNECTED" && (
-                <span className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-mono text-[9px] font-extrabold">
-                  {mode}
-                </span>
-              )}
-            </div>
-
-            <div>
-              <p className="text-sm font-bold text-white">{counterpartyName}</p>
-              <p className="text-[11px] text-slate-300">
-                {phase === "IDLE"
-                  ? "Select Video Call or Audio Call below to start"
-                  : phase === "RINGING"
-                    ? `Ringing encrypted ${mode.toLowerCase()} room...`
-                    : phase === "CONNECTED"
-                      ? `${mode === "VIDEO" ? "HD Video" : "Crystal Audio"} Connected • ${formatClock(seconds)}`
-                      : "Session Ended"}
-              </p>
-            </div>
-
-            {/* Live WebAudio Equalizer */}
-            <div className="flex items-end justify-center gap-1 h-8 pt-1" aria-hidden="true">
-              {bars.map((val, idx) => (
-                <span
-                  key={idx}
-                  className="w-1.5 rounded-full transition-all duration-100"
-                  style={{
-                    height: `${Math.max(14, Math.min(100, val))}%`,
-                    backgroundColor: phase === "CONNECTED" ? "#22d3ee" : "#334155",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Local Camera PIP / Screen Share */}
+          {/* Remote Real Video Stream from 2nd Device */}
           <video
-            ref={localVideoRef}
+            ref={remoteVideoRef}
             autoPlay
-            muted
             playsInline
-            className={`absolute bottom-3 right-3 w-32 sm:w-44 aspect-video rounded-xl object-cover border-2 border-cyan-400/70 shadow-2xl bg-slate-950 z-20 ${
-              (hardwareLive && mode === "VIDEO" && !camOff) || screenSharing ? "block" : "hidden"
+            className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-500 ${
+              remoteHasVideo ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           />
 
-          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-950/80 border border-cyan-500/30 font-mono text-[10px] text-cyan-200 z-20">
-            E2E CLINIC ROOM • {hardwareLive ? "LIVE MIC/CAM" : "SIMULATED AV"}
-          </span>
-        </div>
+          {/* Remote Counterparty Stage Backdrop when Video stream is absent or in Audio Mode */}
+          {(!remoteHasVideo || mode === "AUDIO") && (
+            <div className="text-center px-6 space-y-3 z-10">
+              <div className="relative inline-block">
+                <img
+                  src={counterpartyAvatar}
+                  alt={counterpartyName}
+                  className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 mx-auto shadow-xl ${
+                    phase === "CONNECTED" ? "border-emerald-400" : "border-cyan-400/60"
+                  }`}
+                />
+                {phase === "CONNECTED" && (
+                  <span className="absolute -bottom-1 -right-1 px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-mono text-[9px] font-extrabold">
+                    {mode}
+                  </span>
+                )}
+              </div>
 
-        {/* Call Controls Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => void startCall("VIDEO")}
-              className="min-h-11 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs inline-flex items-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
-            >
-              <Video className="w-4 h-4" />
-              {phase === "CONNECTED" && mode === "VIDEO" ? "Restart Video" : "Start Video Call"}
-            </button>
+              <div>
+                <h4 className="font-bold text-base text-white">{counterpartyName}</h4>
+                <p className="text-xs text-cyan-300 font-mono">
+                  {phase === "CONNECTED"
+                    ? "Clinical Channel Active • End-to-End Encrypted"
+                    : phase === "RINGING"
+                    ? "Calling counterparty terminal..."
+                    : "Offline / Standby"}
+                </p>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => void startCall("AUDIO")}
-              className="min-h-11 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs inline-flex items-center gap-2 shadow-lg shadow-cyan-500/20 cursor-pointer"
-            >
-              <PhoneCall className="w-4 h-4" />
-              {phase === "CONNECTED" && mode === "AUDIO" ? "Restart Audio" : "Start Audio Call"}
-            </button>
+              {/* Dynamic Equalizer Bar visualizer */}
+              {(phase === "CONNECTED" || phase === "RINGING") && (
+                <div className="flex items-center justify-center gap-1 h-10 px-4 py-1.5 rounded-full bg-black/40 border border-cyan-500/30 backdrop-blur-sm max-w-xs mx-auto">
+                  {bars.map((b, i) => (
+                    <span
+                      key={i}
+                      className={`w-1 rounded-full transition-all duration-75 ${
+                        micMuted
+                          ? "bg-slate-600"
+                          : phase === "CONNECTED"
+                          ? "bg-gradient-to-t from-cyan-400 to-emerald-400"
+                          : "bg-amber-400"
+                      }`}
+                      style={{ height: `${Math.max(10, Math.min(100, b))}%` }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-            <button
-              type="button"
-              onClick={toggleMic}
-              className={`min-h-11 px-3 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer ${
-                micMuted
-                  ? "bg-rose-500/20 border-rose-400/50 text-rose-200"
-                  : "bg-slate-900 border-slate-700 text-slate-200 hover:border-cyan-400/50"
-              }`}
-            >
-              {micMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-              {micMuted ? "Unmute" : "Mute"}
-            </button>
-
-            <button
-              type="button"
-              onClick={toggleCam}
-              disabled={mode === "AUDIO"}
-              className="min-h-11 px-3 rounded-xl bg-slate-900 border border-slate-700 hover:border-cyan-400/50 disabled:opacity-40 text-slate-200 text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
-            >
-              {camOff ? <CameraOff className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
-              {camOff ? "Cam On" : "Cam Off"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => void toggleScreenShare()}
-              className={`min-h-11 px-3 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer ${
-                screenSharing
-                  ? "bg-indigo-500/30 border-indigo-400 text-indigo-200"
-                  : "bg-slate-900 border-slate-700 text-slate-200 hover:border-cyan-400/50"
-              }`}
-            >
-              <MonitorUp className="w-4 h-4" />
-              {screenSharing ? "Stop Share" : "Share Report"}
-            </button>
-
-            {(phase === "CONNECTED" || phase === "RINGING") && (
-              <button
-                type="button"
-                onClick={endCall}
-                className="min-h-11 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <PhoneOff className="w-4 h-4" /> End Call
-              </button>
+          {/* Local User PiP Stream (Self View) */}
+          <div className="absolute bottom-3 right-3 w-28 sm:w-36 aspect-video rounded-xl border border-cyan-400/60 bg-black/85 overflow-hidden shadow-2xl z-20">
+            <video
+              ref={localVideoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`w-full h-full object-cover ${camOff ? "hidden" : "block"}`}
+            />
+            {camOff && (
+              <div className="w-full h-full flex flex-col items-center justify-center text-[10px] text-slate-400 font-mono bg-slate-900/90 p-1 text-center">
+                <CameraOff className="w-4 h-4 mb-0.5 text-slate-500" />
+                <span>Cam Muted</span>
+              </div>
             )}
+            <div className="absolute top-1 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-[9px] font-mono text-cyan-300">
+              You
+            </div>
+          </div>
+
+          {/* Encryption & Room Overlay Badge */}
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur-md text-[10px] font-mono text-slate-300 inline-flex items-center gap-1.5 z-20">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Room: {cleanRoomId} • WebRTC</span>
           </div>
         </div>
 
-        <p className="text-[11px] font-mono text-cyan-300 flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-          <span>{statusNote}</span>
-        </p>
+        {/* Status Bar */}
+        <div className="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 flex items-center justify-between gap-2">
+          <span className="truncate">{statusNote}</span>
+          <span className="font-mono text-[11px] text-cyan-300 shrink-0">
+            {hardwareLive ? "Hardware HD" : "Simulated/WebAudio"}
+          </span>
+        </div>
+
+        {/* Control Bar Actions */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          {phase !== "CONNECTED" && phase !== "RINGING" ? (
+            <>
+              <button
+                type="button"
+                onClick={() => void startCall("VIDEO")}
+                className="min-h-11 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-bold text-xs inline-flex items-center gap-2 cursor-pointer shadow-lg hover:brightness-105 transition"
+              >
+                <Video className="w-4 h-4 fill-slate-950" /> Start Video Call
+              </button>
+              <button
+                type="button"
+                onClick={() => void startCall("AUDIO")}
+                className="min-h-11 px-5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-cyan-500/40 text-cyan-300 font-bold text-xs inline-flex items-center gap-2 cursor-pointer transition"
+              >
+                <PhoneCall className="w-4 h-4" /> Start Audio Call
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={toggleMic}
+                className={`min-h-10 px-3.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition ${
+                  micMuted
+                    ? "bg-rose-950 border-rose-500/60 text-rose-300"
+                    : "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                }`}
+              >
+                {micMuted ? <MicOff className="w-4 h-4 text-rose-400" /> : <Mic className="w-4 h-4 text-emerald-400" />}
+                {micMuted ? "Unmute Mic" : "Mute Mic"}
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleCam}
+                className={`min-h-10 px-3.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition ${
+                  camOff
+                    ? "bg-rose-950 border-rose-500/60 text-rose-300"
+                    : "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                }`}
+              >
+                {camOff ? <CameraOff className="w-4 h-4 text-rose-400" /> : <Camera className="w-4 h-4 text-cyan-400" />}
+                {camOff ? "Turn On Cam" : "Turn Off Cam"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void toggleScreenShare()}
+                className={`min-h-10 px-3.5 rounded-xl border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition ${
+                  screenSharing
+                    ? "bg-cyan-950 border-cyan-400 text-cyan-300"
+                    : "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+                }`}
+              >
+                <MonitorUp className="w-4 h-4" />
+                {screenSharing ? "Stop Share" : "Share Screen"}
+              </button>
+
+              <button
+                type="button"
+                onClick={endCall}
+                className="min-h-10 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer transition shadow-lg shadow-rose-950/50"
+              >
+                <PhoneOff className="w-4 h-4" /> End Call
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* RIGHT: LIVE IN-CALL CLINICAL CHAT (SYNCED VIA BROADCASTCHANNEL) */}
+      {/* RIGHT: REAL-TIME CROSS-DEVICE CHAT & PRE-CALL INTAKE */}
       {!compact && (
-        <div className="lg:col-span-5 rounded-3xl border border-cyan-500/25 bg-[#071126]/95 text-slate-100 p-4 sm:p-5 flex flex-col justify-between min-h-[380px] shadow-2xl">
-          <div className="space-y-3 flex-1 flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="lg:col-span-5 rounded-3xl border border-cyan-500/30 bg-[#050d1e]/95 text-white p-4 sm:p-5 flex flex-col justify-between space-y-3 shadow-2xl">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white">Live In-Call Clinical Chat</h3>
+                <h3 className="font-bold text-sm">Consultation Chat & Intake</h3>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-500/30">
-                Multi-Tab Sync
+              <span className="font-mono text-[10px] text-slate-400">
+                {remotePeerActive ? "🟢 2 Devices Synced" : "🟡 Waiting for 2nd Device"}
               </span>
             </div>
 
-            {/* Quick Prompts */}
+            {/* Patient Pre-Call Intake Summary Card (Visible to Doctor and Patient) */}
+            {intakeData && (
+              <div className="p-3 rounded-2xl bg-cyan-950/30 border border-cyan-500/40 text-xs space-y-1.5 animate-fadeIn">
+                <div className="flex items-center justify-between font-bold text-cyan-300 text-[11px]">
+                  <span className="inline-flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5" /> Pre-Call Patient Intake
+                  </span>
+                  <span className="font-mono">Mode: {intakeData.consultation_modality}</span>
+                </div>
+                {intakeData.symptoms_text && (
+                  <p className="text-slate-200">
+                    <strong>Symptoms:</strong> {intakeData.symptoms_text}
+                  </p>
+                )}
+                {intakeData.has_uploaded_report && (
+                  <div className="text-[11px] text-emerald-300 flex items-center gap-1">
+                    <FileText className="w-3.5 h-3.5" /> Attached: {intakeData.report_filename || "Medical Report"}
+                  </div>
+                )}
+                {intakeData.has_audio_memo && (
+                  <div className="text-[11px] text-indigo-300 flex items-center gap-1">
+                    <Mic className="w-3.5 h-3.5" /> Voice note recorded ({intakeData.audio_memo_duration_sec}s)
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Quick Macro Pills */}
             <div className="flex flex-wrap gap-1.5">
-              {["Shared latest CBC report", "Fever 101°F for 2 days", "Please advise dosage"].map((prompt) => (
+              {[
+                "Can you hear me clearly?",
+                "প্রেসক্রিপশন কি দেখতে পাচ্ছেন?",
+                "ল্যাব রিপোর্ট আপলোড করেছি",
+                "I have mild fever and sore throat",
+              ].map((txt, i) => (
                 <button
-                  key={prompt}
+                  key={i}
                   type="button"
-                  onClick={() => sendMessage(prompt)}
-                  className="text-[10px] px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 hover:border-cyan-400/50 text-slate-300 hover:text-cyan-200 cursor-pointer"
+                  onClick={() => void sendMessage(txt)}
+                  className="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 hover:border-cyan-400/50 text-[11px] text-slate-300 hover:text-white transition cursor-pointer"
                 >
-                  + {prompt}
+                  {txt}
                 </button>
               ))}
             </div>
 
-            {/* Message Feed */}
-            <div className="flex-1 max-h-60 overflow-y-auto space-y-2.5 pr-1 py-1">
+            {/* Messages Thread */}
+            <div className="h-64 sm:h-72 overflow-y-auto space-y-2 pr-1 text-xs">
               {messages.map((m) => (
                 <div
                   key={m.id}
-                  className={`p-2.5 rounded-2xl text-xs ${
+                  className={`p-2.5 rounded-2xl max-w-[85%] space-y-0.5 ${
                     m.sender === "you"
-                      ? "bg-cyan-500/20 border border-cyan-400/40 ml-8 text-white"
-                      : m.sender === "system"
-                        ? "bg-slate-900/90 border border-slate-800 text-slate-400 text-[11px] font-mono"
-                        : "bg-slate-900 border border-slate-700/80 mr-8 text-slate-100"
+                      ? "ml-auto bg-cyan-600 text-white rounded-br-none"
+                      : m.sender === "remote"
+                      ? "mr-auto bg-slate-800 text-slate-100 rounded-bl-none border border-slate-700"
+                      : "mx-auto bg-slate-900/90 text-slate-400 font-mono text-[10px] text-center border border-slate-800"
                   }`}
                 >
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 mb-0.5 font-mono">
-                    <span className="font-bold text-cyan-300">{m.name}</span>
-                    <span>{m.time}</span>
-                  </div>
-                  <p className="leading-relaxed">{m.text}</p>
+                  {m.sender !== "system" && (
+                    <div className="flex items-center justify-between gap-2 text-[10px] opacity-80">
+                      <span className="font-bold">{m.name}</span>
+                      <span>{m.time}</span>
+                    </div>
+                  )}
+                  <p>{m.text}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-800 space-y-2.5">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                sendMessage();
-              }}
-              className="flex gap-2"
+          {/* Chat Input */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void sendMessage();
+            }}
+            className="flex items-center gap-2 pt-2 border-t border-slate-800"
+          >
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Send message across devices..."
+              className="flex-1 min-h-10 rounded-xl border border-slate-700 bg-slate-900 px-3 text-xs text-white placeholder-slate-500 focus:border-cyan-400 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="min-h-10 px-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs inline-flex items-center gap-1 cursor-pointer transition"
             >
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Type message or symptom note..."
-                className="flex-1 min-h-11 rounded-xl bg-slate-900 border border-slate-700 px-3 text-xs text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="min-h-11 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <Send className="w-3.5 h-3.5" /> Send
-              </button>
-            </form>
-
-            <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span>Local WebRTC/getUserMedia demo • No video frames saved on server</span>
-              <Phone className="w-3 h-3 text-cyan-400 ml-auto shrink-0" />
-            </div>
-          </div>
+              <Send className="w-3.5 h-3.5" />
+            </button>
+          </form>
         </div>
       )}
     </div>

@@ -191,7 +191,7 @@ export function BloodConnectPage() {
   const [reqGroup, setReqGroup] = useState("O+");
   const [reqUnits, setReqUnits] = useState(1);
   const [reqUrgency, setReqUrgency] = useState<"EMERGENCY" | "URGENT" | "SCHEDULED">("EMERGENCY");
-  const [reqHospital, setReqHospital] = useState("Dhaka Medical College Hospital (DMCH)");
+  const [reqHospital, setReqHospital] = useState("ShasthoSetu Central Model Hospital (Demo)");
   const [reqRadius, setReqRadius] = useState<5 | 10 | 20>(10);
   const [reqNotes, setReqNotes] = useState("Hospital blood bank cross-match sample ready.");
 

@@ -20,6 +20,7 @@ import { apiGet, apiPost } from "../../lib/apiClient";
 import { useI18n } from "../../lib/i18n";
 import { formatDhakaDateTime } from "../../lib/formatters";
 import { StatusBadge, useToast } from "../ui";
+import { playNotificationSound } from "../../utils/soundEffects";
 
 export interface TicketSummary {
   id: string;
@@ -172,6 +173,7 @@ export function LiveSupportChatWidget({
       };
 
       setMessages((prev) => [...prev, joinSysMsg, agentHelloMsg]);
+      playNotificationSound();
       pushToast({
         title: locale === "bn" ? "সাপোর্ট অফিসার চ্যাটে যোগ দিয়েছেন" : "Support Officer joined the chat",
         tone: "success",
@@ -240,6 +242,7 @@ export function LiveSupportChatWidget({
           };
 
           setMessages((prev) => [...prev, botMsg]);
+          playNotificationSound();
         }, 800);
       }
     } catch {

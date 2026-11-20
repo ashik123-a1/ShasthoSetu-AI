@@ -67,14 +67,14 @@ describe("UI-01 ShasthoSetu Design System & Reusable Primitives", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("ShasthoSetu AI");
   });
 
-  it("3. Defaults to Clinical Daylight theme and persists Obsidian Dark toggle", async () => {
+  it("3. Defaults to Obsidian Dark theme and persists Clinical Daylight toggle", async () => {
     const user = userEvent.setup();
     renderApp();
-    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.theme).toBe("dark");
 
     await user.click(screen.getByTestId("theme-switch"));
-    expect(document.documentElement.dataset.theme).toBe("dark");
-    expect(window.localStorage.getItem("ss-theme")).toBe("dark");
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(window.localStorage.getItem("ss-theme")).toBe("light");
   });
 
   it("4. Toggles WCAG Pause Motion and persists html.reduce-motion", async () => {

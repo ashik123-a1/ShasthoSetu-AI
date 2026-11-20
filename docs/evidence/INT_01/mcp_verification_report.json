@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-19T21:36:56.522621+00:00",
+  "generated_at_utc": "2026-11-20T07:56:00.061823+00:00",
   "protocol_client": "mcp.ClientSession (stdio JSON-RPC)",
   "summary": {
     "custom_built_total": 3,
@@ -467,7 +467,7 @@
           }
         }
       ],
-      "latency_ms": 612.8
+      "latency_ms": 576.5
     },
     {
       "server_id": "directory-mcp",
@@ -581,7 +581,7 @@
                 "rating": 4.9,
                 "reviews_count": 412,
                 "avatar_url": "/images/doctors/doc-f-01.jpg",
-                "open_slots_count": 9,
+                "open_slots_count": 2,
                 "consultation_fee_bdt": 500
               },
               {
@@ -753,7 +753,7 @@
           }
         }
       ],
-      "latency_ms": 530.1
+      "latency_ms": 523.4
     },
     {
       "server_id": "care-record-mcp",
@@ -814,8 +814,8 @@
               "is_synthetic": true
             },
             "counts": {
-              "appointments": 2,
-              "medication_plans": 5,
+              "appointments": 11,
+              "medication_plans": 9,
               "pcos_cycle_logs": 2,
               "pediatric_vaccines": 0
             }
@@ -827,10 +827,10 @@
           "is_error": false,
           "preview": {
             "found": true,
-            "ocr_job_id": "ocr-job-0052",
+            "ocr_job_id": "ocr-job-2b38485b85ed431e",
             "job_status": "NEEDS_REVIEW",
             "authorization_state": "RAW_OCR",
-            "uncertain_fields_count": 0,
+            "uncertain_fields_count": 3,
             "can_activate_reminder": false,
             "http_gate_code": 422,
             "policy": "Mandatory HTTP 422 Human Verification Gate — Never auto-activate unverified OCR schedules."
@@ -846,38 +846,38 @@
           "preview": {
             "allowed": true,
             "requester_role": "ADMIN",
-            "total_audit_log_rows": 157,
+            "total_audit_log_rows": 996,
             "doctor_verification_events_count": 4,
             "recent_events": [
               {
-                "id": "aud-038426c8ba2040b0",
-                "actor_role": "PATIENT",
-                "action_type": "MEDICATION_PLAN_CLINICIAN_AUTHORIZED_PLAN",
-                "target_resource": "medication_plans",
-                "outcome": "SUCCESS",
-                "created_at_utc": "2026-11-19T21:29:14.141Z"
-              },
-              {
-                "id": "aud-e7fe3e57eee540a0",
-                "actor_role": "PATIENT",
+                "id": "aud-96e8fd92ed4f4d50",
+                "actor_role": "SUPPORT",
                 "action_type": "LOGIN_SUCCESS",
                 "target_resource": "sessions",
                 "outcome": "SUCCESS",
-                "created_at_utc": "2026-11-19T21:29:14.131Z"
+                "created_at_utc": "2026-11-20T07:55:01.965Z"
               },
               {
-                "id": "aud-ca344c73089c4fac",
-                "actor_role": "DOCTOR",
-                "action_type": "OCR_CLINICIAN_VERIFY",
-                "target_resource": "ocr_jobs",
+                "id": "aud-71a91c902ec945dd",
+                "actor_role": "ADMIN",
+                "action_type": "LOGIN_SUCCESS",
+                "target_resource": "sessions",
                 "outcome": "SUCCESS",
-                "created_at_utc": "2026-11-19T21:29:14.072Z"
+                "created_at_utc": "2026-11-20T07:55:00.808Z"
+              },
+              {
+                "id": "aud-657877072a244504",
+                "actor_role": "DOCTOR",
+                "action_type": "LOGIN_SUCCESS",
+                "target_resource": "sessions",
+                "outcome": "SUCCESS",
+                "created_at_utc": "2026-11-20T07:54:59.706Z"
               }
             ]
           }
         }
       ],
-      "latency_ms": 531.1
+      "latency_ms": 537.3
     }
   ],
   "public_servers": [
@@ -927,7 +927,7 @@
           "preview": "Allowed directories:\nF:\\Clude cccccccccccccccccccccccc\\data we test\\docs\nF:\\Clude cccccccccccccccccccccccc\\data we test\\SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT\\final_lock"
         }
       ],
-      "latency_ms": 918.8
+      "latency_ms": 903.2
     },
     {
       "server_id": "memory",
@@ -1019,7 +1019,7 @@
           }
         }
       ],
-      "latency_ms": 1070.1
+      "latency_ms": 581.2
     },
     {
       "server_id": "sequential-thinking",
@@ -1061,7 +1061,7 @@
           }
         }
       ],
-      "latency_ms": 1063.9
+      "latency_ms": 770.7
     }
   ],
   "external_sse_servers": [
@@ -1071,7 +1071,7 @@
       "url": "https://cloudcamp-bd-mcp.equisaas-bd.com",
       "reachable": true,
       "http_status": 403,
-      "latency_ms": 318.0,
+      "latency_ms": 117.6,
       "note": "Endpoint responded with HTTP 403 (configured external SSE server)"
     }
   ]

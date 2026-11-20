@@ -1,40 +1,51 @@
-# ShasthoSetu AI — Clinical Datasets & Data Governance Ledger
+# ShasthoSetu AI — Clinical Datasets, Provenance & Governance Ledger
 
-This document inventories the clinical datasets, guidelines, and synthetic cohorts underpinning ShasthoSetu AI, accompanied by cryptographic verification checksums.
-
----
-
-## 🌐 Official Hugging Face Dataset Repository
-All audited clinical datasets and research reconciliation manifests are publicly hosted on Hugging Face:
-- **Repository URL**: [https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets](https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets)
-- **Total Files Uploaded**: 35,641 files across 7 audited directories
-- **Included Modules**:
-  1. `01_pcos_clinical`: 88 clinical patient records with 44 metabolic & hormonal biomarkers (`pcos_clinical_cleaned.csv`).
-  2. `02_pcos_ultrasound`: 299 ovarian ultrasound B-mode scans with strict perceptual hash (pHash) deduplication.
-  3. `03_viral_rash_grouped`: MCVSLD clean grouped split across 6 viral conditions, strictly partitioned by 755 source-photo families (0% leakage).
-  4. `04_prescription_ocr`: Gazipur 1,000-prescription accounting (992 admissible, 8 quarantined with HTTP 422 gate).
-  5. `05_bangla_voice_benchmark`: Google FLEURS Bengali benchmark provenance (26 human audio clips, 22 sentences, 22 speakers).
-  6. `06_dermoped_pediatric_crops`: 656 cropped lesions across 22 verified pediatric patients (19 Chickenpox, 3 Pediculosis).
-  7. `final_audit_lock`: Cryptographic SHA-256 verification scripts, reconciliation CSVs, and audit sign-off reports.
+This document inventories the clinical research datasets, RAG knowledge guidelines, in-repo QA samples, and cryptographic audit hashes underpinning **ShasthoSetu AI**.
 
 ---
 
-## 1. Primary Clinical Datasets
+## 1. Two-Tier Storage Architecture (GitHub + Hugging Face)
 
-| Dataset ID | Name | Source / Authority | Format | Records / Chunks | Integrity Checksum (SHA-256) |
-|---|---|---|---|---|---|
-| `DS-CLIN-01` | **National Dengue Clinical Management Guideline** | DGHS Bangladesh (6th Ed.) | JSONL / Text | 14 Sections, 35 Chunks | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
-| `DS-CLIN-02` | **WHO Acute Respiratory & Influenza Triage Protocol** | World Health Organization | JSONL / PDF | 22 Structured Rules | `a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef0` |
-| `DS-CLIN-03` | **PCOS Clinical & Hormonal Benchmark Cohort** | Mendeley Data (Held-out N=88) | CSV / Parquet | 88 Validated Patient Profiles | `f1e2d3c4b5a697887766554433221100aabbccddeeff00112233445566778899` |
-| `DS-CLIN-04` | **Pediatric Rash & Dehydration Differential Guidelines** | Bangladesh Pediatric Assoc. & NICE | JSONL | 18 Diagnostic Matrices | `99887766554433221100ffeeddccbbaa00112233445566778899aabbccddeeff` |
-| `DS-GEO-05` | **Bangladesh 8-Division Hospital & Blood Directory** | DGHS Health Bulletin & Geo-DB | SQLite / JSON | 43 Doctors, 12 Donors, 8 Divs | `c0ffee1234567890abcdef1234567890abcdef1234567890abcdef1234567890` |
+| Storage Location | Purpose & Contents | Size | Link |
+| :--- | :--- | :---: | :--- |
+| **Hugging Face Hub** | Full audited training/evaluation images, audio clips, CSV splits & lock manifests (`35,641` files across `7` directories) | ~2.03 GiB | [`ashik1236/shasthosetu-clinical-datasets`](https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets) |
+| **GitHub (`testingmainapps/`)** | Self-contained 5-system QA sample pack (PDF/JPG prescriptions, pelvic USG, IMCI/EPI cases, lesion images & negative controls, BN/EN/Banglish prompts) | 1.01 MB | [`testingmainapps/README.md`](testingmainapps/README.md) |
+
+### Download Full Research Datasets from Hugging Face
+```bash
+pip install huggingface-hub
+hf download ashik1236/shasthosetu-clinical-datasets --repo-type dataset --local-dir ./hf_datasets
+```
 
 ---
 
-## 2. Zero-PHI Data Sanitization Standard
+## 2. Canonical Provenance & Primary Academic Sources
 
-All incoming patient queries and session records undergo real-time scrubbing:
-- **Names**: Replaced with demographic tokens (`<PATIENT_MALE_32>`, `<PATIENT_FEMALE_45>`).
-- **Phone Numbers**: Masked as `+880 17•• •••12`.
-- **National IDs (NID)**: Completely redacted (`[REDACTED_NID]`).
-- **Storage Mode**: Strictly local SQLite in Write-Ahead-Logging (WAL) mode with zero external cloud transmission.
+| Module ID | Subfolder on HF | Primary Source & DOI | Audited Scope & Partition Protocol |
+| :--- | :--- | :--- | :--- |
+| **01 PCOS Clinical** | `01_pcos_clinical` | Mendeley Data [`10.17632/tw34c7hv7z.1`](https://doi.org/10.17632/tw34c7hv7z.1) | $N=88$ patient profiles, 44 biomarkers (`pcos_clinical_cleaned.csv`, `11,919` bytes) |
+| **02 PCOS Ultrasound** | `02_pcos_ultrasound` | Frontiers in Physiology [`10.3389/fphys.2025.1520898`](https://doi.org/10.3389/fphys.2025.1520898) | $N=299$ unique ovarian B-mode scans deduplicated via perceptual hash (pHash) |
+| **03 Viral Skin Rash** | `03_viral_rash_grouped` | Mendeley Data MCVSLD [`10.17632/dfztdtfsxz.1`](https://doi.org/10.17632/dfztdtfsxz.1) | $10,384$ lesion crops partitioned across **755 source-photo families** (`0%` family leakage) |
+| **04 Prescription OCR** | `04_prescription_ocr` | Mendeley Data Gazipur v2 [`10.17632/tg2hm7n2bs.2`](https://doi.org/10.17632/tg2hm7n2bs.2) | All `1,000` photos accounted (`697` train + `150` val + `152` test + `1` unannotated `0747`; `992` admissible, `8` quarantined) |
+| **05 Bangla Voice ASR** | `05_bangla_voice_benchmark` | Google FLEURS `bn_in` [`arXiv:2205.12446`](https://arxiv.org/abs/2205.12446) | `26` human audio clips across `22` unique sentences & `22` speakers |
+| **06 DermoPed Pediatric** | `06_dermoped_pediatric_crops` | Zenodo Record [`10.5281/zenodo.20829589`](https://doi.org/10.5281/zenodo.20829589) | Local subset: `22` patients (`19` Chickenpox + `3` Pediculosis = `656` lesion crops) |
+| **07 Bilingual RAG Corpus** | Curated in-repo chunks | DGHS Bangladesh & WHO Guidelines | `14` approved bilingual clinical & platform documents (`35` chunk nodes indexed in BM25 + BGE-M3) |
+
+---
+
+## 3. Verified SHA-256 Audit Lock Ledger
+
+All artifact hashes and reconciliation manifests are verified programmatically by [`verify_final_lock.py`](SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT/final_lock/verify_final_lock.py) and frozen in [`FINAL_AUDIT_SIGNOFF.md`](SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT/final_lock/FINAL_AUDIT_SIGNOFF.md):
+
+- **PCOS Clinical Canonical CSV:** `01_PCOS_Clinical/data/processed/pcos_clinical_cleaned.csv` — `11,919` bytes — SHA-256: `3e38331357da3c4d4501f93e30bb4c5e5acbb3ee0eac23d50035d30b2c5a4661`
+- **DermoPed Checkpoint `EXP_B`:** `44,790,027` bytes — SHA-256: `5a98479c66044e3a6ec244bad0133f0fd5a952e7123e53c567e2cdfe7ef348da`
+- **DermoPed Checkpoint `EXP_D`:** `44,787,896` bytes — SHA-256: `e9ef59b4bc6de88db6cdf7dd78fe775386baf428fcb3e8bd7ba5a63171f8ee67`
+
+---
+
+## 4. Licensing, Privacy Governance & Takedown Policy
+
+1. **Non-Diagnostic Research Use:** Datasets and benchmarks are published exclusively for academic evaluation and clinical AI safety testing — NOT for autonomous medical diagnosis or prescribing.
+2. **Heuristic Privacy Protection:** Direct identifiers in clinical demos are replaced with synthetic personas or regex-masked tokens (`+880 17•• •••12`). Prescription slips rely on upstream marker redactions by the Mendeley authors.
+3. **Upstream License Preservation:** Upstream corpora (`01`–`06`) remain under their respective **CC BY 4.0** academic terms; derivative split scripts and audit ledgers created by ShasthoSetu AI follow the repository's **MIT** / research attribution terms (and non-commercial educational fair use for web-scraped MCVSLD subsets).
+4. **Notice & Takedown Procedure:** Any clinician, institution, or copyright holder requesting redaction or removal of an upstream record can open an issue on [`ashik123-a1/ShasthoSetu-AI`](https://github.com/ashik123-a1/ShasthoSetu-AI/issues) or email the maintainers (see [`05_PRIVACY_AND_PUBLIC_RELEASE_RISKS.md`](docs/HF_DATASET_PROVENANCE_AUDIT_01/05_PRIVACY_AND_PUBLIC_RELEASE_RISKS.md)).

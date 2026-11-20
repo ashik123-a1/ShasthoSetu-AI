@@ -1,0 +1,57 @@
+{
+  "dataset_title": "ShasthoSetu Bilingual Prescription OCR Ground Truth Benchmark",
+  "samples": [
+    {
+      "filename": "sample_hospital_prescription_01.pdf",
+      "format": "PDF",
+      "doctor_name": "Dr. Farhana Rahman",
+      "bmdc_reg": "91044",
+      "patient_name": "Rahima Begum",
+      "diagnosis": "PCOS with Insulin Resistance",
+      "medications": [
+        {
+          "name": "Metformin Hydrochloride",
+          "strength": "500 mg",
+          "dose_frequency": "1 + 0 + 1",
+          "duration": "30 days",
+          "instructions": "After meals with water"
+        },
+        {
+          "name": "Myo-Inositol & D-Chiro Inositol",
+          "strength": "1000 mg",
+          "dose_frequency": "1 + 0 + 0",
+          "duration": "60 days",
+          "instructions": "Morning with breakfast"
+        },
+        {
+          "name": "Vitamin D3",
+          "strength": "40000 IU",
+          "dose_frequency": "1 cap weekly",
+          "duration": "8 weeks",
+          "instructions": "Friday morning"
+        },
+        {
+          "name": "Iron & Folic Acid",
+          "strength": "200 ml",
+          "dose_frequency": "2 tsp once daily",
+          "duration": "15 days",
+          "instructions": "At night"
+        }
+      ]
+    },
+    {
+      "filename": "sample_hospital_prescription_01.png",
+      "format": "PNG",
+      "doctor_name": "Dr. Farhana Rahman",
+      "patient_name": "Rahima Begum",
+      "medication_count": 4
+    },
+    {
+      "filename": "sample_bilingual_rx_0052.jpg",
+      "format": "JPG",
+      "source": "Mendeley 1000 Handwritten Prescription Dataset",
+      "confidence_benchmark": "0.68 to 0.85 CRAFT + ResNet-CTC",
+      "safety_rule": "HTTP 422 Reminder Lock Active until clinician or patient verifies extracted dose"
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { formatBdtFromPoisha } from "../../lib/formatters";
 import { useI18n } from "../../lib/i18n";
+import { playPaymentSuccess } from "../../utils/soundEffects";
 
 export type SimulatedPaymentMethod =
   | "SHASTHOPAY_MFS"
@@ -78,6 +79,7 @@ export function SimulatedPaymentCheckoutModal({
       };
       setProcessing(false);
       setSuccessPayload(payload);
+      playPaymentSuccess();
     }, 1200);
   };
 

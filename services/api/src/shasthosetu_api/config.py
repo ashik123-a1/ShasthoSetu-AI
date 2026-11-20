@@ -44,5 +44,12 @@ class Settings:
     rag_corpus_dir: Path = Path(os.getenv("RAG_CORPUS_DIR", str(DEFAULT_RAG_CORPUS_DIR)))
     ai_request_timeout_sec: int = int(os.getenv("AI_REQUEST_TIMEOUT_SEC", "90"))
 
+    # Lightweight cPanel / Shared Hosting Optional AI Flags
+    ai_inference_enabled: bool = os.getenv("AI_INFERENCE_ENABLED", "true").lower() in ("true", "1", "yes")
+    rag_inference_enabled: bool = os.getenv("RAG_INFERENCE_ENABLED", "true").lower() in ("true", "1", "yes")
+    voice_ai_enabled: bool = os.getenv("VOICE_AI_ENABLED", "true").lower() in ("true", "1", "yes")
+    ocr_enabled: bool = os.getenv("OCR_ENABLED", "true").lower() in ("true", "1", "yes")
+    cpanel_mode: bool = os.getenv("CPANEL_MODE", "false").lower() in ("true", "1", "yes")
+
 
 settings = Settings()

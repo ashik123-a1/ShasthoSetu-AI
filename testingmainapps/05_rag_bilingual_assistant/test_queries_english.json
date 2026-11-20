@@ -1,0 +1,23 @@
+{
+  "language": "en",
+  "test_queries": [
+    {
+      "id": "EN-01",
+      "query": "What are the Rotterdam 2003 criteria for diagnosing Polycystic Ovary Syndrome in young women?",
+      "expected_retrieval_topics": ["Oligo/Anovulation", "Clinical/Biochemical Hyperandrogenism", "Polycystic Ovarian Morphology on USG"],
+      "expected_citation_slug": "dgdf-pcos-guideline-2024"
+    },
+    {
+      "id": "EN-02",
+      "query": "What are the danger signs in acute pediatric diarrhea requiring immediate hospitalization under IMCI?",
+      "expected_retrieval_topics": ["Severe Dehydration", "Lethargy/Unconsciousness", "Inability to drink", "Skin pinch > 2 seconds"],
+      "expected_citation_slug": "dghs-imci-pediatric-manual-2023"
+    },
+    {
+      "id": "EN-03",
+      "query": "What is the recommended dosing interval between Pentavalent vaccine doses 1, 2, and 3 in Bangladesh?",
+      "expected_retrieval_topics": ["Minimum 4-week interval", "Given at 6, 10, 14 weeks"],
+      "expected_citation_slug": "dghs-epi-childhood-schedule-2024"
+    }
+  ]
+}

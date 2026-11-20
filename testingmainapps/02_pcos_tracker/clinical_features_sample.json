@@ -1,0 +1,32 @@
+{
+  "description": "Sample 20-Feature Tabular Input Vector for M01 XGBoost Clinical Model (model_best.joblib)",
+  "features": {
+    "age": 26.0,
+    "bmi": 26.8,
+    "testosterone": 84.5,
+    "lh": 16.4,
+    "fsh": 5.1,
+    "homa_ir": 3.8,
+    "waist_circumference": 88.0,
+    "glucose": 104.0,
+    "sbp": 120.0,
+    "dbp": 80.0,
+    "androstenedione": 4.2,
+    "sdhea": 310.0,
+    "prl": 18.5,
+    "e2": 52.0,
+    "oh_prog_17": 1.4,
+    "total_cholesterol": 195.0,
+    "triglycerides": 165.0,
+    "hdl_c": 42.0,
+    "ldl_c": 120.0,
+    "vit_d_25oh": 14.5
+  },
+  "expected_prediction": "PCOS_RESEARCH_PATTERN",
+  "expected_confidence_range": "0.85 - 0.98",
+  "rotterdam_criteria_markers": [
+    "LH/FSH ratio: 3.2 (Elevated > 2.0)",
+    "HOMA-IR: 3.8 (Insulin Resistance > 2.5)",
+    "Total Testosterone: 84.5 ng/dL (Hyperandrogenism)"
+  ]
+}

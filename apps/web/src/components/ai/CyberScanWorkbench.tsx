@@ -19,7 +19,7 @@ import {
   Sparkles,
   UploadCloud,
 } from "lucide-react";
-import { apiPost, apiPostForm } from "../../lib/apiClient";
+import { ApiError, apiPost, apiPostForm } from "../../lib/apiClient";
 import { useAuth } from "../../lib/authContext";
 import { useI18n } from "../../lib/i18n";
 import { useToast, TrustBadge } from "../ui";
@@ -285,6 +285,34 @@ export function CyberScanWorkbench({
     setInferError(null);
     setResult(null);
     setSavedDraftId(null);
+
+    // File Format Guardrail: Only Prescription OCR accepts PDFs
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const isPdf = file.type === "application/pdf" || ext === "pdf";
+
+    if (activeModule !== "prescription-ocr" && isPdf) {
+      const msg =
+        locale === "bn"
+          ? "⚠️ ফাইল ফরম্যাট ত্রুটি: এই ক্লিনিক্যাল ভিশন মডিউলে শুধুমাত্র ছবি (JPG, JPEG, PNG, WEBP) গ্রহণযোগ্য; PDF বা ডকুমেন্ট ফাইল অনুমোদিত নয়। প্রেসক্রিপশন বা ডকুমেন্টের জন্য 'প্রেসক্রিপশন OCR' মডিউল ব্যবহার করুন।"
+          : "⚠️ Unsupported File Format: Only image files (JPG, JPEG, PNG, WEBP) are accepted in this clinical vision module. Please use Prescription OCR for PDF documents.";
+      setInferError(msg);
+      pushToast({
+        title: locale === "bn" ? "শুধুমাত্র ছবি গ্রহণযোগ্য" : "Images Only",
+        description: "PDF files are only permitted in Prescription OCR.",
+        tone: "danger",
+      });
+      return;
+    }
+
+    if (ext && !["jpg", "jpeg", "png", "webp", "bmp", "pdf"].includes(ext)) {
+      const msg =
+        locale === "bn"
+          ? "⚠️ ফাইল ফরম্যাট ত্রুটি: শুধুমাত্র অনুমোদিত ইমেজ বা ডকুমেন্ট ফাইল নির্বাচন করুন।"
+          : "⚠️ Unsupported File Format: Please select a valid image or document file.";
+      setInferError(msg);
+      return;
+    }
+
     setSelectedFile(file);
     setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
@@ -404,7 +432,13 @@ export function CyberScanWorkbench({
     } catch (err) {
       onScanStateChange?.(false, null);
       setStep(1);
-      setInferError(err instanceof Error ? err.message : "Model inference failed.");
+      setInferError(
+        err instanceof ApiError
+          ? err.detail
+          : err instanceof Error
+          ? err.message
+          : "Model inference failed."
+      );
     }
   };
 

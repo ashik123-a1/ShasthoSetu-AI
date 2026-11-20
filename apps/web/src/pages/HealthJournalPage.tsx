@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   BookOpen,
+  Clock,
   ExternalLink,
   Film,
   FlaskConical,
@@ -18,6 +19,56 @@ import { PublicFloatingHeader } from "../components/layout/PublicFloatingHeader"
 import { PublicFooter } from "../components/layout/PublicFooter";
 import { PageBackdropLayer } from "../components/layout/PageBackdropLayer";
 import { Skeleton } from "../components/ui";
+
+function formatRelativeJournalTime(dateStr: string, locale: string): string {
+  if (!dateStr) return locale === "bn" ? "সম্প্রতি আপডেটকৃত" : "Recently updated";
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffHours < 1) {
+    return locale === "bn" ? "কিছুক্ষণ আগে আপডেট" : "Updated just now";
+  }
+  if (diffHours < 24) {
+    return locale === "bn" ? `${diffHours} ঘণ্টা আগে` : `${diffHours}h ago`;
+  }
+  if (diffDays === 1) {
+    return locale === "bn" ? "গতকাল প্রকাশিত" : "Yesterday";
+  }
+  if (diffDays < 7) {
+    return locale === "bn" ? `${diffDays} দিন আগে` : `${diffDays}d ago`;
+  }
+  return date.toLocaleDateString(locale === "bn" ? "bn-BD" : "en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getArticleThumbnail(art: JournalItem): string {
+  if (art.thumbnail_url && !art.thumbnail_url.includes("null")) {
+    return art.thumbnail_url;
+  }
+  const text = `${art.title} ${art.category} ${art.source_name}`.toLowerCase();
+  if (text.includes("pcos") || text.includes("maternal") || text.includes("women") || text.includes("pregnancy")) {
+    return "/images/backgrounds/bg-pcos-lab.jpg";
+  }
+  if (text.includes("pediatric") || text.includes("child") || text.includes("infant") || text.includes("vaccine")) {
+    return "/images/backgrounds/bg-pediatric-care.jpg";
+  }
+  if (text.includes("rash") || text.includes("skin") || text.includes("derma") || text.includes("viral")) {
+    return "/images/backgrounds/bg-viral-rash.jpg";
+  }
+  if (text.includes("pubmed") || text.includes("research") || text.includes("journal") || text.includes("trial")) {
+    return "/images/backgrounds/bg-ai-research.jpg";
+  }
+  if (text.includes("who") || text.includes("news") || text.includes("dghs") || text.includes("outbreak")) {
+    return "/images/hero/hero-doctors-ai-lab.jpg";
+  }
+  return "/images/hero/hero-doctors-telemedicine.jpg";
+}
 
 interface JournalItem {
   id: string;
@@ -358,56 +409,81 @@ export function HealthJournalPage() {
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {articles.map((art) => (
-                  <article
-                    key={art.id}
-                    className="ss-sapphire-card rounded-3xl p-5 flex flex-col justify-between gap-4 hover:border-sky-400/50 transition"
-                  >
-                    <div className="space-y-2.5">
-                      <div className="flex items-center justify-between gap-2 text-[10px] font-mono">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full font-bold ${
-                            art.item_type === "RESEARCH"
-                              ? "bg-indigo-500/20 text-indigo-200 border border-indigo-400/35"
-                              : art.item_type === "BLOG"
-                              ? "bg-teal-500/20 text-teal-200 border border-teal-400/35"
-                              : "bg-sky-500/20 text-sky-200 border border-sky-400/35"
-                          }`}
-                        >
-                          {art.item_type === "RESEARCH" && <FlaskConical className="w-3 h-3 inline mr-1" />}
-                          {art.item_type}
-                        </span>
-                        <span className="text-slate-400">{art.source_name}</span>
+                {articles.map((art) => {
+                  const thumb = getArticleThumbnail(art);
+                  const relTime = formatRelativeJournalTime(art.published_at_utc, locale);
+
+                  return (
+                    <article
+                      key={art.id}
+                      className="ss-sapphire-card rounded-3xl p-5 flex flex-col justify-between gap-4 hover:border-sky-400/50 transition group overflow-hidden"
+                    >
+                      <div className="space-y-3">
+                        {/* Article Clinical Thumbnail Picture with Category Overlay */}
+                        <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-slate-950 border border-white/10 group-hover:border-cyan-400/40 transition">
+                          <img
+                            src={thumb}
+                            alt={art.title}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-90 group-hover:opacity-100"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                          <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold backdrop-blur-md ${
+                                art.item_type === "RESEARCH"
+                                  ? "bg-indigo-950/80 text-indigo-300 border border-indigo-400/40"
+                                  : art.item_type === "BLOG"
+                                  ? "bg-teal-950/80 text-teal-300 border border-teal-400/40"
+                                  : "bg-sky-950/80 text-sky-300 border border-sky-400/40"
+                              }`}
+                            >
+                              {art.item_type === "RESEARCH" && <FlaskConical className="w-3 h-3 inline mr-1" />}
+                              {art.item_type}
+                            </span>
+                          </div>
+
+                          <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] font-mono text-slate-300">
+                            <span className="text-cyan-300 font-semibold">{art.source_name}</span>
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 border border-white/15 text-slate-300">
+                              <Clock className="w-3 h-3 text-cyan-400" />
+                              {relTime}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <h3 className="text-base font-bold text-white group-hover:text-cyan-300 transition leading-snug line-clamp-2">
+                            {locale === "bn" && art.title_bn ? art.title_bn : art.title}
+                          </h3>
+                          <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                            {locale === "bn" && art.summary_bn ? art.summary_bn : art.summary}
+                          </p>
+                          {art.citation_meta?.pmid && (
+                            <div className="text-[10px] font-mono text-indigo-300 pt-0.5">
+                              PMID: {art.citation_meta.pmid} • {art.citation_meta.journal}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <h3 className="text-base font-bold text-white leading-snug">
-                        {locale === "bn" && art.title_bn ? art.title_bn : art.title}
-                      </h3>
-                      <p className="text-xs text-slate-300 leading-relaxed line-clamp-4">
-                        {locale === "bn" && art.summary_bn ? art.summary_bn : art.summary}
-                      </p>
-                      {art.citation_meta?.pmid && (
-                        <div className="text-[10px] font-mono text-indigo-300">
-                          PMID: {art.citation_meta.pmid} • {art.citation_meta.journal}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2 text-xs">
-                      <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-300">
-                        <ShieldCheck className="w-3.5 h-3.5" /> {art.editorial_status}
-                      </span>
-                      <a
-                        href={art.source_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-semibold text-sky-300 hover:underline inline-flex items-center gap-1"
-                      >
-                        Read Source <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
-                    </div>
-                  </article>
-                ))}
+                      <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2 text-xs">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-300">
+                          <ShieldCheck className="w-3.5 h-3.5" /> {art.editorial_status}
+                        </span>
+                        <a
+                          href={art.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-semibold text-sky-300 hover:underline inline-flex items-center gap-1"
+                        >
+                          Read Source <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           </>

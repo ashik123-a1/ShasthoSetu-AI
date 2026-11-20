@@ -246,9 +246,26 @@ def update_user_status(user_id: str, payload: UserStatusPatchRequest, user: dict
         raise HTTPException(status_code=400, detail="Admin cannot suspend or lock their own active account.")
 
     with get_db_conn() as conn:
-        target = row_to_dict(conn.execute("SELECT id, account_status, primary_role FROM users WHERE id = ?", (user_id,)).fetchone())
+        target = row_to_dict(conn.execute("SELECT id, account_status, primary_role, is_synthetic FROM users WHERE id = ?", (user_id,)).fetchone())
         if not target:
             raise HTTPException(status_code=404, detail="User not found.")
+        if user.get("is_synthetic") and not target.get("is_synthetic"):
+            conn.execute("BEGIN IMMEDIATE;")
+            record_audit(
+                conn,
+                actor_user_id=user["id"],
+                actor_role="ADMIN",
+                action_type="DEMO_ADMIN_MODIFICATION_BLOCKED",
+                target_resource="users",
+                target_id=user_id,
+                outcome="DENIED",
+                details={"reason": "Demo admin attempted to modify real non-synthetic user"},
+            )
+            conn.execute("COMMIT;")
+            raise HTTPException(
+                status_code=403,
+                detail="DEMO_ADMIN_RESTRICTION: Demo admin accounts cannot modify real non-synthetic system users.",
+            )
         now = utc_now_iso()
         conn.execute("BEGIN IMMEDIATE;")
         conn.execute(

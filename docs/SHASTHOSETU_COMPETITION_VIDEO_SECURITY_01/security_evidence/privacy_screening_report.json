@@ -1,0 +1,40 @@
+{
+  "timestamp_utc": "2026-11-20T15:20:00Z",
+  "task_id": "SHASTHOSETU-COMPETITION-VIDEO-AND-SECURITY-01",
+  "screening_checks": [
+    {
+      "check_id": "PRIV-01-SYNTHETIC-DEMO-ACCOUNTS",
+      "description": "All visible demo accounts in users table must have is_synthetic = 1",
+      "total_demo_accounts": 48,
+      "synthetic_flagged": 48,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PRIV-02-BLOOD-DONOR-SYNTHETIC-DATA",
+      "description": "Blood donors must be synthetic test fixtures with is_synthetic = 1",
+      "donors_scanned": 13,
+      "synthetic_donors_count": 13,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PRIV-03-PRESCRIPTION-OCR-RECORDS",
+      "description": "Prescription OCR jobs must use synthetic fixtures only",
+      "total_jobs_scanned": 29,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PRIV-04-PRODUCTION-SECRETS-LEAK",
+      "description": "No real production API keys or external secrets in local environment",
+      "secrets_leaked_count": 0,
+      "status": "PASS"
+    },
+    {
+      "check_id": "PRIV-05-PEDIATRIC-PHOTOGRAPHY-REDISTRIBUTION",
+      "description": "Pediatric patient facial photography strictly excluded from public video footage",
+      "enforcement": "Video will display inference architecture, classification bar charts, and synthetic crop diagrams only. No raw patient photos.",
+      "status": "PASS"
+    }
+  ],
+  "overall_privacy_status": "PASS",
+  "video_capture_approved": true
+}

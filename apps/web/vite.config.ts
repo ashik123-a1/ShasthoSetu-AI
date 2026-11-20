@@ -5,10 +5,10 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: "127.0.0.1",
+    host: "0.0.0.0",
     port: 5173,
     strictPort: true,
-    allowedHosts: [".trycloudflare.com", "localhost", "127.0.0.1"],
+    allowedHosts: true,
     proxy: {
       "/v1": {
         target: "http://127.0.0.1:8000",
@@ -17,10 +17,10 @@ export default defineConfig({
     },
   },
   preview: {
-    host: "127.0.0.1",
+    host: "0.0.0.0",
     port: 4173,
     strictPort: true,
-    allowedHosts: [".trycloudflare.com", "localhost", "127.0.0.1"],
+    allowedHosts: true,
     proxy: {
       "/v1": {
         target: "http://127.0.0.1:8000",

@@ -134,10 +134,6 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
             <div className="relative w-9 h-9 shrink-0 flex items-center justify-center">
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute -inset-1 rounded-full border border-dashed border-cyan-400/70 lg-spin-orbit"
-              />
-              <span
-                aria-hidden="true"
                 className="pointer-events-none absolute inset-0 rounded-full bg-cyan-400/25 blur-sm group-hover:bg-cyan-400/40 transition"
               />
               <img
@@ -230,7 +226,7 @@ export function PublicFloatingHeader({ transparentHero = false }: { transparentH
                 type="button"
                 onClick={toggleTheme}
                 aria-label={theme === "dark" ? t("controls.themeLight") : t("controls.themeDark")}
-                data-testid="public-theme-switch"
+                data-testid="theme-switch"
                 className="w-8 h-8 rounded-full flex items-center justify-center transition cursor-pointer hover:bg-white/10"
               >
                 {theme === "dark" ? (

@@ -1,0 +1,47 @@
+{
+  "triage_system": "Bangladesh National IMCI (Integrated Management of Childhood Illness) Protocol",
+  "cases": [
+    {
+      "case_id": "PED-CAS-01",
+      "triage_color": "RED",
+      "urgency_level": "EMERGENCY_IMMEDIATE_HOSPITALIZATION",
+      "child_name": "Rahim",
+      "age_months": 8,
+      "symptoms": ["High Fever 103.8°F for 3 days", "Stridor while calm", "Severe chest indrawing", "Lethargic / unable to drink"],
+      "vital_signs": {
+        "heart_rate_bpm": 168,
+        "respiratory_rate_bpm": 62,
+        "spO2_pct": 89
+      },
+      "protocol_action": "Administer high-flow humidified oxygen, first dose intramuscular ceftriaxone, and immediate emergency referral to tertiary pediatric ICU."
+    },
+    {
+      "case_id": "PED-CAS-02",
+      "triage_color": "YELLOW",
+      "urgency_level": "PRIORITY_CLINICIAN_REVIEW_WITHIN_1_HOUR",
+      "child_name": "Farhana",
+      "age_months": 18,
+      "symptoms": ["Watery diarrhea > 6 episodes/day", "Sunken eyes", "Skin pinch goes back slowly (1.5s)", "Drinks eagerly (thirsty)"],
+      "vital_signs": {
+        "heart_rate_bpm": 128,
+        "respiratory_rate_bpm": 34,
+        "spO2_pct": 97
+      },
+      "protocol_action": "IMCI Plan B Oral Rehydration Therapy (75 ml/kg ORS over 4 hours) + Zinc supplementation 20 mg daily for 14 days."
+    },
+    {
+      "case_id": "PED-CAS-03",
+      "triage_color": "GREEN",
+      "urgency_level": "ROUTINE_HOME_MANAGEMENT_AND_COUNSELING",
+      "child_name": "Ariyan",
+      "age_months": 22,
+      "symptoms": ["Clear rhinorrhea (runny nose)", "Mild cough", "Low grade fever 99.4°F", "Active and feeding well"],
+      "vital_signs": {
+        "heart_rate_bpm": 105,
+        "respiratory_rate_bpm": 26,
+        "spO2_pct": 99
+      },
+      "protocol_action": "Safe home care: continue breastfeeding, warm fluids, saline nasal drops for nasal congestion, return immediately if danger signs develop."
+    }
+  ]
+}

@@ -23,7 +23,7 @@ def run_openai_agents_navigation(symptom_summary: str) -> dict[str, Any]:
             "doctor_name": "Dr. Farhana Ahmed",
             "bmdc_reg_no": "BMDC-A-48920",
             "specialty": "Internal Medicine & Tropical Diseases",
-            "hospital": "Dhaka Medical College Hospital",
+            "hospital": "ShasthoSetu Central Model Hospital (Demo)",
             "telemedicine_available": True
         },
         "tool_call_trace": {
