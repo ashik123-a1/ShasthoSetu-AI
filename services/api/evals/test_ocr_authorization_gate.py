@@ -45,6 +45,8 @@ def create_user_client(identifier: str) -> tuple[TestClient, dict]:
     if resp.status_code != 200:
         raise RuntimeError(f"Login failed for {identifier}: {resp.status_code} {resp.text}")
     data = resp.json()
+    if "csrf_token" in data:
+        c.headers["x-csrf-token"] = data["csrf_token"]
     return c, data["user"]
 
 def run_ocr_authorization_tests():

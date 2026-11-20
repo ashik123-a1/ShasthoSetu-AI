@@ -136,11 +136,20 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
       setFeeBdt(Math.round(Number(d.doctor_profile?.consultation_fee_minor_poisha || 50000) / 100));
 
       if (d.approved) {
-        const qRes = await apiGet<{ drafts: DoctorAiDraft[] }>("/v1/ai/drafts/doctor-queue");
-        setAiDraftQueue(qRes.drafts || []);
+        try {
+          const qRes = await apiGet<{ drafts: DoctorAiDraft[] }>("/v1/ai/drafts/doctor-queue");
+          setAiDraftQueue(qRes.drafts || []);
+        } catch {
+          // Non-fatal draft queue catch
+        }
+
         if (section === "wallet") {
-          const w = await apiGet<DoctorWallet>("/v1/doctor/wallet");
-          setWallet(w);
+          try {
+            const w = await apiGet<DoctorWallet>("/v1/doctor/wallet");
+            if (w) setWallet(w);
+          } catch {
+            // Keep d.wallet as fallback
+          }
         } else if (section === "availability" || section === "calendar") {
           setAvailability(await apiGet("/v1/doctor/availability"));
         } else if (section === "appointments" || section === "referrals") {
@@ -269,8 +278,18 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
     const w = wallet || dash?.wallet;
     if (!w) {
       return (
-        <div className="bento-card rounded-2xl p-6 text-center text-slate-400 font-mono text-xs">
-          Loading clinician balance ledger...
+        <div className="bento-card rounded-2xl p-8 text-center text-slate-400 font-mono text-xs space-y-4">
+          <div className="animate-pulse flex items-center justify-center gap-2 text-cyan-300">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            <span>{locale === "bn" ? "চিকিৎসকের ওয়ালেট ও ব্যালেন্স লেজার লোড হচ্ছে..." : "Loading clinician balance ledger..."}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadData()}
+            className="min-h-9 px-4 rounded-xl bg-slate-900 border border-cyan-500/40 text-cyan-300 text-xs font-semibold hover:bg-slate-800 cursor-pointer inline-flex items-center gap-2"
+          >
+            <RefreshCw className="w-3.5 h-3.5" /> {locale === "bn" ? "পুনরায় লোড করুন" : "Reload Balance Ledger"}
+          </button>
         </div>
       );
     }
@@ -409,19 +428,30 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
               </div>
             </div>
 
-            <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
-              {filteredTransactions.map((tx) => (
-                <div
-                  key={tx.id}
-                  data-testid={`doctor-txn-row-${tx.txn_ref}`}
-                  className="rounded-2xl bg-slate-950/90 border border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3 text-xs"
-                >
+            {filteredTransactions.length === 0 ? (
+              <div className="rounded-2xl bg-slate-950/60 border border-slate-800 p-8 text-center text-slate-400 text-xs font-mono">
+                {locale === "bn"
+                  ? "কোনো কনসালটেশন ট্রানজেকশন রেকর্ড পাওয়া যায়নি।"
+                  : "No consultation transactions found for the selected filter."}
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
+                {filteredTransactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    data-testid={`doctor-txn-row-${tx.txn_ref}`}
+                    className="rounded-2xl bg-slate-950/90 border border-slate-800 p-4 flex flex-wrap items-center justify-between gap-3 text-xs"
+                  >
                   <div className="space-y-1 max-w-xl">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono font-bold text-cyan-300">{tx.txn_ref}</span>
                       <span className="font-mono text-[11px] text-emerald-300">({tx.receipt_number})</span>
                       <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-200 border border-cyan-500/30">
-                        {tx.gateway_method}
+                        {tx.gateway_method
+                          .replace(/DEMO_BKASH|DEMO_MFS/g, "Demo Payment MFS")
+                          .replace(/DEMO_NAGAD|DEMO_DIRECT/g, "Demo Payment Direct")
+                          .replace(/DEMO_CARD/g, "Demo Card Pay")
+                          .replace(/DEMO_BANK/g, "Demo Bank Settlement")}
                       </span>
                       <span className="font-mono text-[10px] text-slate-400">
                         {tx.billing_month}
@@ -451,10 +481,11 @@ export function DoctorPortalPage({ section = "dashboard" }: { section?: string }
                 </div>
               ))}
             </div>
-          </div>
-        )}
-      </div>
-    );
+          )}
+        </div>
+      )}
+    </div>
+  );
   };
 
   const saveNote = async (state: "DRAFT" | "SIGNED") => {

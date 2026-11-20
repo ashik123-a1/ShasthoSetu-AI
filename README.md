@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://shasthosetu.fit/"><img alt="Live Platform shasthosetu.fit" src="https://img.shields.io/badge/LIVE_PLATFORM-shasthosetu.fit-06B6D4?style=for-the-badge&logo=googlechrome&logoColor=white"/></a>
   <a href="https://huggingface.co/datasets/ashik1236/shasthosetu-clinical-datasets"><img alt="Open Data on Hugging Face" src="https://img.shields.io/badge/OPEN_DATA-Hugging_Face_(35,641_Files)-F59E0B?style=for-the-badge&logo=huggingface&logoColor=white"/></a>
-  <a href="docs/TESTING.md"><img alt="Automated Tests" src="https://img.shields.io/badge/TESTS-53%2F53_Passed_(38_Pytest_%2B_15_Vitest)-10B981?style=for-the-badge&logo=pytest&logoColor=white"/></a>
+  <a href="docs/TESTING.md"><img alt="Automated Tests" src="https://img.shields.io/badge/TESTS-64%2F64_Passed_(48_Pytest_%2B_16_Vitest)-10B981?style=for-the-badge&logo=pytest&logoColor=white"/></a>
   <a href="docs/mcp_architecture.md"><img alt="MCP Architecture" src="https://img.shields.io/badge/MCP-3_Built_%2B_4_Integrated-8B5CF6?style=for-the-badge&logo=anthropic&logoColor=white"/></a>
   <a href="docs/SECURITY.md"><img alt="Security and Zero-PHI" src="https://img.shields.io/badge/SECURITY-Zero--PHI_%26_HTTP_422_Gate-6366F1?style=for-the-badge&logo=shield&logoColor=white"/></a>
   <a href="LICENSE"><img alt="License MIT" src="https://img.shields.io/badge/LICENSE-MIT-38BDF8?style=for-the-badge"/></a>
@@ -35,7 +35,7 @@
   <a href="#-executive-overview--problem-statement"><b>Overview</b></a> ·
   <a href="#-visual-product-tour--verified-ui"><b>Visual Tour</b></a> ·
   <a href="#-ai-models--clinical-research-deep-dive"><b>Models &amp; Research</b></a> ·
-  <a href="#-frontend-backend-tests--audit-verification"><b>Tests (53/53)</b></a> ·
+  <a href="#-frontend-backend-tests--audit-verification"><b>Tests (64/64)</b></a> ·
   <a href="#-technical-architecture--engineering-pipelines"><b>Architecture</b></a> ·
   <a href="#-10-minute-local-quickstart"><b>Quickstart</b></a> ·
   <a href="#-where-everything-lives-project-map"><b>Project Map</b></a> ·
@@ -78,7 +78,7 @@ Across Bangladesh's **170+ million citizens**, district clinics and rural Upazil
 | **Database Persistence** | **55 SQLite tables** (`54` in schema + replay nonce guard) in **WAL + `BEGIN IMMEDIATE`** | [`schema.sql`](services/api/src/shasthosetu_api/db/schema.sql) · [`docs/DATABASE.md`](docs/DATABASE.md) |
 | **Clinical & Geo Directory** | **43 approved demo clinicians**, **8 departments**, **8 Bangladesh divisions**, **12 lab panels** | [`BangladeshCareMap.tsx`](apps/web/src/components/map/BangladeshCareMap.tsx) · [`seed_demo.py`](services/api/src/shasthosetu_api/seeds/seed_demo.py) |
 | **Hybrid RRF Clinical RAG** | **Recall@1: `95.00%` · Recall@3: `100.00%` · MRR: `0.9750`** ($N=20$ medical) | [`docs/evidence/AI_RAG_VOICE_OCR_01/rag_eval_table.md`](docs/evidence/AI_RAG_VOICE_OCR_01/rag_eval_table.md) |
-| **Automated Backend & Web Tests** | **`53 / 53` passed (`38` pytest + `15` vitest)** + **`0` TypeScript errors** | [`services/api/tests/`](services/api/tests) · [`apps/web/src/test/designSystem.test.tsx`](apps/web/src/test/designSystem.test.tsx) |
+| **Automated Backend & Web Tests** | **`64 / 64` passed (`48` pytest + `16` vitest)** + **`0` TypeScript errors** | [`services/api/tests/`](services/api/tests) · [`apps/web/src/test/designSystem.test.tsx`](apps/web/src/test/designSystem.test.tsx) |
 | **Audited ML / DL Modules** | **6 clinical research prototypes** (`7/7` read-only SHA-256 lock checks pass) | [`FINAL_AUDIT_SIGNOFF.md`](SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT/final_lock/FINAL_AUDIT_SIGNOFF.md) · [`research/`](research) |
 | **MCP & Agent Orchestration** | **3 custom MCP servers** + **4 integrated public/SSE MCPs** + Live **LangGraph** | [`docs/mcp_architecture.md`](docs/mcp_architecture.md) · [`services/agents/`](services/agents) |
 | **Business & Commission Treasury** | **4 revenue verticals** (Diagnostic Lab 18%, Doctor 15%, ePharma 12%, Plan 20%), **5 bank escrow accounts**, live admin alerts & 6-month ledger | [`docs/BUSINESS_MODEL.md`](docs/BUSINESS_MODEL.md) · [`/admin/transactions`](apps/web/src/pages/AdminPortalPage.tsx) |
@@ -187,7 +187,7 @@ Every screenshot below was freshly captured (`1440×900`) from the live running 
 
 All automated suites across the Python backend, React/TypeScript frontend, E2E Playwright harness, MCP suite, and SHA-256 dataset lock are documented below so evaluators can reproduce every pass independently:
 
-### 1. Backend Automated Test Suite (`services/api/tests/` — **38 / 38 Passed**)
+### 1. Backend Automated Test Suite (`services/api/tests/` — **48 / 48 Passed**)
 
 ```powershell
 cd services/api
@@ -199,20 +199,21 @@ python -m pytest tests -q
 | :--- | :---: | :--- |
 | [`services/api/tests/test_ai_rag_voice_ocr.py`](services/api/tests/test_ai_rag_voice_ocr.py) | **24 Passed** | Hybrid RAG citation grounding, Code 999 crisis escalation, BN/EN/Banglish prompt-injection refusals, Whisper audio draft gate (`is_confirmed`), Safe-OCR `HTTP 422` reminder lock, clinician sign-off, RAG source governance |
 | [`services/api/tests/test_fullstack_api.py`](services/api/tests/test_fullstack_api.py) | **10 Passed** | Auth Argon2id login & role-escalation lockout, SQLite `BEGIN IMMEDIATE` slot lock (`HTTP 409`), simulated payment receipts, Support **`HTTP 403` Zero-PHI wall**, Pending doctor gate, cross-doctor IDOR denial, Blood Connect masking |
+| [`services/api/tests/test_ocr_regression.py`](services/api/tests/test_ocr_regression.py) | **10 Passed** | Safe-OCR medicine candidate normalization, brand name fuzzy recovery, timing/duration normalization, low-resolution unsharp mask enhancement, and HTTP 422 guardrails |
 | [`services/api/tests/test_rag_metric_lock_02.py`](services/api/tests/test_rag_metric_lock_02.py) | **4 Passed** | Recomputes Dense (`0.9500` MRR), `BM25` (`0.8542` MRR, `EN-06` root-cause trace), and Hybrid RRF (`0.9750` MRR) metrics from raw traces and asserts exact parity with published tables |
 
 *(Additional standalone security & evaluation harnesses live in [`services/api/evals/`](services/api/evals): `test_demo_isolation_security.py`, `test_ocr_authorization_gate.py`, `test_webhook_security.py`, `verify_six_ai_tools.py`, `benchmark_all_rag_modes.py`.)*
 
-### 2. Frontend TypeScript, Vitest Unit Suite & Production Build (**15 / 15 Passed · 0 TS Errors**)
+### 2. Frontend TypeScript, Vitest Unit Suite & Production Build (**16 / 16 Passed · 0 TS Errors**)
 
 ```powershell
 cd apps/web
 npm run typecheck    # Strict tsc --noEmit -> 0 errors
-npm run test         # Vitest 15/15 unit & accessibility tests passed
+npm run test         # Vitest 16/16 unit & accessibility tests passed
 npm run build        # Production Vite 6 bundle -> apps/web/dist/
 ```
 
-- **[`apps/web/src/test/designSystem.test.tsx`](apps/web/src/test/designSystem.test.tsx) (`15 / 15 Passed`):** Verifies 100% `bn.json`/`en.json` translation key parity (`#1`), BN/EN toggle persistence (`#2`), Obsidian Dark / Clinical White theme toggle (`#3`), WCAG reduce-motion switch (`#4`), modal focus trap (`#5`), keyboard pill tabs (`#6`), RBAC role sidebar guards (`#7`), searchable/sortable DataTable (`#8`), TrustBadges & feedback states (`#9`), Poisha integer BDT + `Asia/Dhaka` formatting (`#10`), PublicHome `/` + Hero lattice (`#11`), feature/care-map routes (`#12`), medical receipt & prescription document rendering (`#13–#14`), and doctor profile modal (`#15`).
+- **[`apps/web/src/test/designSystem.test.tsx`](apps/web/src/test/designSystem.test.tsx) (`16 / 16 Passed`):** Verifies 100% `bn.json`/`en.json` translation key parity (`#1`), BN/EN toggle persistence (`#2`), Obsidian Dark / Clinical White theme toggle (`#3`), WCAG reduce-motion switch (`#4`), modal focus trap (`#5`), keyboard pill tabs (`#6`), RBAC role sidebar guards (`#7`), searchable/sortable DataTable (`#8`), TrustBadges & feedback states (`#9`), Poisha integer BDT + `Asia/Dhaka` formatting (`#10`), PublicHome `/` + Hero lattice (`#11`), dedicated feature pages & Care Map (`#12`), medical receipt & prescription document rendering (`#13–#14`), doctor profile modal (`#15`), and demo payment gateway method labeling (`#16`).
 - **Playwright Browser E2E Suites ([`apps/web/e2e/`](apps/web/e2e)):** `ui01.spec.ts`, `fullstack01.spec.ts`, `ai_rag_voice_ocr_01.spec.ts` (`npm run test:e2e`).
 
 ### 3. Research Hash Lock & MCP Server Verification

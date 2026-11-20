@@ -15,6 +15,12 @@ from pypdf import PdfReader
 
 from ..config import settings
 from ..core.security import new_id
+from .ml_inference import (
+    _clean_brand_name,
+    _clean_duration,
+    _clean_timing,
+    _preprocess_prescription_for_ocr,
+)
 from .model_manager import (
     get_cached_model,
     get_model_lock,
@@ -137,17 +143,13 @@ def extract_structured_medicine_candidates(raw_lines: list[str], mean_conf: floa
                 else:
                     med_tokens.append(t)
 
-            name = " ".join(med_tokens).strip() or clean_line
-            # Normalize common OCR prefixes
-            name = re.sub(r"\bTAB_\b", "TAB.", name)
-            name = re.sub(r"\bTAB\b(?!\.)", "TAB.", name, flags=re.IGNORECASE)
-            name = re.sub(r"\bCAP\b(?!\.)", "CAP.", name, flags=re.IGNORECASE)
-            name = re.sub(r"\b1O/SR\b", "10/SR", name, flags=re.IGNORECASE)
+            raw_name = " ".join(med_tokens).strip() or clean_line
+            name = _clean_brand_name(raw_name)
 
-            m_str = _STRENGTH_RE.search(clean_line)
+            m_str = _STRENGTH_RE.search(clean_line) or _STRENGTH_RE.search(name)
             strength = f"{m_str.group(1)} {m_str.group(2)}" if m_str else "NEEDS_VERIFICATION"
-            freq = " ".join(freq_tokens).strip() if freq_tokens else (m_freq.group(0).strip() if m_freq else "NEEDS_VERIFICATION")
-            dur = " ".join(dur_tokens).strip() if dur_tokens else (m_dur.group(0).strip() if m_dur else "NEEDS_VERIFICATION")
+            freq = " ".join(freq_tokens).strip() if freq_tokens else (m_freq.group(0).strip() if m_freq else _clean_timing(clean_line))
+            dur = " ".join(dur_tokens).strip() if dur_tokens else (m_dur.group(0).strip() if m_dur else _clean_duration(clean_line))
             m_route = _ROUTE_RE.search(clean_line)
             route = m_route.group(0).strip() if m_route else "NEEDS_VERIFICATION"
             dose = "1 unit (Verify)" if freq != "NEEDS_VERIFICATION" else "NEEDS_VERIFICATION"
@@ -271,26 +273,27 @@ def run_bilingual_ocr_pipeline(file_bytes: bytes, filename: str) -> dict[str, An
         for p_idx, img in enumerate(page_images, start=1):
             w, h = img.size
             page_dims.append({"page": p_idx, "width": w, "height": h})
-            arr = np.array(img)
+            prep_img, scale_x, scale_y = _preprocess_prescription_for_ocr(img)
+            arr = np.array(prep_img)
             reader_en = _get_easyocr_reader("en")
-            res_en = reader_en.readtext(arr) if reader_en else []
-            en_conf = sum(c for _, _, c in res_en) / max(1, len(res_en))
+            res_en = reader_en.readtext(arr, mag_ratio=1.5, text_threshold=0.6, low_text=0.3, contrast_ths=0.1, adjust_contrast=0.6) if reader_en else []
+            en_conf = sum(c for _, _, c in res_en) / max(1, len(res_en)) if res_en else 0.0
             has_bn = any(any("\u0980" <= ch <= "\u09FF" for ch in t) for _, t, _ in res_en)
-            if en_conf >= 0.65 and not has_bn:
+            if not has_bn and res_en:
                 results = res_en
             else:
                 reader_bn = _get_easyocr_reader("bn")
-                res_bn = reader_bn.readtext(arr) if reader_bn else []
-                bn_conf = sum(c for _, _, c in res_bn) / max(1, len(res_bn))
-                results = res_bn if (bn_conf > en_conf or has_bn) else res_en
+                res_bn = reader_bn.readtext(arr, mag_ratio=1.5, text_threshold=0.6, low_text=0.3, contrast_ths=0.1, adjust_contrast=0.6) if reader_bn else []
+                bn_conf = sum(c for _, _, c in res_bn) / max(1, len(res_bn)) if res_bn else 0.0
+                results = res_bn if (has_bn or (bn_conf > en_conf and bn_conf >= 0.5)) else res_en
 
             page_boxes: list[dict[str, Any]] = []
             for pts, text, conf in results:
                 clean = str(text).strip()
                 if not clean:
                     continue
-                xs = [float(p[0]) for p in pts]
-                ys = [float(p[1]) for p in pts]
+                xs = [float(p[0]) * scale_x for p in pts]
+                ys = [float(p[1]) * scale_y for p in pts]
                 x_pct = round(max(0.0, min(98.0, (min(xs) / max(1, w)) * 100.0)), 2)
                 y_pct = round(max(0.0, min(98.0, (min(ys) / max(1, h)) * 100.0)), 2)
                 w_pct = round(max(1.0, min(100.0 - x_pct, ((max(xs) - min(xs)) / max(1, w)) * 100.0)), 2)

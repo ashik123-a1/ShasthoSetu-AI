@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-20T07:56:00.061823+00:00",
+  "generated_at_utc": "2026-11-20T16:03:27.976503+00:00",
   "protocol_client": "mcp.ClientSession (stdio JSON-RPC)",
   "summary": {
     "custom_built_total": 3,
@@ -14,9 +14,9 @@
     {
       "server_id": "guideline-mcp",
       "transport": "stdio",
-      "command": "_shared//venv//Scripts//python.exe",
+      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
       "args": [
-        "services//mcp//guideline_mcp.py",
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\guideline_mcp.py",
         "--transport",
         "stdio"
       ],
@@ -67,7 +67,7 @@
                 "section_heading": "পিসিওএস (PCOS) কী এবং সাধারণ লক্ষণ (বাংলা)",
                 "language": "bilingual",
                 "score": 8.5,
-                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide/nSection: পিসিওএস (PCOS) কী এবং সাধারণ লক্ষণ (বাংলা)/n/nপলিসিস্টিক ওভারি সিনড্রোম বা **PCOS** হলো প্রজননক্ষম বয়সী নারী ও কিশোরীদের একটি প্রচলিত হরমোনজনিত ও বিপাকীয় (endocrine & metabolic) অবস্থা। বিশ্ব স্বাস্থ্য সংস্থা (WHO) এবং আন্তর্জাতিক Rotterdam মানদণ্ড অনুযায়ী শুধুমাত্র একটি লক্ষণ বা একটি টেস্টের ভিত্তিতে PCOS নিশ্চিত রোগ নির্ণয় করা য"
+                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide\nSection: পিসিওএস (PCOS) কী এবং সাধারণ লক্ষণ (বাংলা)\n\nপলিসিস্টিক ওভারি সিনড্রোম বা **PCOS** হলো প্রজননক্ষম বয়সী নারী ও কিশোরীদের একটি প্রচলিত হরমোনজনিত ও বিপাকীয় (endocrine & metabolic) অবস্থা। বিশ্ব স্বাস্থ্য সংস্থা (WHO) এবং আন্তর্জাতিক Rotterdam মানদণ্ড অনুযায়ী শুধুমাত্র একটি লক্ষণ বা একটি টেস্টের ভিত্তিতে PCOS নিশ্চিত রোগ নির্ণয় করা য"
               },
               {
                 "chunk_id": "rchk-3c5df829c1bf421d",
@@ -78,7 +78,7 @@
                 "section_heading": "Overview & Common Symptoms (English)",
                 "language": "bilingual",
                 "score": 7.0,
-                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide/nSection: Overview & Common Symptoms (English)/n/nPolycystic ovary syndrome (PCOS) is a common hormonal and metabolic condition affecting women and adolescents of reproductive age. According to World Health Organization (WHO) and international Rotterdam guidance, PCOS cannot be diagnosed from a single symptom or blood test alone; a qualified cl"
+                "excerpt": "Source: Polycystic Ovary Syndrome (PCOS) — Bilingual Patient Education Guide\nSection: Overview & Common Symptoms (English)\n\nPolycystic ovary syndrome (PCOS) is a common hormonal and metabolic condition affecting women and adolescents of reproductive age. According to World Health Organization (WHO) and international Rotterdam guidance, PCOS cannot be diagnosed from a single symptom or blood test alone; a qualified cl"
               },
               {
                 "chunk_id": "rchk-b6cf819c0b584eba",
@@ -86,10 +86,10 @@
                 "source_title": "Ultrasound & PCOM Terminology Explained (Bilingual Guide)",
                 "publisher": "MedlinePlus Diagnostic Tests & International PCOS Evidence Summary",
                 "category": "Ultrasound / PCOM Terminology",
-                "section_heading": "What Does /"PCOM/" Mean on an Ultrasound Report? (English)",
+                "section_heading": "What Does \"PCOM\" Mean on an Ultrasound Report? (English)",
                 "language": "bilingual",
                 "score": 5.0,
-                "excerpt": "Source: Ultrasound & PCOM Terminology Explained (Bilingual Guide)/nSection: What Does /"PCOM/" Mean on an Ultrasound Report? (English)/n/n**PCOM** stands for **Polycystic Ovarian Morphology**. When a pelvic or transvaginal ultrasound report mentions PCOM or /"polycystic ovaries,/" it describes a visual structural pattern—typically an increased number of small antral follicles (often 2–9 mm in size) arranged near the ovarian"
+                "excerpt": "Source: Ultrasound & PCOM Terminology Explained (Bilingual Guide)\nSection: What Does \"PCOM\" Mean on an Ultrasound Report? (English)\n\n**PCOM** stands for **Polycystic Ovarian Morphology**. When a pelvic or transvaginal ultrasound report mentions PCOM or \"polycystic ovaries,\" it describes a visual structural pattern—typically an increased number of small antral follicles (often 2–9 mm in size) arranged near the ovarian"
               }
             ],
             "policy": "Grounded informational excerpts ONLY — never diagnostic or prescribing advice."
@@ -467,14 +467,14 @@
           }
         }
       ],
-      "latency_ms": 576.5
+      "latency_ms": 609.2
     },
     {
       "server_id": "directory-mcp",
       "transport": "stdio",
-      "command": "_shared//venv//Scripts//python.exe",
+      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
       "args": [
-        "services//mcp//directory_mcp.py",
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\directory_mcp.py",
         "--transport",
         "stdio"
       ],
@@ -581,7 +581,7 @@
                 "rating": 4.9,
                 "reviews_count": 412,
                 "avatar_url": "/images/doctors/doc-f-01.jpg",
-                "open_slots_count": 2,
+                "open_slots_count": 4,
                 "consultation_fee_bdt": 500
               },
               {
@@ -753,14 +753,14 @@
           }
         }
       ],
-      "latency_ms": 523.4
+      "latency_ms": 548.5
     },
     {
       "server_id": "care-record-mcp",
       "transport": "stdio",
-      "command": "_shared//venv//Scripts//python.exe",
+      "command": "F:\\Clude cccccccccccccccccccccccc\\data we test\\_shared\\venv\\Scripts\\python.exe",
       "args": [
-        "services//mcp//care_record_mcp.py",
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\services\\mcp\\care_record_mcp.py",
         "--transport",
         "stdio"
       ],
@@ -815,7 +815,7 @@
             },
             "counts": {
               "appointments": 11,
-              "medication_plans": 9,
+              "medication_plans": 11,
               "pcos_cycle_logs": 2,
               "pediatric_vaccines": 0
             }
@@ -827,10 +827,10 @@
           "is_error": false,
           "preview": {
             "found": true,
-            "ocr_job_id": "ocr-job-2b38485b85ed431e",
+            "ocr_job_id": "ocr-job-1f1850f2af894155",
             "job_status": "NEEDS_REVIEW",
             "authorization_state": "RAW_OCR",
-            "uncertain_fields_count": 3,
+            "uncertain_fields_count": 0,
             "can_activate_reminder": false,
             "http_gate_code": 422,
             "policy": "Mandatory HTTP 422 Human Verification Gate — Never auto-activate unverified OCR schedules."
@@ -846,38 +846,38 @@
           "preview": {
             "allowed": true,
             "requester_role": "ADMIN",
-            "total_audit_log_rows": 996,
+            "total_audit_log_rows": 2054,
             "doctor_verification_events_count": 4,
             "recent_events": [
               {
-                "id": "aud-96e8fd92ed4f4d50",
-                "actor_role": "SUPPORT",
+                "id": "aud-c4f6296b3aeb4359",
+                "actor_role": "PATIENT",
+                "action_type": "MEDICATION_PLAN_CLINICIAN_AUTHORIZED_PLAN",
+                "target_resource": "medication_plans",
+                "outcome": "SUCCESS",
+                "created_at_utc": "2026-11-20T16:02:38.298Z"
+              },
+              {
+                "id": "aud-ea73aa045d684ce5",
+                "actor_role": "PATIENT",
                 "action_type": "LOGIN_SUCCESS",
                 "target_resource": "sessions",
                 "outcome": "SUCCESS",
-                "created_at_utc": "2026-11-20T07:55:01.965Z"
+                "created_at_utc": "2026-11-20T16:02:38.289Z"
               },
               {
-                "id": "aud-71a91c902ec945dd",
-                "actor_role": "ADMIN",
-                "action_type": "LOGIN_SUCCESS",
-                "target_resource": "sessions",
-                "outcome": "SUCCESS",
-                "created_at_utc": "2026-11-20T07:55:00.808Z"
-              },
-              {
-                "id": "aud-657877072a244504",
+                "id": "aud-ad321ddbc9424e76",
                 "actor_role": "DOCTOR",
-                "action_type": "LOGIN_SUCCESS",
-                "target_resource": "sessions",
+                "action_type": "OCR_CLINICIAN_VERIFY",
+                "target_resource": "ocr_jobs",
                 "outcome": "SUCCESS",
-                "created_at_utc": "2026-11-20T07:54:59.706Z"
+                "created_at_utc": "2026-11-20T16:02:38.241Z"
               }
             ]
           }
         }
       ],
-      "latency_ms": 537.3
+      "latency_ms": 535.9
     }
   ],
   "public_servers": [
@@ -890,8 +890,8 @@
         "npx",
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "docs",
-        "SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT//final_lock"
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\docs",
+        "F:\\Clude cccccccccccccccccccccccc\\data we test\\SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT\\final_lock"
       ],
       "status": "PASS",
       "server_info": {
@@ -924,10 +924,10 @@
           "tool": "list_allowed_directories",
           "arguments": {},
           "is_error": false,
-          "preview": "Allowed directories:/ndocs/nSHASTHOSETU_FINAL_DATASET_MODEL_AUDIT//final_lock"
+          "preview": "Allowed directories:\nF:\\Clude cccccccccccccccccccccccc\\data we test\\docs\nF:\\Clude cccccccccccccccccccccccc\\data we test\\SHASTHOSETU_FINAL_DATASET_MODEL_AUDIT\\final_lock"
         }
       ],
-      "latency_ms": 903.2
+      "latency_ms": 1009.8
     },
     {
       "server_id": "memory",
@@ -1019,7 +1019,7 @@
           }
         }
       ],
-      "latency_ms": 581.2
+      "latency_ms": 1268.0
     },
     {
       "server_id": "sequential-thinking",
@@ -1061,7 +1061,7 @@
           }
         }
       ],
-      "latency_ms": 770.7
+      "latency_ms": 613.8
     }
   ],
   "external_sse_servers": [
@@ -1071,7 +1071,7 @@
       "url": "https://cloudcamp-bd-mcp.equisaas-bd.com",
       "reachable": true,
       "http_status": 403,
-      "latency_ms": 117.6,
+      "latency_ms": 133.2,
       "note": "Endpoint responded with HTTP 403 (configured external SSE server)"
     }
   ]

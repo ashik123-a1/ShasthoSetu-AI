@@ -6,27 +6,27 @@
     "M01_pcos_clinical": {
       "status": 200,
       "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
-      "latency_ms": 883.7
+      "latency_ms": 823.9
     },
     "M02_pcos_ultrasound": {
       "status": 200,
       "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
-      "latency_ms": 670.2
+      "latency_ms": 402.4
     },
     "M03_viral_rash": {
       "status": 200,
       "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
-      "latency_ms": 117.0
+      "latency_ms": 141.5
     },
     "M04_dermoped": {
       "status": 200,
       "classification": "RESEARCH_PREVIEW_NON_DIAGNOSTIC",
-      "latency_ms": 102.3
+      "latency_ms": 123.4
     },
     "M05_prescription_ocr": {
       "status": 200,
       "model_id": "M04-EASYOCR-PIPELINE-01",
-      "tokens": 44
+      "tokens": 25
     },
     "M06_voice_tts": {
       "status": 200,
@@ -36,9 +36,9 @@
           "engine": "Windows SAPI5 (Microsoft Zira/Hazel Desktop)"
         },
         "bengali": {
-          "available": true,
-          "engine": "facebook/mms-tts-ben (Local VITS)",
-          "unavailable_message": null
+          "available": false,
+          "engine": "Unavailable locally (check browser voices)",
+          "unavailable_message": "Bengali voice unavailable"
         }
       }
     },

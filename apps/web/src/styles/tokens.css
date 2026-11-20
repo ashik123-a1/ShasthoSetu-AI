@@ -317,9 +317,9 @@ html[data-theme="light"] .text-slate-400 {
 
 html[data-theme="light"] .bg-slate-950,
 html[data-theme="light"] .bg-slate-900,
-html[data-theme="light"] .bg-[#040914],
-html[data-theme="light"] .bg-[#061024],
-html[data-theme="light"] .bg-[#071229] {
+html[data-theme="light"] [class*="bg-[#040914]"],
+html[data-theme="light"] [class*="bg-[#061024]"],
+html[data-theme="light"] [class*="bg-[#071229]"] {
   background-color: #ffffff !important;
   color: #0f172a !important;
 }

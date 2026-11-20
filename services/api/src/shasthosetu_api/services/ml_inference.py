@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import difflib
 import hashlib
 import io
 import math
@@ -12,7 +13,7 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageFilter
 from pypdf import PdfReader
 
 try:
@@ -481,6 +482,117 @@ _HEADER_RE = re.compile(
 )
 
 
+_COMMON_BRANDS = [
+    "ABCIXIMAB", "VOMILAST", "ZOCLAR", "GESTAKIND", "PARACETAMOL", "METFORMIN",
+    "ROSUVASTATIN", "SERGEL", "SECLO", "MAXPRO", "MONAS", "FEXO", "NAPA", "ACE",
+    "PANTOBEX", "AZITHROMYCIN", "CEFIXIME", "AMOXICILLIN", "ESLOR", "OMIDON", "EMISTAT",
+    "DOXYLAMINE", "PYRIDOXINE", "FOLIC ACID", "CLARITHROMYCIN", "ISOXSUPRINE", "CLOPIDOGREL",
+    "ATORVASTATIN", "LOSARTAN", "AMLODIPINE", "ORADEX-S", "ROXIM", "ROLAC", "TNABIL", "TRILOCK",
+]
+
+_TIMING_MAP = {
+    "morning": "1 Morning", "homin": "1 Morning", "poming": "1 Morning", "moming": "1 Morning",
+    "orniing": "1 Morning", "vrning": "1 Morning", "night": "1 Night", "nigh": "1 Night",
+    "kahe": "1 Night", "after": "After Food", "before": "Before Food", "daily": "Daily",
+}
+
+
+_VALID_SUFFIX_RE = re.compile(r"^(?:10/sr|20/sr|500|650|extra|xr|sr|ds|plus|d|forte|max|cr)$", re.IGNORECASE)
+
+
+def _clean_brand_name(raw_text: str) -> str:
+    """Normalize noisy OCR brand names using fuzzy dictionary and formulation prefix cleanup."""
+    s = re.sub(r"^[0-9\)\.\-\s]+", "", raw_text)
+    s = re.sub(r"^(?:tab|cap|syp|inj|oint|tias|tins|tael|tar|tae|t4[\-_]?[8g]|caz|cae)[\.\s\:\-_,]*", "", s, flags=re.IGNORECASE).strip()
+    s = re.sub(r"^[@#\$\%]+", "", s).strip()
+    s = _STRENGTH_RE.sub("", s).strip()
+    words = s.split()
+    if not words:
+        return raw_text
+    first = words[0].upper()
+    best_brand = None
+    best_ratio = 0.0
+    for b in _COMMON_BRANDS:
+        r = difflib.SequenceMatcher(None, first, b).ratio()
+        if r > best_ratio:
+            best_ratio = r
+            best_brand = b
+
+    form = "Cap." if any(k in raw_text.lower() for k in ["cap", "caz", "cae"]) else "Tab."
+    if "TAB." in raw_text or "TAB_" in raw_text or "TAB " in raw_text:
+        form = "TAB."
+    elif "CAP." in raw_text or "CAP_" in raw_text or "CAP " in raw_text:
+        form = "CAP."
+    elif "Cap." in raw_text:
+        form = "Cap."
+    elif "Tab." in raw_text:
+        form = "Tab."
+
+    if best_ratio >= 0.45 and best_brand:
+        brand_name = best_brand.title()
+        suffix_clean = []
+        for w in words[1:]:
+            w_norm = re.sub(r"\b(?:id/sr|io/sr|1o/sr)\b", "10/SR", w, flags=re.IGNORECASE)
+            w_norm = re.sub(r"\b(?:soo|5oo)\b", "500", w_norm, flags=re.IGNORECASE)
+            w_strip = re.sub(r"[^a-zA-Z0-9/]", "", w_norm)
+            if _VALID_SUFFIX_RE.match(w_strip):
+                suffix_clean.append(w_strip.upper() if "sr" in w_strip.lower() or "xr" in w_strip.lower() else w_strip)
+        suffix = " ".join(suffix_clean)
+        return f"{form} {brand_name} {suffix}".strip()
+
+    clean_norm = re.sub(r"\bTAB_\b", "TAB.", raw_text)
+    clean_norm = re.sub(r"\bTAB\b(?!\.)", "TAB.", clean_norm, flags=re.IGNORECASE)
+    clean_norm = re.sub(r"\bCAP\b(?!\.)", "CAP.", clean_norm, flags=re.IGNORECASE)
+    clean_norm = re.sub(r"\b1O/SR\b", "10/SR", clean_norm, flags=re.IGNORECASE)
+    return clean_norm
+
+
+def _clean_timing(raw_text: str) -> str:
+    """Extract and normalize dosage timing/frequency."""
+    m_code = re.search(r"\b[0-4০-৪]\s*[\+\-\*]\s*[0-4০-৪]\s*[\+\-\*]\s*[0-4০-৪]\b|\b(?:OD|BD|BID|TDS|TID|QDS|QID|SOS|PRN|HS|STAT)\b", raw_text, re.IGNORECASE)
+    if m_code:
+        return m_code.group(0).strip()
+    words = re.findall(r"[A-Za-z]+", raw_text.lower())
+    matched = []
+    for w in words:
+        for k, v in _TIMING_MAP.items():
+            if k in w or difflib.SequenceMatcher(None, w, k).ratio() >= 0.65:
+                if v not in matched:
+                    matched.append(v)
+                break
+    return ", ".join(matched) if matched else "NEEDS_VERIFICATION"
+
+
+def _clean_duration(raw_text: str) -> str:
+    """Extract and normalize duration and total counts."""
+    m_num = re.search(r"(\d+)\s*(?:days?|davs|dova|dovs|d|weeks?|months?|দিন|সপ্তাহ)", raw_text, re.IGNORECASE)
+    days = f"{m_num.group(1)} Days" if m_num else ""
+    m_tot = re.search(r"(?:tot|for|ior|tot:)[^\d]*(\d+)[^\w]*(?:tab|cap|todi|inb|cb)", raw_text, re.IGNORECASE)
+    tot = f"(Tot: {m_tot.group(1)} Tab)" if m_tot else ""
+    res = f"{days} {tot}".strip()
+    return res if res else "NEEDS_VERIFICATION"
+
+
+def _preprocess_prescription_for_ocr(pil_img: Image.Image) -> tuple[Image.Image, float, float]:
+    """Upscales low-resolution images and enhances contrast for crisp EasyOCR recognition."""
+    w, h = pil_img.size
+    target_min = 900
+    if min(w, h) < target_min:
+        scale = target_min / float(min(w, h))
+        new_w, new_h = int(w * scale), int(h * scale)
+        up_img = pil_img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    else:
+        up_img = pil_img.copy()
+
+    enh = ImageEnhance.Contrast(up_img)
+    enh_img = enh.enhance(1.35)
+    sharp_img = enh_img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=120, threshold=3))
+
+    scale_x = w / float(sharp_img.size[0])
+    scale_y = h / float(sharp_img.size[1])
+    return sharp_img, scale_x, scale_y
+
+
 def _cluster_boxes_into_lines(boxes: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
     """Group 2D bounding boxes into natural horizontal lines based on vertical overlap."""
     if not boxes:
@@ -494,8 +606,8 @@ def _cluster_boxes_into_lines(boxes: list[dict[str, Any]]) -> list[list[dict[str
         prev = lines[-1]
         avg_y = sum(x.get("y_center", x.get("y_pct", 0)) for x in prev) / len(prev)
         avg_h = sum(x.get("height", x.get("h_pct", 10)) for x in prev) / len(prev)
-        # 70% height vertical tolerance for same-line clustering
-        thresh = max(18.0 if "y_center" in b else 2.2, avg_h * 0.72)
+        # Dynamic vertical tolerance: accommodates multi-column prescription rows
+        thresh = max(24.0 if "y_center" in b else 3.5, avg_h * 0.85)
         cur_y = b.get("y_center", b.get("y_pct", 0))
         if abs(cur_y - avg_y) <= thresh:
             prev.append(b)
@@ -527,10 +639,36 @@ def _extract_candidates_from_clustered_lines(
         has_freq = any(_FREQ_RE.search(b["text"]) for b in line)
         has_dur = any(_DUR_RE.search(b["text"]) or "days" in b["text"].lower() or "tot" in b["text"].lower() for b in line)
 
-        is_primary_med_row = has_med or (has_num and (has_freq or has_dur or has_brand)) or (has_freq and has_dur)
+        # Fuzzy detection for noisy/low-res scans:
+        has_fuzzy_brand = False
+        for b in line:
+            t_s = re.sub(r"^[0-9\)\.\-\s]+", "", b["text"])
+            t_s = re.sub(r"^(?:tab|cap|syp|inj|oint|tias|tins|tael|tar|tae|t4[\-_]?[8g]|caz|cae)[\.\s\:\-_,]*", "", t_s, flags=re.IGNORECASE).strip()
+            t_s = re.sub(r"^[@#\$\%]+", "", t_s).strip()
+            w_list = t_s.split()
+            if w_list:
+                f_w = w_list[0].upper()
+                if any(difflib.SequenceMatcher(None, f_w, cb.upper()).ratio() >= 0.50 for cb in _COMMON_BRANDS):
+                    has_fuzzy_brand = True
+                    break
+
+        has_fuzzy_timing = any(_clean_timing(b["text"]) != "NEEDS_VERIFICATION" for b in line)
+        has_fuzzy_duration = any(_clean_duration(b["text"]) != "NEEDS_VERIFICATION" for b in line)
+
+        has_chem_salt = any(kw in line_text.lower() for kw in ["succinate", "hcl", "ip", "bp", "usp", "salt", "+"])
+        is_generic_subline = bool(candidates) and has_chem_salt and not has_freq and not has_dur and not has_med and not has_num
+
+        is_primary_med_row = not is_generic_subline and (
+            has_med
+            or (has_num and (has_freq or has_dur or has_brand or has_fuzzy_brand))
+            or (has_freq and has_dur)
+            or (has_fuzzy_brand and (has_freq or has_dur or has_med or has_num))
+            or (has_fuzzy_timing and has_fuzzy_duration)
+        )
 
         if is_primary_med_row:
             med_tokens: list[str] = []
+            strength_tokens: list[str] = []
             freq_tokens: list[str] = []
             dur_tokens: list[str] = []
 
@@ -545,20 +683,22 @@ def _extract_candidates_from_clustered_lines(
                     dur_tokens.append(t)
                 elif _FREQ_RE.search(t):
                     freq_tokens.append(t)
+                elif _STRENGTH_RE.search(t):
+                    strength_tokens.append(t)
                 else:
                     med_tokens.append(t)
 
-            name = " ".join(med_tokens).strip() or line_text
-            # Clean and normalize common OCR formulation prefixes
-            name = re.sub(r"\bTAB_\b", "TAB.", name)
-            name = re.sub(r"\bTAB\b(?!\.)", "TAB.", name, flags=re.IGNORECASE)
-            name = re.sub(r"\bCAP\b(?!\.)", "CAP.", name, flags=re.IGNORECASE)
-            name = re.sub(r"\b1O/SR\b", "10/SR", name, flags=re.IGNORECASE)
+            raw_name = " ".join(med_tokens).strip() or line_text
+            name = _clean_brand_name(raw_name)
 
-            dur = " ".join(dur_tokens).strip() if dur_tokens else "NEEDS_VERIFICATION"
-            freq = " ".join(freq_tokens).strip() if freq_tokens else "NEEDS_VERIFICATION"
+            dur = " ".join(dur_tokens).strip() if dur_tokens else _clean_duration(line_text)
+            freq = " ".join(freq_tokens).strip() if freq_tokens else _clean_timing(line_text)
 
-            m_str = _STRENGTH_RE.search(name)
+            m_str = (
+                _STRENGTH_RE.search(" ".join(strength_tokens))
+                or _STRENGTH_RE.search(raw_name)
+                or _STRENGTH_RE.search(line_text)
+            )
             strength = f"{m_str.group(1)} {m_str.group(2)}" if m_str else "NEEDS_VERIFICATION"
 
             row_conf = round(float(sum(b.get("confidence", mean_conf) for b in line) / max(1, len(line))), 4)
@@ -593,20 +733,25 @@ def _extract_candidates_from_clustered_lines(
             if m_sub_dur and candidates[-1]["duration"] == "NEEDS_VERIFICATION":
                 candidates[-1]["duration"] = m_sub_dur.group(0).strip()
 
-    # Safe fallback if prescription had unstructured text
+    # Safe fallback if prescription had unstructured text: never output isolated numbers/timings as medicine!
     if not candidates and lines:
-        for i, ln_boxes in enumerate(lines[:4]):
+        for i, ln_boxes in enumerate(lines[:6]):
             full_ln = " ".join(b["text"] for b in ln_boxes).strip()
             if not full_ln or _HEADER_RE.search(full_ln):
+                continue
+            if re.match(r"^[\d\(\)\[\]\:\-\s\.]+$", full_ln):
+                continue
+            if re.match(r"^(?:morning|night|after\s+food|before\s+food|vrning|\d+\s*days?|\(tot:[^\)]+\))$", full_ln, re.IGNORECASE):
                 continue
             m_str = _STRENGTH_RE.search(full_ln)
             m_freq = _FREQ_RE.search(full_ln)
             m_dur = _DUR_RE.search(full_ln)
             c_val = round(float(sum(b.get("confidence", mean_conf) for b in ln_boxes) / max(1, len(ln_boxes))), 4)
+            name_norm = _clean_brand_name(full_ln[:90])
             candidates.append(
                 {
                     "group_index": len(candidates),
-                    "medicine_name": full_ln[:90],
+                    "medicine_name": name_norm,
                     "strength": f"{m_str.group(1)} {m_str.group(2)}" if m_str else "NEEDS_VERIFICATION",
                     "frequency": m_freq.group(0).strip() if m_freq else "NEEDS_VERIFICATION",
                     "duration": m_dur.group(0).strip() if m_dur else "NEEDS_VERIFICATION",
@@ -655,22 +800,23 @@ def infer_prescription_ocr(file_bytes: bytes, filename: str) -> dict[str, Any]:
     else:
         img, _ = _decode_image_bytes(file_bytes, filename)
         img_w, img_h = img.size
-        arr = np.array(img)
+        prep_img, scale_x, scale_y = _preprocess_prescription_for_ocr(img)
+        arr = np.array(prep_img)
         with _MODEL_LOCK:
-            # Intelligent dual-reader strategy: run English pass first
+            # Intelligent dual-reader strategy: run English pass first with tuned OCR parameters
             reader_en = _load_easyocr_reader("en")
-            results_en = reader_en.readtext(arr)
-            en_conf = sum(c for _, _, c in results_en) / max(1, len(results_en))
+            results_en = reader_en.readtext(arr, mag_ratio=1.5, text_threshold=0.6, low_text=0.3, contrast_ths=0.1, adjust_contrast=0.6)
             has_bn_chars = any(any("\u0980" <= ch <= "\u09FF" for ch in t) for _, t, _ in results_en)
+            en_conf = sum(c for _, _, c in results_en) / max(1, len(results_en)) if results_en else 0.0
 
-            if en_conf >= 0.65 and not has_bn_chars:
+            if not has_bn_chars and results_en:
                 results = results_en
                 engine_label = "EasyOCR Latin ResNet-CTC (High Precision)"
             else:
                 reader_bn = _load_easyocr_reader("bn")
-                results_bn = reader_bn.readtext(arr)
-                bn_conf = sum(c for _, _, c in results_bn) / max(1, len(results_bn))
-                if bn_conf > en_conf or has_bn_chars:
+                results_bn = reader_bn.readtext(arr, mag_ratio=1.5, text_threshold=0.6, low_text=0.3, contrast_ths=0.1, adjust_contrast=0.6)
+                bn_conf = sum(c for _, _, c in results_bn) / max(1, len(results_bn)) if results_bn else 0.0
+                if has_bn_chars or (bn_conf > en_conf and bn_conf >= 0.5):
                     results = results_bn
                     engine_label = "EasyOCR Bilingual CRAFT + ResNet-CTC (bn+en)"
                 else:
@@ -682,8 +828,8 @@ def infer_prescription_ocr(file_bytes: bytes, filename: str) -> dict[str, Any]:
             clean = str(text).strip()
             if not clean:
                 continue
-            xs = [float(p[0]) for p in pts]
-            ys = [float(p[1]) for p in pts]
+            xs = [float(p[0]) * scale_x for p in pts]
+            ys = [float(p[1]) * scale_y for p in pts]
             x_pct = max(0.0, min(98.0, (min(xs) / max(1, img_w)) * 100.0))
             y_pct = max(0.0, min(98.0, (min(ys) / max(1, img_h)) * 100.0))
             w_pct = max(1.0, min(100.0 - x_pct, ((max(xs) - min(xs)) / max(1, img_w)) * 100.0))

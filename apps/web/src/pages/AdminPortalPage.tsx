@@ -745,7 +745,12 @@ export function AdminPortalPage({ section = "dashboard" }: { section?: string })
                       {tx.revenue_stream}
                     </span>
                     <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-200 border border-cyan-500/30">
-                      {tx.bank_account_code} • {tx.gateway_method}
+                      {tx.bank_account_code} •{" "}
+                      {tx.gateway_method
+                        .replace(/DEMO_BKASH|DEMO_MFS/g, "Demo Payment MFS")
+                        .replace(/DEMO_NAGAD|DEMO_DIRECT/g, "Demo Payment Direct")
+                        .replace(/DEMO_CARD/g, "Demo Card Pay")
+                        .replace(/DEMO_BANK/g, "Demo Corporate Bank")}
                     </span>
                   </div>
                   <div className="font-semibold text-white">{tx.item_title}</div>

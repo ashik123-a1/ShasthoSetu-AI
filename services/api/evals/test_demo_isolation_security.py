@@ -47,7 +47,10 @@ def create_client(identifier: str) -> tuple[TestClient, dict]:
     resp = c.post("/v1/auth/login", json={"identifier": identifier, "password": pwd})
     if resp.status_code != 200:
         raise RuntimeError(f"Login failed for {identifier}: {resp.status_code} {resp.text}")
-    return c, resp.json()["user"]
+    data = resp.json()
+    if "csrf_token" in data:
+        c.headers["x-csrf-token"] = data["csrf_token"]
+    return c, data["user"]
 
 def run_demo_isolation_security_tests():
     print("=" * 65)

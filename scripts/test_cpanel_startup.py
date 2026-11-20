@@ -34,14 +34,24 @@ r_health = client.get("/v1/health")
 assert r_health.status_code == 200, f"Expected 200, got {r_health.status_code}"
 print("PASS: /v1/health returned 200 OK.")
 
-# 2. AI Inference Offline handling
+# 2. Verify unauthenticated access to AI inference is rejected with 401
+r_unauth = client.post("/v1/ai/infer/pcos-clinical", json={"age": 28, "bmi": 26.5})
+assert r_unauth.status_code == 401, f"Expected 401, got {r_unauth.status_code}"
+print("PASS: Unauthenticated inference access strictly rejected with HTTP 401.")
+
+# Log in as patient demo to acquire session & CSRF token
+r_login = client.post("/v1/auth/login", json={"identifier": "patient.demo@shasthosetu.local", "password": "PatientDemo#2026"})
+assert r_login.status_code == 200, f"Login failed: {r_login.status_code}"
+client.headers["x-csrf-token"] = r_login.json()["csrf_token"]
+
+# 3. AI Inference Offline handling
 r_pcos = client.post("/v1/ai/infer/pcos-clinical", json={"age": 28, "bmi": 26.5})
 assert r_pcos.status_code == 200, f"Expected 200, got {r_pcos.status_code}"
 pcos_data = r_pcos.json()
 assert pcos_data.get("status") == "OFFLINE", "Expected OFFLINE status in cPanel mode"
 print(f"PASS: PCOS clinical inference gracefully handled offline mode: {pcos_data['status']} - {pcos_data['message']}.")
 
-# 3. LangGraph Orchestration in cPanel mode
+# 4. LangGraph Orchestration in cPanel mode
 r_orch = client.post("/v1/agents/orchestrate", json={"query": "আমার ৩ দিন ধরে ১০৩ জ্বর", "language": "bn"})
 assert r_orch.status_code == 200, f"Expected 200, got {r_orch.status_code}"
 orch_data = r_orch.json()

@@ -1,6 +1,6 @@
 # ShasthoSetu AI — Complete Automated Testing, Security & Research Audit Guide
 
-This document provides the complete inventory of **backend pytest suites (`38` tests)**, **frontend Vitest unit/component tests (`15` tests)**, **TypeScript/Vite build verification**, **Playwright browser E2E specs (`3` specs)**, **MCP JSON-RPC checks**, and **cryptographic research lock suites (`7` checks)**.
+This document provides the complete inventory of **backend pytest suites (`48` tests)**, **frontend Vitest unit/component tests (`16` tests)**, **TypeScript/Vite build verification**, **Playwright browser E2E specs (`3` specs)**, **MCP JSON-RPC checks**, and **cryptographic research lock suites (`7` checks)**.
 
 ---
 
@@ -10,8 +10,9 @@ This document provides the complete inventory of **backend pytest suites (`38` t
 | :--- | :--- | :---: | :--- | :---: |
 | **Backend API** | [`services/api/tests/test_ai_rag_voice_ocr.py`](../services/api/tests/test_ai_rag_voice_ocr.py) | `24 tests` | `pytest services/api/tests/test_ai_rag_voice_ocr.py -q` | **24 Passed** |
 | **Backend API** | [`services/api/tests/test_fullstack_api.py`](../services/api/tests/test_fullstack_api.py) | `10 tests` | `pytest services/api/tests/test_fullstack_api.py -q` | **10 Passed** |
+| **Safe-OCR Reg**| [`services/api/tests/test_ocr_regression.py`](../services/api/tests/test_ocr_regression.py) | `10 tests` | `pytest services/api/tests/test_ocr_regression.py -q` | **10 Passed** |
 | **Metric Lock** | [`services/api/tests/test_rag_metric_lock_02.py`](../services/api/tests/test_rag_metric_lock_02.py) | `4 tests` | `pytest services/api/tests/test_rag_metric_lock_02.py -q` | **4 Passed** |
-| **Frontend Unit** | [`apps/web/src/test/designSystem.test.tsx`](../apps/web/src/test/designSystem.test.tsx) | `15 tests` | `cd apps/web && npm run test` | **15 Passed** |
+| **Frontend Unit** | [`apps/web/src/test/designSystem.test.tsx`](../apps/web/src/test/designSystem.test.tsx) | `16 tests` | `cd apps/web && npm run test` | **16 Passed** |
 | **Type Safety** | Strict `tsc --noEmit` across React 19 UI | Full SPA | `cd apps/web && npm run typecheck` | **0 Errors** |
 | **Prod Bundle** | Vite 6 + Tailwind v4 CSS/JS production bundle | Full SPA | `cd apps/web && npm run build` | **Built Cleanly** |
 | **Browser E2E** | [`apps/web/e2e/*.spec.ts`](../apps/web/e2e) (`ui01`, `fullstack01`, `ai_rag_voice_ocr_01`) | `3 specs` | `cd apps/web && npm run test:e2e` | Multi-viewport & workflow E2E |
@@ -20,14 +21,14 @@ This document provides the complete inventory of **backend pytest suites (`38` t
 
 ---
 
-## 2. Backend Pytest Suite Details (`38 / 38 Passed`)
+## 2. Backend Pytest Suite Details (`48 / 48 Passed`)
 
 ### Run All Backend Tests
 ```powershell
 cd services/api
 $env:PYTHONPATH = "src;../.."
 python -m pytest tests -q
-# Output: 38 passed
+# Output: 48 passed
 ```
 
 - **`test_ai_rag_voice_ocr.py` (`24 tests`):** Tests bilingual Hybrid RAG citation grounding, Emergency 999 red-flag routing, prompt injection refusal across BN/EN/Banglish, Whisper audio draft confirmation (`is_confirmed`), Safe-OCR extraction, **mandatory `HTTP 422`** lockout prior to verification, clinician verification sign-off, and RAG index governance.
